@@ -1,0 +1,90 @@
+from fastapi import APIRouter, Depends, HTTPException, status
+from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.database import get_db
+from app.repositories.product_repository import ProductRepository
+from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
+from app.models.productos import Producto
+from typing import List
+
+router = APIRouter(prefix="/api/products", tags=["Products"])
+
+
+@router.get("", response_model=List[ProductResponse])
+async def get_products(
+    skip: int = 0,
+    limit: int = 100,
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ProductRepository(db)
+    products = await repo.get_all(skip, limit)
+    return products
+
+
+@router.get("/{product_id}", response_model=ProductResponse)
+async def get_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ProductRepository(db)
+    product = await repo.get_by_id(product_id)
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return product
+
+
+@router.post("", response_model=ProductResponse, status_code=201)
+async def create_product(
+    data: ProductCreate,
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ProductRepository(db)
+    
+    if await repo.code_exists(data.codigo):
+        raise HTTPException(status_code=400, detail="El código del producto ya existe")
+    
+    product = Producto(**data.model_dump())
+    created = await repo.create(product)
+    return created
+
+
+@router.put("/{product_id}", response_model=ProductResponse)
+async def update_product(
+    product_id: int,
+    data: ProductUpdate,
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ProductRepository(db)
+    
+    if data.codigo and await repo.code_exists(data.codigo, exclude_id=product_id):
+        raise HTTPException(status_code=400, detail="El código del producto ya existe")
+    
+    product = await repo.update(product_id, **data.model_dump(exclude_unset=True))
+    if not product:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return product
+
+
+@router.delete("/{product_id}")
+async def delete_product(
+    product_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ProductRepository(db)
+    deleted = await repo.delete(product_id)
+    if not deleted:
+        raise HTTPException(status_code=404, detail="Producto no encontrado")
+    return {"message": "Producto eliminado"}
+
+
+@router.get("/stats/summary")
+async def get_stats(db: AsyncSession = Depends(get_db)):
+    repo = ProductRepository(db)
+    products = await repo.get_all()
+    
+    total = len(products)
+    total_value = sum(float(p.precio_venta) for p in products if p.precio_venta)
+    
+    return {
+        "total_products": total,
+        "total_inventory_value": round(total_value, 2)
+    }
