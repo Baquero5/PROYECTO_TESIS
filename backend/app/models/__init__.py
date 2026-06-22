@@ -1,6 +1,8 @@
 # Modelos de seguridad
 from app.models.roles import Rol
 from app.models.usuarios import Usuario
+from app.models.permisos import Permiso
+from app.models.rol_permisos import RolPermiso
 
 # Modelos de catálogo
 from app.models.categorias import Categoria
@@ -28,6 +30,8 @@ from app.models.reabastecimiento import Reabastecimiento
 __all__ = [
     "Rol",
     "Usuario",
+    "Permiso",
+    "RolPermiso",
     "Categoria",
     "Proveedor",
     "Producto",

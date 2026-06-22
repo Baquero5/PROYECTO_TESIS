@@ -11,6 +11,8 @@ const menuItems = [
     { path: '/ventas', icon: '💰', label: 'Ventas' },
     { path: '/alertas', icon: '⚠️', label: 'Alertas' },
     { path: '/prediccion', icon: '🔮', label: 'Predicción' },
+    { path: '/usuarios', icon: '👥', label: 'Usuarios' },
+    { path: '/roles', icon: '🔐', label: 'Roles' },
 ];
 
 export default function Layout() {

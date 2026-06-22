@@ -174,13 +174,14 @@ export default function Productos() {
                                 <th>Proveedor</th>
                                 <th>P. Compra</th>
                                 <th>P. Venta</th>
+                                <th>F. Ingreso</th>
                                 <th>Estado</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
                             {filtered.length === 0 ? (
-                                <tr><td colSpan="8" style={{ textAlign: 'center', padding: '20px' }}>No hay productos</td></tr>
+                                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>No hay productos</td></tr>
                             ) : filtered.map(prod => (
                                 <tr key={prod.id_producto}>
                                     <td><span className="badge badge-info">{prod.codigo}</span></td>
@@ -189,6 +190,7 @@ export default function Productos() {
                                     <td>{getProveedorName(prod.id_proveedor)}</td>
                                     <td>${prod.precio_compra}</td>
                                     <td>${prod.precio_venta}</td>
+                                    <td>{prod.fecha_ingreso ? new Date(prod.fecha_ingreso).toLocaleDateString() : '-'}</td>
                                     <td>
                                         <span className={`badge ${prod.estado ? 'badge-success' : 'badge-danger'}`}>
                                             {prod.estado ? 'Activo' : 'Inactivo'}

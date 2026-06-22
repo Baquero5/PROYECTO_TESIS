@@ -1,4 +1,5 @@
-from sqlalchemy import Column, Integer, String, Text, Numeric, Boolean, ForeignKey
+from sqlalchemy import Column, Integer, String, Text, Numeric, Boolean, ForeignKey, DateTime
+from sqlalchemy.sql import func
 from app.core.database import Base
 
 
@@ -14,3 +15,4 @@ class Producto(Base):
     precio_compra = Column(Numeric(10, 2), default=0.0)
     precio_venta = Column(Numeric(10, 2), default=0.0)
     estado = Column(Boolean, default=True)
+    fecha_ingreso = Column(DateTime(timezone=True), server_default=func.now())

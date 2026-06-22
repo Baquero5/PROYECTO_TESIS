@@ -11,6 +11,8 @@ import Inventario from './pages/InventarioPage';
 import Ventas from './pages/Ventas';
 import Alertas from './pages/Alertas';
 import Prediccion from './pages/Prediccion';
+import Usuarios from './pages/Usuarios';
+import Roles from './pages/Roles';
 
 function App() {
     return (
@@ -33,6 +35,8 @@ function App() {
                         <Route path="/ventas" element={<Ventas />} />
                         <Route path="/alertas" element={<Alertas />} />
                         <Route path="/prediccion" element={<Prediccion />} />
+                        <Route path="/usuarios" element={<Usuarios />} />
+                        <Route path="/roles" element={<Roles />} />
                     </Route>
                     <Route path="/" element={<Navigate to="/dashboard" replace />} />
                     <Route path="*" element={<Navigate to="/dashboard" replace />} />

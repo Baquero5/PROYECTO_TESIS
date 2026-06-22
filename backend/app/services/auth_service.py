@@ -69,3 +69,31 @@ async def require_admin(user: Usuario = Depends(get_current_user)) -> Usuario:
         if not rol or rol.nombre != "ADMINISTRADOR":
             raise HTTPException(status_code=403, detail="Se requieren permisos de administrador")
     return user
+
+
+def require_permission(permission_code: str):
+    async def permission_checker(
+        user: Usuario = Depends(get_current_user),
+        db: AsyncSession = Depends(get_db)
+    ) -> Usuario:
+        from sqlalchemy import select
+        from app.models.permisos import Permiso
+        from app.models.rol_permisos import RolPermiso
+        
+        # Verificar si el usuario tiene el permiso
+        result = await db.execute(
+            select(Permiso)
+            .join(RolPermiso, Permiso.id_permiso == RolPermiso.id_permiso)
+            .where(
+                RolPermiso.id_rol == user.id_rol,
+                Permiso.codigo == permission_code
+            )
+        )
+        if result.scalar_one_or_none() is None:
+            raise HTTPException(
+                status_code=403,
+                detail=f"No tiene permiso para realizar esta acción: {permission_code}"
+            )
+        return user
+    
+    return Depends(permission_checker)

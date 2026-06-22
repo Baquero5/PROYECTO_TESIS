@@ -1,5 +1,6 @@
 from pydantic import BaseModel
 from typing import Optional
+from datetime import datetime
 
 
 class ProductCreate(BaseModel):
@@ -33,6 +34,7 @@ class ProductResponse(BaseModel):
     precio_compra: float
     precio_venta: float
     estado: bool
+    fecha_ingreso: Optional[datetime] = None
 
     class Config:
         from_attributes = True

@@ -16,8 +16,11 @@ from app.presentation.alerta_routes import router as alerta_router
 from app.presentation.dataset_routes import router as dataset_router
 from app.presentation.modelo_ia_routes import router as modelo_ia_router
 from app.presentation.prediccion_routes import router as prediccion_router
+from app.presentation.permiso_routes import router as permiso_router
 from app.models.usuarios import Usuario
 from app.models.roles import Rol
+from app.models.permisos import Permiso
+from app.models.rol_permisos import RolPermiso
 from app.models.categorias import Categoria
 from app.models.proveedores import Proveedor
 from app.models.productos import Producto
@@ -34,6 +37,132 @@ from app.models.predicciones import Prediccion
 from app.services.auth_service import hash_password
 
 settings = get_settings()
+
+# Permisos por defecto del sistema
+DEFAULT_PERMISOS = [
+    # Productos
+    ("PRODUCTOS_CREAR", "Crear productos"),
+    ("PRODUCTOS_LEER", "Ver productos"),
+    ("PRODUCTOS_ACTUALIZAR", "Actualizar productos"),
+    ("PRODUCTOS_ELIMINAR", "Eliminar productos"),
+    # Categorías
+    ("CATEGORIAS_CREAR", "Crear categorías"),
+    ("CATEGORIAS_LEER", "Ver categorías"),
+    ("CATEGORIAS_ACTUALIZAR", "Actualizar categorías"),
+    ("CATEGORIAS_ELIMINAR", "Eliminar categorías"),
+    # Proveedores
+    ("PROVEEDORES_CREAR", "Crear proveedores"),
+    ("PROVEEDORES_LEER", "Ver proveedores"),
+    ("PROVEEDORES_ACTUALIZAR", "Actualizar proveedores"),
+    ("PROVEEDORES_ELIMINAR", "Eliminar proveedores"),
+    # Inventario
+    ("INVENTARIO_CREAR", "Crear movimientos de inventario"),
+    ("INVENTARIO_LEER", "Ver inventario"),
+    ("INVENTARIO_ACTUALIZAR", "Actualizar inventario"),
+    ("INVENTARIO_ELIMINAR", "Eliminar movimientos"),
+    # Ventas
+    ("VENTAS_CREAR", "Crear ventas"),
+    ("VENTAS_LEER", "Ver ventas"),
+    ("VENTAS_ACTUALIZAR", "Actualizar ventas"),
+    ("VENTAS_ELIMINAR", "Eliminar ventas"),
+    # Alertas
+    ("ALERTAS_CREAR", "Crear alertas"),
+    ("ALERTAS_LEER", "Ver alertas"),
+    ("ALERTAS_ACTUALIZAR", "Actualizar alertas"),
+    ("ALERTAS_ELIMINAR", "Eliminar alertas"),
+    # Usuarios
+    ("USUARIOS_CREAR", "Crear usuarios"),
+    ("USUARIOS_LEER", "Ver usuarios"),
+    ("USUARIOS_ACTUALIZAR", "Actualizar usuarios"),
+    ("USUARIOS_ELIMINAR", "Eliminar usuarios"),
+    # Roles
+    ("ROLES_CREAR", "Crear roles"),
+    ("ROLES_LEER", "Ver roles"),
+    ("ROLES_ACTUALIZAR", "Actualizar roles"),
+    ("ROLES_ELIMINAR", "Eliminar roles"),
+    # Reportes
+    ("REPORTES_LEER", "Ver reportes"),
+    # Configuración
+    ("CONFIGURACION_CREAR", "Crear configuración"),
+    ("CONFIGURACION_LEER", "Ver configuración"),
+    ("CONFIGURACION_ACTUALIZAR", "Actualizar configuración"),
+    ("CONFIGURACION_ELIMINAR", "Eliminar configuración"),
+    # Predicción IA
+    ("PREDICCION_IA_LEER", "Ver predicciones IA"),
+]
+
+# Permisos por rol
+ROLE_PERMISSIONS = {
+    "ADMINISTRADOR": [p[0] for p in DEFAULT_PERMISOS],  # Todos los permisos
+    "SISTEMAS": [
+        "PRODUCTOS_CREAR", "PRODUCTOS_LEER", "PRODUCTOS_ACTUALIZAR", "PRODUCTOS_ELIMINAR",
+        "CATEGORIAS_CREAR", "CATEGORIAS_LEER", "CATEGORIAS_ACTUALIZAR", "CATEGORIAS_ELIMINAR",
+        "PROVEEDORES_CREAR", "PROVEEDORES_LEER", "PROVEEDORES_ACTUALIZAR", "PROVEEDORES_ELIMINAR",
+        "INVENTARIO_CREAR", "INVENTARIO_LEER", "INVENTARIO_ACTUALIZAR", "INVENTARIO_ELIMINAR",
+        "VENTAS_LEER",
+        "ALERTAS_CREAR", "ALERTAS_LEER", "ALERTAS_ACTUALIZAR", "ALERTAS_ELIMINAR",
+        "USUARIOS_LEER",
+        "REPORTES_LEER",
+        "CONFIGURACION_CREAR", "CONFIGURACION_LEER", "CONFIGURACION_ACTUALIZAR", "CONFIGURACION_ELIMINAR",
+        "PREDICCION_IA_LEER",
+    ],
+    "VENTAS": [
+        "PRODUCTOS_LEER",
+        "CATEGORIAS_LEER",
+        "PROVEEDORES_LEER",
+        "INVENTARIO_LEER",
+        "VENTAS_CREAR", "VENTAS_LEER", "VENTAS_ACTUALIZAR", "VENTAS_ELIMINAR",
+        "ALERTAS_LEER",
+        "REPORTES_LEER",
+    ],
+}
+
+
+async def create_default_data():
+    from sqlalchemy import select
+    from app.models.rol_permisos import RolPermiso
+    
+    async with AsyncSessionLocal() as db:
+        # Crear permisos
+        for codigo, descripcion in DEFAULT_PERMISOS:
+            result = await db.execute(select(Permiso).where(Permiso.codigo == codigo))
+            if result.scalar_one_or_none() is None:
+                permiso = Permiso(codigo=codigo, descripcion=descripcion)
+                db.add(permiso)
+        await db.commit()
+        print(f"[OK] {len(DEFAULT_PERMISOS)} permisos creados")
+        
+        # Crear roles y asignar permisos
+        for rol_nombre, permisos_codes in ROLE_PERMISSIONS.items():
+            result = await db.execute(select(Rol).where(Rol.nombre == rol_nombre))
+            rol = result.scalar_one_or_none()
+            if rol is None:
+                rol = Rol(nombre=rol_nombre, descripcion=f"Rol {rol_nombre}")
+                db.add(rol)
+                await db.flush()
+            
+            # Obtener IDs de permisos
+            permiso_ids = []
+            for code in permisos_codes:
+                result = await db.execute(select(Permiso).where(Permiso.codigo == code))
+                permiso = result.scalar_one_or_none()
+                if permiso:
+                    permiso_ids.append(permiso.id_permiso)
+            
+            # Asignar permisos al rol
+            for permiso_id in permiso_ids:
+                result = await db.execute(
+                    select(RolPermiso).where(
+                        RolPermiso.id_rol == rol.id_rol,
+                        RolPermiso.id_permiso == permiso_id
+                    )
+                )
+                if result.scalar_one_or_none() is None:
+                    rol_permiso = RolPermiso(id_rol=rol.id_rol, id_permiso=permiso_id)
+                    db.add(rol_permiso)
+            
+            await db.commit()
+            print(f"[OK] Rol {rol_nombre} configurado con {len(permiso_ids)} permisos")
 
 
 async def create_admin_user():
@@ -69,6 +198,7 @@ async def lifespan(app: FastAPI):
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     print("[OK] Tablas creadas en la base de datos")
+    await create_default_data()
     await create_admin_user()
     yield
     print("[STOP] Apagando servidor...")
@@ -104,6 +234,7 @@ app.include_router(alerta_router)
 app.include_router(dataset_router)
 app.include_router(modelo_ia_router)
 app.include_router(prediccion_router)
+app.include_router(permiso_router)
 
 
 @app.get("/")
