@@ -1,6 +1,6 @@
 # MEMORIA DE TRABAJO - SmartInventory AI
 ## Fecha: 25 de Junio de 2026
-## Estado: MÓDULOS COMPLETADOS - PENDIENTES MENORES
+## Estado: DÍA COMPLETADO - CONTINUAR MAÑANA
 
 ---
 
@@ -184,4 +184,33 @@ GET  /api/ventas/producto/{id}/historial?days=90
 GET  /api/modelos-ia
 PUT  /api/modelos-ia/{id}/activar
 PUT  /api/modelos-ia/{id}/desactivar
+```
+
+---
+
+## PARA CONTINUAR MAÑANA
+
+### Siguiente pendiente: Exportación de reportes
+- Botón de exportación en cada módulo (Inventario, Ventas, Predicciones, Alertas)
+- Formatos: PDF, Excel, CSV
+- Página dedicada de reportes (opcional)
+
+### Otros pendientes
+1. Dashboard analítico avanzado
+2. Validaciones robustas
+3. Alertas inteligentes avanzadas
+4. Preparación de documentación para sustentación
+
+### Iniciar Backend TESIS
+```bash
+cd C:\Users\RRHH3\Desktop\VISUAL\TESIS\backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
+
+### Iniciar Frontend TESIS
+```bash
+cd C:\Users\RRHH3\Desktop\VISUAL\TESIS\frontend
+npm install
+npm run dev
 ```
