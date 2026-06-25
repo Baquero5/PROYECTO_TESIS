@@ -18,9 +18,24 @@ class ModeloIARepository:
 
     async def get_best(self) -> Optional[ModeloIA]:
         result = await self.db.execute(
-            select(ModeloIA).order_by(ModeloIA.mape.asc()).limit(1)
+            select(ModeloIA)
+            .where(ModeloIA.mape.isnot(None))
+            .order_by(ModeloIA.mape.asc())
+            .limit(1)
         )
         return result.scalar_one_or_none()
+
+    async def get_active(self) -> Optional[ModeloIA]:
+        result = await self.db.execute(
+            select(ModeloIA).where(ModeloIA.estado == "ACTIVO").limit(1)
+        )
+        return result.scalar_one_or_none()
+
+    async def get_by_algorithm(self, algoritmo: str) -> List[ModeloIA]:
+        result = await self.db.execute(
+            select(ModeloIA).where(ModeloIA.algoritmo == algoritmo.upper())
+        )
+        return list(result.scalars().all())
 
     async def create(self, modelo: ModeloIA) -> ModeloIA:
         self.db.add(modelo)
@@ -37,4 +52,26 @@ class ModeloIARepository:
                 setattr(modelo, key, value)
         await self.db.commit()
         await self.db.refresh(modelo)
+        return modelo
+
+    async def activate_model(self, modelo_id: int) -> Optional[ModeloIA]:
+        """Activa un modelo y desactiva los demás."""
+        from sqlalchemy import update
+        await self.db.execute(
+            update(ModeloIA).values(estado="INACTIVO")
+        )
+        modelo = await self.get_by_id(modelo_id)
+        if modelo:
+            modelo.estado = "ACTIVO"
+            await self.db.commit()
+            await self.db.refresh(modelo)
+        return modelo
+
+    async def set_model_status(self, modelo_id: int, estado: str) -> Optional[ModeloIA]:
+        """Establece el estado de un modelo sin afectar a otros."""
+        modelo = await self.get_by_id(modelo_id)
+        if modelo:
+            modelo.estado = estado
+            await self.db.commit()
+            await self.db.refresh(modelo)
         return modelo

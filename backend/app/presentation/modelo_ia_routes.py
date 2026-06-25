@@ -47,3 +47,21 @@ async def update_modelo(modelo_id: int, data: ModeloIAUpdate, db: AsyncSession =
     if not modelo:
         raise HTTPException(status_code=404, detail="Modelo no encontrado")
     return modelo
+
+
+@router.put("/{modelo_id}/activar", response_model=ModeloIAResponse)
+async def activate_modelo(modelo_id: int, db: AsyncSession = Depends(get_db)):
+    repo = ModeloIARepository(db)
+    modelo = await repo.set_model_status(modelo_id, "ACTIVO")
+    if not modelo:
+        raise HTTPException(status_code=404, detail="Modelo no encontrado")
+    return modelo
+
+
+@router.put("/{modelo_id}/desactivar", response_model=ModeloIAResponse)
+async def deactivate_modelo(modelo_id: int, db: AsyncSession = Depends(get_db)):
+    repo = ModeloIARepository(db)
+    modelo = await repo.set_model_status(modelo_id, "INACTIVO")
+    if not modelo:
+        raise HTTPException(status_code=404, detail="Modelo no encontrado")
+    return modelo

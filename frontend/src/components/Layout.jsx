@@ -2,17 +2,18 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
 
-const menuItems = [
-    { path: '/dashboard', icon: '📈', label: 'Dashboard' },
-    { path: '/productos', icon: '📦', label: 'Productos' },
-    { path: '/categorias', icon: '🏷️', label: 'Categorías' },
-    { path: '/proveedores', icon: '🚚', label: 'Proveedores' },
-    { path: '/inventario', icon: '📊', label: 'Inventario' },
-    { path: '/ventas', icon: '💰', label: 'Ventas' },
-    { path: '/alertas', icon: '⚠️', label: 'Alertas' },
-    { path: '/prediccion', icon: '🔮', label: 'Predicción' },
-    { path: '/usuarios', icon: '👥', label: 'Usuarios' },
-    { path: '/roles', icon: '🔐', label: 'Roles' },
+const allMenuItems = [
+    { path: '/dashboard', icon: '📈', label: 'Dashboard', roles: [1, 2] },
+    { path: '/productos', icon: '📦', label: 'Productos', roles: [1, 2, 3] },
+    { path: '/categorias', icon: '🏷️', label: 'Categorías', roles: [1, 2, 3] },
+    { path: '/proveedores', icon: '🚚', label: 'Proveedores', roles: [1, 2, 3] },
+    { path: '/inventario', icon: '📊', label: 'Inventario', roles: [1, 2, 3] },
+    { path: '/ventas', icon: '💰', label: 'Ventas', roles: [1, 2, 3] },
+    { path: '/alertas', icon: '⚠️', label: 'Alertas', roles: [1, 2] },
+    { path: '/prediccion', icon: '🔮', label: 'Predicción', roles: [1, 2] },
+    { path: '/modelos-ia', icon: '🤖', label: 'Modelos IA', roles: [1, 2] },
+    { path: '/usuarios', icon: '👥', label: 'Usuarios', roles: [1, 2] },
+    { path: '/roles', icon: '🔐', label: 'Roles', roles: [1, 2] },
 ];
 
 export default function Layout() {
@@ -20,6 +21,8 @@ export default function Layout() {
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
     const [darkMode, setDarkMode] = useState(false);
+
+    const menuItems = allMenuItems.filter(item => item.roles.includes(user?.id_rol));
 
     const handleLogout = () => {
         logout();
@@ -102,7 +105,7 @@ export default function Layout() {
                             <div>
                                 <div className="user-name">{fullName || user?.correo}</div>
                                 <div style={{ fontSize: '0.7rem', color: 'var(--gray-500)' }}>
-                                    {user?.id_rol === 1 ? 'Administrador' : 'Usuario'}
+                                    {user?.id_rol === 1 ? 'Administrador' : user?.id_rol === 2 ? 'Sistemas' : 'Vendedor'}
                                 </div>
                             </div>
                         </div>

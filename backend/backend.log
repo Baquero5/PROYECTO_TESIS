@@ -1,0 +1,1337 @@
+[START] Iniciando Sistema de Predicción de Demanda v1.0.0
+2026-06-22 11:22:02,965 INFO sqlalchemy.engine.Engine SELECT DATABASE()
+2026-06-22 11:22:02,966 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:02,967 INFO sqlalchemy.engine.Engine SELECT @@sql_mode
+2026-06-22 11:22:02,967 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:02,968 INFO sqlalchemy.engine.Engine SELECT @@lower_case_table_names
+2026-06-22 11:22:02,968 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:02,970 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:22:02,970 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`roles`
+2026-06-22 11:22:02,971 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:02,987 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`usuarios`
+2026-06-22 11:22:02,988 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,001 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`permisos`
+2026-06-22 11:22:03,001 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,013 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`rol_permisos`
+2026-06-22 11:22:03,014 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,018 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`categorias`
+2026-06-22 11:22:03,018 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,030 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`proveedores`
+2026-06-22 11:22:03,031 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,037 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`productos`
+2026-06-22 11:22:03,038 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,043 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`inventarios`
+2026-06-22 11:22:03,044 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,048 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`movimientos_inventario`
+2026-06-22 11:22:03,049 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,054 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`ventas`
+2026-06-22 11:22:03,054 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,059 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`detalle_ventas`
+2026-06-22 11:22:03,059 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,066 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`parametros_inventario`
+2026-06-22 11:22:03,066 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,073 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`alertas`
+2026-06-22 11:22:03,074 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,080 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`dataset_entrenamiento`
+2026-06-22 11:22:03,081 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,086 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`modelos_ia`
+2026-06-22 11:22:03,087 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,091 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`predicciones`
+2026-06-22 11:22:03,091 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,097 INFO sqlalchemy.engine.Engine DESCRIBE `tesis_inventario`.`reabastecimiento`
+2026-06-22 11:22:03,097 INFO sqlalchemy.engine.Engine [raw sql] ()
+2026-06-22 11:22:03,102 INFO sqlalchemy.engine.Engine COMMIT
+[OK] Tablas creadas en la base de datos
+2026-06-22 11:22:03,105 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:22:03,114 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,114 INFO sqlalchemy.engine.Engine [generated in 0.00062s] ('PRODUCTOS_CREAR',)
+2026-06-22 11:22:03,116 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,117 INFO sqlalchemy.engine.Engine [cached since 0.003458s ago] ('PRODUCTOS_LEER',)
+2026-06-22 11:22:03,118 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,118 INFO sqlalchemy.engine.Engine [cached since 0.00554s ago] ('PRODUCTOS_ACTUALIZAR',)
+2026-06-22 11:22:03,120 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,121 INFO sqlalchemy.engine.Engine [cached since 0.007107s ago] ('PRODUCTOS_ELIMINAR',)
+2026-06-22 11:22:03,122 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,122 INFO sqlalchemy.engine.Engine [cached since 0.008693s ago] ('CATEGORIAS_CREAR',)
+2026-06-22 11:22:03,123 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,124 INFO sqlalchemy.engine.Engine [cached since 0.01065s ago] ('CATEGORIAS_LEER',)
+2026-06-22 11:22:03,125 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,126 INFO sqlalchemy.engine.Engine [cached since 0.01228s ago] ('CATEGORIAS_ACTUALIZAR',)
+2026-06-22 11:22:03,127 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,129 INFO sqlalchemy.engine.Engine [cached since 0.01543s ago] ('CATEGORIAS_ELIMINAR',)
+2026-06-22 11:22:03,130 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,131 INFO sqlalchemy.engine.Engine [cached since 0.01712s ago] ('PROVEEDORES_CREAR',)
+2026-06-22 11:22:03,132 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,132 INFO sqlalchemy.engine.Engine [cached since 0.01839s ago] ('PROVEEDORES_LEER',)
+2026-06-22 11:22:03,132 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,133 INFO sqlalchemy.engine.Engine [cached since 0.01964s ago] ('PROVEEDORES_ACTUALIZAR',)
+2026-06-22 11:22:03,133 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,134 INFO sqlalchemy.engine.Engine [cached since 0.02091s ago] ('PROVEEDORES_ELIMINAR',)
+2026-06-22 11:22:03,135 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,136 INFO sqlalchemy.engine.Engine [cached since 0.0222s ago] ('INVENTARIO_CREAR',)
+2026-06-22 11:22:03,136 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,136 INFO sqlalchemy.engine.Engine [cached since 0.02352s ago] ('INVENTARIO_LEER',)
+2026-06-22 11:22:03,137 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,138 INFO sqlalchemy.engine.Engine [cached since 0.02483s ago] ('INVENTARIO_ACTUALIZAR',)
+2026-06-22 11:22:03,139 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,141 INFO sqlalchemy.engine.Engine [cached since 0.02743s ago] ('INVENTARIO_ELIMINAR',)
+2026-06-22 11:22:03,142 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,142 INFO sqlalchemy.engine.Engine [cached since 0.02929s ago] ('VENTAS_CREAR',)
+2026-06-22 11:22:03,143 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,144 INFO sqlalchemy.engine.Engine [cached since 0.03079s ago] ('VENTAS_LEER',)
+2026-06-22 11:22:03,145 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,146 INFO sqlalchemy.engine.Engine [cached since 0.03246s ago] ('VENTAS_ACTUALIZAR',)
+2026-06-22 11:22:03,147 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,148 INFO sqlalchemy.engine.Engine [cached since 0.03433s ago] ('VENTAS_ELIMINAR',)
+2026-06-22 11:22:03,149 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,149 INFO sqlalchemy.engine.Engine [cached since 0.0357s ago] ('ALERTAS_CREAR',)
+2026-06-22 11:22:03,149 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,150 INFO sqlalchemy.engine.Engine [cached since 0.03696s ago] ('ALERTAS_LEER',)
+2026-06-22 11:22:03,151 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,152 INFO sqlalchemy.engine.Engine [cached since 0.0382s ago] ('ALERTAS_ACTUALIZAR',)
+2026-06-22 11:22:03,152 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,153 INFO sqlalchemy.engine.Engine [cached since 0.03945s ago] ('ALERTAS_ELIMINAR',)
+2026-06-22 11:22:03,153 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,154 INFO sqlalchemy.engine.Engine [cached since 0.04068s ago] ('USUARIOS_CREAR',)
+2026-06-22 11:22:03,155 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,156 INFO sqlalchemy.engine.Engine [cached since 0.04233s ago] ('USUARIOS_LEER',)
+2026-06-22 11:22:03,157 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,157 INFO sqlalchemy.engine.Engine [cached since 0.04373s ago] ('USUARIOS_ACTUALIZAR',)
+2026-06-22 11:22:03,158 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,158 INFO sqlalchemy.engine.Engine [cached since 0.04494s ago] ('USUARIOS_ELIMINAR',)
+2026-06-22 11:22:03,159 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,160 INFO sqlalchemy.engine.Engine [cached since 0.04622s ago] ('ROLES_CREAR',)
+2026-06-22 11:22:03,161 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,161 INFO sqlalchemy.engine.Engine [cached since 0.04819s ago] ('ROLES_LEER',)
+2026-06-22 11:22:03,163 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,163 INFO sqlalchemy.engine.Engine [cached since 0.04984s ago] ('ROLES_ACTUALIZAR',)
+2026-06-22 11:22:03,164 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,165 INFO sqlalchemy.engine.Engine [cached since 0.05183s ago] ('ROLES_ELIMINAR',)
+2026-06-22 11:22:03,166 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,167 INFO sqlalchemy.engine.Engine [cached since 0.05334s ago] ('REPORTES_LEER',)
+2026-06-22 11:22:03,168 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,168 INFO sqlalchemy.engine.Engine [cached since 0.05478s ago] ('CONFIGURACION_CREAR',)
+2026-06-22 11:22:03,169 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,170 INFO sqlalchemy.engine.Engine [cached since 0.05618s ago] ('CONFIGURACION_LEER',)
+2026-06-22 11:22:03,171 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,171 INFO sqlalchemy.engine.Engine [cached since 0.05762s ago] ('CONFIGURACION_ACTUALIZAR',)
+2026-06-22 11:22:03,172 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,173 INFO sqlalchemy.engine.Engine [cached since 0.05969s ago] ('CONFIGURACION_ELIMINAR',)
+2026-06-22 11:22:03,176 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,177 INFO sqlalchemy.engine.Engine [cached since 0.06388s ago] ('PREDICCION_IA_LEER',)
+2026-06-22 11:22:03,178 INFO sqlalchemy.engine.Engine COMMIT
+[OK] 38 permisos creados
+2026-06-22 11:22:03,179 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:22:03,180 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.nombre = %s
+2026-06-22 11:22:03,182 INFO sqlalchemy.engine.Engine [generated in 0.00046s] ('ADMINISTRADOR',)
+2026-06-22 11:22:03,183 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,183 INFO sqlalchemy.engine.Engine [cached since 0.06972s ago] ('PRODUCTOS_CREAR',)
+2026-06-22 11:22:03,184 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,185 INFO sqlalchemy.engine.Engine [cached since 0.07125s ago] ('PRODUCTOS_LEER',)
+2026-06-22 11:22:03,186 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,186 INFO sqlalchemy.engine.Engine [cached since 0.07269s ago] ('PRODUCTOS_ACTUALIZAR',)
+2026-06-22 11:22:03,187 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,188 INFO sqlalchemy.engine.Engine [cached since 0.07414s ago] ('PRODUCTOS_ELIMINAR',)
+2026-06-22 11:22:03,189 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,189 INFO sqlalchemy.engine.Engine [cached since 0.07585s ago] ('CATEGORIAS_CREAR',)
+2026-06-22 11:22:03,190 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,191 INFO sqlalchemy.engine.Engine [cached since 0.07719s ago] ('CATEGORIAS_LEER',)
+2026-06-22 11:22:03,192 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,193 INFO sqlalchemy.engine.Engine [cached since 0.07907s ago] ('CATEGORIAS_ACTUALIZAR',)
+2026-06-22 11:22:03,194 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,194 INFO sqlalchemy.engine.Engine [cached since 0.08084s ago] ('CATEGORIAS_ELIMINAR',)
+2026-06-22 11:22:03,195 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,196 INFO sqlalchemy.engine.Engine [cached since 0.08259s ago] ('PROVEEDORES_CREAR',)
+2026-06-22 11:22:03,197 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,197 INFO sqlalchemy.engine.Engine [cached since 0.08386s ago] ('PROVEEDORES_LEER',)
+2026-06-22 11:22:03,198 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,199 INFO sqlalchemy.engine.Engine [cached since 0.0851s ago] ('PROVEEDORES_ACTUALIZAR',)
+2026-06-22 11:22:03,199 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,200 INFO sqlalchemy.engine.Engine [cached since 0.08635s ago] ('PROVEEDORES_ELIMINAR',)
+2026-06-22 11:22:03,200 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,201 INFO sqlalchemy.engine.Engine [cached since 0.08764s ago] ('INVENTARIO_CREAR',)
+2026-06-22 11:22:03,201 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,202 INFO sqlalchemy.engine.Engine [cached since 0.08894s ago] ('INVENTARIO_LEER',)
+2026-06-22 11:22:03,203 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,204 INFO sqlalchemy.engine.Engine [cached since 0.09017s ago] ('INVENTARIO_ACTUALIZAR',)
+2026-06-22 11:22:03,204 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,205 INFO sqlalchemy.engine.Engine [cached since 0.09147s ago] ('INVENTARIO_ELIMINAR',)
+2026-06-22 11:22:03,206 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,206 INFO sqlalchemy.engine.Engine [cached since 0.09321s ago] ('VENTAS_CREAR',)
+2026-06-22 11:22:03,209 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,209 INFO sqlalchemy.engine.Engine [cached since 0.09583s ago] ('VENTAS_LEER',)
+2026-06-22 11:22:03,211 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,211 INFO sqlalchemy.engine.Engine [cached since 0.09789s ago] ('VENTAS_ACTUALIZAR',)
+2026-06-22 11:22:03,213 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,213 INFO sqlalchemy.engine.Engine [cached since 0.1009s ago] ('VENTAS_ELIMINAR',)
+2026-06-22 11:22:03,216 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,216 INFO sqlalchemy.engine.Engine [cached since 0.1029s ago] ('ALERTAS_CREAR',)
+2026-06-22 11:22:03,217 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,218 INFO sqlalchemy.engine.Engine [cached since 0.1045s ago] ('ALERTAS_LEER',)
+2026-06-22 11:22:03,219 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,219 INFO sqlalchemy.engine.Engine [cached since 0.106s ago] ('ALERTAS_ACTUALIZAR',)
+2026-06-22 11:22:03,220 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,221 INFO sqlalchemy.engine.Engine [cached since 0.108s ago] ('ALERTAS_ELIMINAR',)
+2026-06-22 11:22:03,224 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,224 INFO sqlalchemy.engine.Engine [cached since 0.111s ago] ('USUARIOS_CREAR',)
+2026-06-22 11:22:03,225 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,226 INFO sqlalchemy.engine.Engine [cached since 0.1125s ago] ('USUARIOS_LEER',)
+2026-06-22 11:22:03,227 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,227 INFO sqlalchemy.engine.Engine [cached since 0.1138s ago] ('USUARIOS_ACTUALIZAR',)
+2026-06-22 11:22:03,228 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,229 INFO sqlalchemy.engine.Engine [cached since 0.1151s ago] ('USUARIOS_ELIMINAR',)
+2026-06-22 11:22:03,229 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,230 INFO sqlalchemy.engine.Engine [cached since 0.1164s ago] ('ROLES_CREAR',)
+2026-06-22 11:22:03,230 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,231 INFO sqlalchemy.engine.Engine [cached since 0.1177s ago] ('ROLES_LEER',)
+2026-06-22 11:22:03,231 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,233 INFO sqlalchemy.engine.Engine [cached since 0.1191s ago] ('ROLES_ACTUALIZAR',)
+2026-06-22 11:22:03,234 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,235 INFO sqlalchemy.engine.Engine [cached since 0.1216s ago] ('ROLES_ELIMINAR',)
+2026-06-22 11:22:03,236 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,237 INFO sqlalchemy.engine.Engine [cached since 0.1232s ago] ('REPORTES_LEER',)
+2026-06-22 11:22:03,238 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,239 INFO sqlalchemy.engine.Engine [cached since 0.1253s ago] ('CONFIGURACION_CREAR',)
+2026-06-22 11:22:03,240 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,241 INFO sqlalchemy.engine.Engine [cached since 0.127s ago] ('CONFIGURACION_LEER',)
+2026-06-22 11:22:03,241 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,242 INFO sqlalchemy.engine.Engine [cached since 0.1285s ago] ('CONFIGURACION_ACTUALIZAR',)
+2026-06-22 11:22:03,242 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,243 INFO sqlalchemy.engine.Engine [cached since 0.1299s ago] ('CONFIGURACION_ELIMINAR',)
+2026-06-22 11:22:03,244 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,245 INFO sqlalchemy.engine.Engine [cached since 0.1314s ago] ('PREDICCION_IA_LEER',)
+2026-06-22 11:22:03,246 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,247 INFO sqlalchemy.engine.Engine [generated in 0.00038s] (1, 1)
+2026-06-22 11:22:03,248 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,248 INFO sqlalchemy.engine.Engine [cached since 0.001974s ago] (1, 2)
+2026-06-22 11:22:03,249 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,249 INFO sqlalchemy.engine.Engine [cached since 0.003306s ago] (1, 3)
+2026-06-22 11:22:03,250 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,251 INFO sqlalchemy.engine.Engine [cached since 0.004609s ago] (1, 4)
+2026-06-22 11:22:03,251 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,252 INFO sqlalchemy.engine.Engine [cached since 0.005935s ago] (1, 5)
+2026-06-22 11:22:03,254 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,254 INFO sqlalchemy.engine.Engine [cached since 0.008365s ago] (1, 6)
+2026-06-22 11:22:03,257 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,258 INFO sqlalchemy.engine.Engine [cached since 0.01178s ago] (1, 7)
+2026-06-22 11:22:03,258 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,261 INFO sqlalchemy.engine.Engine [cached since 0.01431s ago] (1, 8)
+2026-06-22 11:22:03,263 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,264 INFO sqlalchemy.engine.Engine [cached since 0.01783s ago] (1, 9)
+2026-06-22 11:22:03,265 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,266 INFO sqlalchemy.engine.Engine [cached since 0.01943s ago] (1, 10)
+2026-06-22 11:22:03,267 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,268 INFO sqlalchemy.engine.Engine [cached since 0.02103s ago] (1, 11)
+2026-06-22 11:22:03,269 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,269 INFO sqlalchemy.engine.Engine [cached since 0.02296s ago] (1, 12)
+2026-06-22 11:22:03,270 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,271 INFO sqlalchemy.engine.Engine [cached since 0.02464s ago] (1, 13)
+2026-06-22 11:22:03,273 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,273 INFO sqlalchemy.engine.Engine [cached since 0.02683s ago] (1, 14)
+2026-06-22 11:22:03,274 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,275 INFO sqlalchemy.engine.Engine [cached since 0.02842s ago] (1, 15)
+2026-06-22 11:22:03,276 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,276 INFO sqlalchemy.engine.Engine [cached since 0.02982s ago] (1, 16)
+2026-06-22 11:22:03,277 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,278 INFO sqlalchemy.engine.Engine [cached since 0.0314s ago] (1, 17)
+2026-06-22 11:22:03,278 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,279 INFO sqlalchemy.engine.Engine [cached since 0.03275s ago] (1, 18)
+2026-06-22 11:22:03,279 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,280 INFO sqlalchemy.engine.Engine [cached since 0.03405s ago] (1, 19)
+2026-06-22 11:22:03,281 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,282 INFO sqlalchemy.engine.Engine [cached since 0.0359s ago] (1, 20)
+2026-06-22 11:22:03,284 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,285 INFO sqlalchemy.engine.Engine [cached since 0.03826s ago] (1, 21)
+2026-06-22 11:22:03,285 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,286 INFO sqlalchemy.engine.Engine [cached since 0.0396s ago] (1, 22)
+2026-06-22 11:22:03,286 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,287 INFO sqlalchemy.engine.Engine [cached since 0.04089s ago] (1, 23)
+2026-06-22 11:22:03,288 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,289 INFO sqlalchemy.engine.Engine [cached since 0.04233s ago] (1, 24)
+2026-06-22 11:22:03,290 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,290 INFO sqlalchemy.engine.Engine [cached since 0.0438s ago] (1, 25)
+2026-06-22 11:22:03,291 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,291 INFO sqlalchemy.engine.Engine [cached since 0.04519s ago] (1, 26)
+2026-06-22 11:22:03,292 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,292 INFO sqlalchemy.engine.Engine [cached since 0.04651s ago] (1, 27)
+2026-06-22 11:22:03,293 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,294 INFO sqlalchemy.engine.Engine [cached since 0.04782s ago] (1, 28)
+2026-06-22 11:22:03,295 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,296 INFO sqlalchemy.engine.Engine [cached since 0.04913s ago] (1, 29)
+2026-06-22 11:22:03,296 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,297 INFO sqlalchemy.engine.Engine [cached since 0.05057s ago] (1, 30)
+2026-06-22 11:22:03,297 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,298 INFO sqlalchemy.engine.Engine [cached since 0.05183s ago] (1, 31)
+2026-06-22 11:22:03,300 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,300 INFO sqlalchemy.engine.Engine [cached since 0.05371s ago] (1, 32)
+2026-06-22 11:22:03,301 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,302 INFO sqlalchemy.engine.Engine [cached since 0.05558s ago] (1, 33)
+2026-06-22 11:22:03,303 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,303 INFO sqlalchemy.engine.Engine [cached since 0.05698s ago] (1, 34)
+2026-06-22 11:22:03,304 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,305 INFO sqlalchemy.engine.Engine [cached since 0.05828s ago] (1, 35)
+2026-06-22 11:22:03,306 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,306 INFO sqlalchemy.engine.Engine [cached since 0.05984s ago] (1, 36)
+2026-06-22 11:22:03,307 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,308 INFO sqlalchemy.engine.Engine [cached since 0.06128s ago] (1, 37)
+2026-06-22 11:22:03,309 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,309 INFO sqlalchemy.engine.Engine [cached since 0.06265s ago] (1, 38)
+2026-06-22 11:22:03,309 INFO sqlalchemy.engine.Engine COMMIT
+[OK] Rol ADMINISTRADOR configurado con 38 permisos
+2026-06-22 11:22:03,310 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:22:03,311 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.nombre = %s
+2026-06-22 11:22:03,311 INFO sqlalchemy.engine.Engine [cached since 0.1302s ago] ('SISTEMAS',)
+2026-06-22 11:22:03,313 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,314 INFO sqlalchemy.engine.Engine [cached since 0.2006s ago] ('PRODUCTOS_CREAR',)
+2026-06-22 11:22:03,315 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,315 INFO sqlalchemy.engine.Engine [cached since 0.2027s ago] ('PRODUCTOS_LEER',)
+2026-06-22 11:22:03,317 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,318 INFO sqlalchemy.engine.Engine [cached since 0.2044s ago] ('PRODUCTOS_ACTUALIZAR',)
+2026-06-22 11:22:03,319 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,321 INFO sqlalchemy.engine.Engine [cached since 0.2072s ago] ('PRODUCTOS_ELIMINAR',)
+2026-06-22 11:22:03,322 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,323 INFO sqlalchemy.engine.Engine [cached since 0.2093s ago] ('CATEGORIAS_CREAR',)
+2026-06-22 11:22:03,324 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,324 INFO sqlalchemy.engine.Engine [cached since 0.2108s ago] ('CATEGORIAS_LEER',)
+2026-06-22 11:22:03,325 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,326 INFO sqlalchemy.engine.Engine [cached since 0.2123s ago] ('CATEGORIAS_ACTUALIZAR',)
+2026-06-22 11:22:03,327 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,327 INFO sqlalchemy.engine.Engine [cached since 0.2139s ago] ('CATEGORIAS_ELIMINAR',)
+2026-06-22 11:22:03,329 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,329 INFO sqlalchemy.engine.Engine [cached since 0.2159s ago] ('PROVEEDORES_CREAR',)
+2026-06-22 11:22:03,331 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,331 INFO sqlalchemy.engine.Engine [cached since 0.2179s ago] ('PROVEEDORES_LEER',)
+2026-06-22 11:22:03,332 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,332 INFO sqlalchemy.engine.Engine [cached since 0.2192s ago] ('PROVEEDORES_ACTUALIZAR',)
+2026-06-22 11:22:03,333 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,334 INFO sqlalchemy.engine.Engine [cached since 0.2205s ago] ('PROVEEDORES_ELIMINAR',)
+2026-06-22 11:22:03,334 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,335 INFO sqlalchemy.engine.Engine [cached since 0.2218s ago] ('INVENTARIO_CREAR',)
+2026-06-22 11:22:03,336 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,337 INFO sqlalchemy.engine.Engine [cached since 0.223s ago] ('INVENTARIO_LEER',)
+2026-06-22 11:22:03,337 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,338 INFO sqlalchemy.engine.Engine [cached since 0.2243s ago] ('INVENTARIO_ACTUALIZAR',)
+2026-06-22 11:22:03,339 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,339 INFO sqlalchemy.engine.Engine [cached since 0.226s ago] ('INVENTARIO_ELIMINAR',)
+2026-06-22 11:22:03,340 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,340 INFO sqlalchemy.engine.Engine [cached since 0.2289s ago] ('VENTAS_LEER',)
+2026-06-22 11:22:03,344 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,344 INFO sqlalchemy.engine.Engine [cached since 0.2304s ago] ('ALERTAS_CREAR',)
+2026-06-22 11:22:03,345 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,345 INFO sqlalchemy.engine.Engine [cached since 0.2319s ago] ('ALERTAS_LEER',)
+2026-06-22 11:22:03,346 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,346 INFO sqlalchemy.engine.Engine [cached since 0.2343s ago] ('ALERTAS_ACTUALIZAR',)
+2026-06-22 11:22:03,349 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,350 INFO sqlalchemy.engine.Engine [cached since 0.2362s ago] ('ALERTAS_ELIMINAR',)
+2026-06-22 11:22:03,352 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,353 INFO sqlalchemy.engine.Engine [cached since 0.2397s ago] ('USUARIOS_LEER',)
+2026-06-22 11:22:03,354 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,355 INFO sqlalchemy.engine.Engine [cached since 0.2412s ago] ('REPORTES_LEER',)
+2026-06-22 11:22:03,356 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,357 INFO sqlalchemy.engine.Engine [cached since 0.2432s ago] ('CONFIGURACION_CREAR',)
+2026-06-22 11:22:03,358 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,358 INFO sqlalchemy.engine.Engine [cached since 0.2448s ago] ('CONFIGURACION_LEER',)
+2026-06-22 11:22:03,359 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,359 INFO sqlalchemy.engine.Engine [cached since 0.2466s ago] ('CONFIGURACION_ACTUALIZAR',)
+2026-06-22 11:22:03,361 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,363 INFO sqlalchemy.engine.Engine [cached since 0.2492s ago] ('CONFIGURACION_ELIMINAR',)
+2026-06-22 11:22:03,364 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,364 INFO sqlalchemy.engine.Engine [cached since 0.2508s ago] ('PREDICCION_IA_LEER',)
+2026-06-22 11:22:03,365 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,365 INFO sqlalchemy.engine.Engine [cached since 0.1191s ago] (2, 1)
+2026-06-22 11:22:03,366 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,367 INFO sqlalchemy.engine.Engine [cached since 0.1204s ago] (2, 2)
+2026-06-22 11:22:03,367 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,368 INFO sqlalchemy.engine.Engine [cached since 0.1218s ago] (2, 3)
+2026-06-22 11:22:03,368 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,369 INFO sqlalchemy.engine.Engine [cached since 0.1231s ago] (2, 4)
+2026-06-22 11:22:03,370 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,371 INFO sqlalchemy.engine.Engine [cached since 0.1244s ago] (2, 5)
+2026-06-22 11:22:03,372 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,373 INFO sqlalchemy.engine.Engine [cached since 0.1262s ago] (2, 6)
+2026-06-22 11:22:03,375 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,375 INFO sqlalchemy.engine.Engine [cached since 0.1293s ago] (2, 7)
+2026-06-22 11:22:03,378 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,378 INFO sqlalchemy.engine.Engine [cached since 0.1324s ago] (2, 8)
+2026-06-22 11:22:03,382 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,382 INFO sqlalchemy.engine.Engine [cached since 0.1358s ago] (2, 9)
+2026-06-22 11:22:03,385 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,385 INFO sqlalchemy.engine.Engine [cached since 0.1389s ago] (2, 10)
+2026-06-22 11:22:03,389 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,390 INFO sqlalchemy.engine.Engine [cached since 0.1431s ago] (2, 11)
+2026-06-22 11:22:03,391 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,391 INFO sqlalchemy.engine.Engine [cached since 0.1446s ago] (2, 12)
+2026-06-22 11:22:03,392 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,393 INFO sqlalchemy.engine.Engine [cached since 0.1464s ago] (2, 13)
+2026-06-22 11:22:03,394 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,394 INFO sqlalchemy.engine.Engine [cached since 0.1481s ago] (2, 14)
+2026-06-22 11:22:03,396 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,396 INFO sqlalchemy.engine.Engine [cached since 0.1498s ago] (2, 15)
+2026-06-22 11:22:03,397 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,398 INFO sqlalchemy.engine.Engine [cached since 0.1512s ago] (2, 16)
+2026-06-22 11:22:03,399 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,399 INFO sqlalchemy.engine.Engine [cached since 0.1527s ago] (2, 18)
+2026-06-22 11:22:03,399 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,400 INFO sqlalchemy.engine.Engine [cached since 0.154s ago] (2, 21)
+2026-06-22 11:22:03,401 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,402 INFO sqlalchemy.engine.Engine [cached since 0.1553s ago] (2, 22)
+2026-06-22 11:22:03,402 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,403 INFO sqlalchemy.engine.Engine [cached since 0.1567s ago] (2, 23)
+2026-06-22 11:22:03,403 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,404 INFO sqlalchemy.engine.Engine [cached since 0.1579s ago] (2, 24)
+2026-06-22 11:22:03,406 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,406 INFO sqlalchemy.engine.Engine [cached since 0.1597s ago] (2, 26)
+2026-06-22 11:22:03,407 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,409 INFO sqlalchemy.engine.Engine [cached since 0.1648s ago] (2, 33)
+2026-06-22 11:22:03,414 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,415 INFO sqlalchemy.engine.Engine [cached since 0.1686s ago] (2, 34)
+2026-06-22 11:22:03,416 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,418 INFO sqlalchemy.engine.Engine [cached since 0.1716s ago] (2, 35)
+2026-06-22 11:22:03,420 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,421 INFO sqlalchemy.engine.Engine [cached since 0.1746s ago] (2, 36)
+2026-06-22 11:22:03,423 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,423 INFO sqlalchemy.engine.Engine [cached since 0.1794s ago] (2, 37)
+2026-06-22 11:22:03,431 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,432 INFO sqlalchemy.engine.Engine [cached since 0.1854s ago] (2, 38)
+2026-06-22 11:22:03,432 INFO sqlalchemy.engine.Engine COMMIT
+[OK] Rol SISTEMAS configurado con 28 permisos
+2026-06-22 11:22:03,435 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:22:03,436 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.nombre = %s
+2026-06-22 11:22:03,436 INFO sqlalchemy.engine.Engine [cached since 0.2553s ago] ('VENTAS',)
+2026-06-22 11:22:03,438 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,439 INFO sqlalchemy.engine.Engine [cached since 0.3254s ago] ('PRODUCTOS_LEER',)
+2026-06-22 11:22:03,440 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,441 INFO sqlalchemy.engine.Engine [cached since 0.3273s ago] ('CATEGORIAS_LEER',)
+2026-06-22 11:22:03,442 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,443 INFO sqlalchemy.engine.Engine [cached since 0.329s ago] ('PROVEEDORES_LEER',)
+2026-06-22 11:22:03,444 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,444 INFO sqlalchemy.engine.Engine [cached since 0.3311s ago] ('INVENTARIO_LEER',)
+2026-06-22 11:22:03,445 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,447 INFO sqlalchemy.engine.Engine [cached since 0.3331s ago] ('VENTAS_CREAR',)
+2026-06-22 11:22:03,448 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,448 INFO sqlalchemy.engine.Engine [cached since 0.3349s ago] ('VENTAS_LEER',)
+2026-06-22 11:22:03,449 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,449 INFO sqlalchemy.engine.Engine [cached since 0.3362s ago] ('VENTAS_ACTUALIZAR',)
+2026-06-22 11:22:03,450 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,451 INFO sqlalchemy.engine.Engine [cached since 0.3376s ago] ('VENTAS_ELIMINAR',)
+2026-06-22 11:22:03,451 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,452 INFO sqlalchemy.engine.Engine [cached since 0.3389s ago] ('ALERTAS_LEER',)
+2026-06-22 11:22:03,453 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos 
+WHERE permisos.codigo = %s
+2026-06-22 11:22:03,454 INFO sqlalchemy.engine.Engine [cached since 0.3401s ago] ('REPORTES_LEER',)
+2026-06-22 11:22:03,454 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,455 INFO sqlalchemy.engine.Engine [cached since 0.2086s ago] (3, 2)
+2026-06-22 11:22:03,456 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,457 INFO sqlalchemy.engine.Engine [cached since 0.2104s ago] (3, 6)
+2026-06-22 11:22:03,459 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,459 INFO sqlalchemy.engine.Engine [cached since 0.2133s ago] (3, 10)
+2026-06-22 11:22:03,461 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,461 INFO sqlalchemy.engine.Engine [cached since 0.2148s ago] (3, 14)
+2026-06-22 11:22:03,462 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,462 INFO sqlalchemy.engine.Engine [cached since 0.2161s ago] (3, 17)
+2026-06-22 11:22:03,463 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,464 INFO sqlalchemy.engine.Engine [cached since 0.2174s ago] (3, 18)
+2026-06-22 11:22:03,464 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,465 INFO sqlalchemy.engine.Engine [cached since 0.2188s ago] (3, 19)
+2026-06-22 11:22:03,465 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,466 INFO sqlalchemy.engine.Engine [cached since 0.2201s ago] (3, 20)
+2026-06-22 11:22:03,467 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,468 INFO sqlalchemy.engine.Engine [cached since 0.2215s ago] (3, 22)
+2026-06-22 11:22:03,468 INFO sqlalchemy.engine.Engine SELECT rol_permisos.id_rol, rol_permisos.id_permiso 
+FROM rol_permisos 
+WHERE rol_permisos.id_rol = %s AND rol_permisos.id_permiso = %s
+2026-06-22 11:22:03,469 INFO sqlalchemy.engine.Engine [cached since 0.2228s ago] (3, 33)
+2026-06-22 11:22:03,470 INFO sqlalchemy.engine.Engine COMMIT
+[OK] Rol VENTAS configurado con 10 permisos
+2026-06-22 11:22:03,471 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:22:03,472 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.correo = %s
+2026-06-22 11:22:03,476 INFO sqlalchemy.engine.Engine [generated in 0.00151s] ('admin@sistema.com',)
+[INFO] Usuario administrador ya existe
+2026-06-22 11:22:03,477 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:22,314 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:22,346 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.correo = %s
+2026-06-22 11:29:22,347 INFO sqlalchemy.engine.Engine [cached since 438.9s ago] ('admin@sistema.com',)
+2026-06-22 11:29:22,618 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59187 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-06-22 11:29:22,652 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:22,655 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:29:22,656 INFO sqlalchemy.engine.Engine [generated in 0.00056s] (1,)
+2026-06-22 11:29:22,661 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:22,662 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:29:22,662 INFO sqlalchemy.engine.Engine [generated in 0.00055s] (1,)
+2026-06-22 11:29:22,663 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:22,665 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:29:22,666 INFO sqlalchemy.engine.Engine [generated in 0.00049s] ()
+2026-06-22 11:29:22,667 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59187 - "GET /api/auth/users HTTP/1.1" 200 OK
+2026-06-22 11:29:22,669 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:22,671 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:29:22,672 INFO sqlalchemy.engine.Engine [generated in 0.00051s] ()
+2026-06-22 11:29:22,673 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59187 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:29:22,676 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:22,679 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:29:22,679 INFO sqlalchemy.engine.Engine [cached since 0.02338s ago] (1,)
+2026-06-22 11:29:22,680 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:22,681 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:29:22,681 INFO sqlalchemy.engine.Engine [cached since 0.02005s ago] (1,)
+2026-06-22 11:29:22,683 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:22,685 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:29:22,686 INFO sqlalchemy.engine.Engine [generated in 0.00051s] ()
+2026-06-22 11:29:22,688 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59187 - "GET /api/permisos HTTP/1.1" 200 OK
+2026-06-22 11:29:59,881 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,884 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:29:59,884 INFO sqlalchemy.engine.Engine [generated in 0.00060s] (0, 100)
+2026-06-22 11:29:59,885 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,886 INFO sqlalchemy.engine.Engine SELECT predicciones.id_prediccion, predicciones.id_modelo, predicciones.id_producto, predicciones.fecha_prediccion, predicciones.periodo, predicciones.demanda_estimada 
+FROM predicciones
+2026-06-22 11:29:59,887 INFO sqlalchemy.engine.Engine [generated in 0.00030s] ()
+2026-06-22 11:29:59,890 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,892 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59201 - "GET /api/products/stats/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59203 - "GET /api/predicciones HTTP/1.1" 200 OK
+2026-06-22 11:29:59,898 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,902 INFO sqlalchemy.engine.Engine SELECT alertas.id_alerta, alertas.id_producto, alertas.tipo_alerta, alertas.mensaje, alertas.fecha_alerta, alertas.estado 
+FROM alertas 
+WHERE alertas.estado = %s
+2026-06-22 11:29:59,902 INFO sqlalchemy.engine.Engine [generated in 0.00073s] ('ACTIVA',)
+2026-06-22 11:29:59,902 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,905 INFO sqlalchemy.engine.Engine SELECT inventarios.id_inventario, inventarios.id_producto, inventarios.stock_actual, inventarios.stock_minimo, inventarios.stock_maximo, inventarios.ultima_actualizacion 
+FROM inventarios
+2026-06-22 11:29:59,905 INFO sqlalchemy.engine.Engine [generated in 0.00047s] ()
+2026-06-22 11:29:59,907 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,909 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,910 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:29:59,910 INFO sqlalchemy.engine.Engine [cached since 0.02622s ago] (0, 100)
+2026-06-22 11:29:59,912 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,913 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,913 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,914 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:29:59,915 INFO sqlalchemy.engine.Engine [cached since 0.03126s ago] (0, 100)
+2026-06-22 11:29:59,916 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,916 INFO sqlalchemy.engine.Engine SELECT predicciones.id_prediccion, predicciones.id_modelo, predicciones.id_producto, predicciones.fecha_prediccion, predicciones.periodo, predicciones.demanda_estimada 
+FROM predicciones
+2026-06-22 11:29:59,916 INFO sqlalchemy.engine.Engine [cached since 0.02974s ago] ()
+2026-06-22 11:29:59,917 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,919 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59202 - "GET /api/alertas/activas HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59206 - "GET /api/inventario HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59207 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59215 - "GET /api/products/stats/summary HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59216 - "GET /api/predicciones HTTP/1.1" 200 OK
+2026-06-22 11:29:59,926 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,926 INFO sqlalchemy.engine.Engine SELECT alertas.id_alerta, alertas.id_producto, alertas.tipo_alerta, alertas.mensaje, alertas.fecha_alerta, alertas.estado 
+FROM alertas 
+WHERE alertas.estado = %s
+2026-06-22 11:29:59,926 INFO sqlalchemy.engine.Engine [cached since 0.03074s ago] ('ACTIVA',)
+2026-06-22 11:29:59,926 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,936 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,936 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:29:59,936 INFO sqlalchemy.engine.Engine [cached since 0.05571s ago] (0, 100)
+2026-06-22 11:29:59,941 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:29:59,941 INFO sqlalchemy.engine.Engine SELECT inventarios.id_inventario, inventarios.id_producto, inventarios.stock_actual, inventarios.stock_minimo, inventarios.stock_maximo, inventarios.ultima_actualizacion 
+FROM inventarios
+2026-06-22 11:29:59,941 INFO sqlalchemy.engine.Engine [cached since 0.03709s ago] ()
+INFO:     127.0.0.1:59219 - "GET /api/alertas/activas HTTP/1.1" 200 OK
+2026-06-22 11:29:59,946 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:29:59,949 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59225 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59224 - "GET /api/inventario HTTP/1.1" 200 OK
+2026-06-22 11:30:03,502 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:30:03,503 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:30:03,505 INFO sqlalchemy.engine.Engine [cached since 40.85s ago] (1,)
+2026-06-22 11:30:03,506 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:30:03,508 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:30:03,508 INFO sqlalchemy.engine.Engine [cached since 40.84s ago] ()
+2026-06-22 11:30:03,510 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:30:03,511 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:30:03,511 INFO sqlalchemy.engine.Engine [cached since 40.85s ago] (1,)
+2026-06-22 11:30:03,513 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:30:03,514 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59233 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:30:03,517 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:30:03,517 INFO sqlalchemy.engine.Engine [cached since 40.85s ago] ()
+2026-06-22 11:30:03,519 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59232 - "GET /api/auth/users HTTP/1.1" 200 OK
+2026-06-22 11:30:03,523 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:30:03,524 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:30:03,524 INFO sqlalchemy.engine.Engine [cached since 40.85s ago] ()
+2026-06-22 11:30:03,524 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:30:03,531 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:30:03,532 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:30:03,533 INFO sqlalchemy.engine.Engine [cached since 40.88s ago] (1,)
+2026-06-22 11:30:03,533 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:30:03,535 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:30:03,535 INFO sqlalchemy.engine.Engine [cached since 40.87s ago] (1,)
+INFO:     127.0.0.1:59236 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:30:03,538 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:30:03,540 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:30:03,541 INFO sqlalchemy.engine.Engine [cached since 40.88s ago] ()
+2026-06-22 11:30:03,543 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59239 - "GET /api/auth/users HTTP/1.1" 200 OK
+2026-06-22 11:31:50,987 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:31:50,988 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:31:50,989 INFO sqlalchemy.engine.Engine [cached since 148.3s ago] ()
+2026-06-22 11:31:50,993 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59252 - "GET /api/permisos HTTP/1.1" 401 Unauthorized
+INFO:     127.0.0.1:59251 - "GET /api/roles HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59255 - "GET /api/permisos HTTP/1.1" 401 Unauthorized
+2026-06-22 11:31:51,014 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:31:51,014 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:31:51,015 INFO sqlalchemy.engine.Engine [cached since 148.3s ago] ()
+2026-06-22 11:31:51,018 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59259 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:05,659 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,665 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.correo = %s
+2026-06-22 11:32:05,666 INFO sqlalchemy.engine.Engine [cached since 602.2s ago] ('admin@sistema.com',)
+2026-06-22 11:32:05,896 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59271 - "POST /api/auth/login HTTP/1.1" 200 OK
+2026-06-22 11:32:05,958 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,959 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:32:05,960 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] (0, 100)
+2026-06-22 11:32:05,962 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:05,963 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,964 INFO sqlalchemy.engine.Engine SELECT alertas.id_alerta, alertas.id_producto, alertas.tipo_alerta, alertas.mensaje, alertas.fecha_alerta, alertas.estado 
+FROM alertas 
+WHERE alertas.estado = %s
+2026-06-22 11:32:05,965 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] ('ACTIVA',)
+2026-06-22 11:32:05,966 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:05,967 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,968 INFO sqlalchemy.engine.Engine SELECT predicciones.id_prediccion, predicciones.id_modelo, predicciones.id_producto, predicciones.fecha_prediccion, predicciones.periodo, predicciones.demanda_estimada 
+FROM predicciones
+2026-06-22 11:32:05,968 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] ()
+2026-06-22 11:32:05,969 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,970 INFO sqlalchemy.engine.Engine SELECT inventarios.id_inventario, inventarios.id_producto, inventarios.stock_actual, inventarios.stock_minimo, inventarios.stock_maximo, inventarios.ultima_actualizacion 
+FROM inventarios
+2026-06-22 11:32:05,971 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] ()
+2026-06-22 11:32:05,971 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,972 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:32:05,972 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] (0, 100)
+2026-06-22 11:32:05,973 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:05,975 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59278 - "GET /api/products/stats/summary HTTP/1.1" 200 OK
+2026-06-22 11:32:05,978 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59280 - "GET /api/alertas/activas HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59285 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59286 - "GET /api/predicciones HTTP/1.1" 200 OK
+2026-06-22 11:32:05,985 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:05,992 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:32:05,993 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] (0, 100)
+2026-06-22 11:32:05,995 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59283 - "GET /api/inventario HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59289 - "GET /api/products/stats/summary HTTP/1.1" 200 OK
+2026-06-22 11:32:06,001 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:06,002 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:32:06,002 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] (0, 100)
+2026-06-22 11:32:06,004 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:06,005 INFO sqlalchemy.engine.Engine SELECT alertas.id_alerta, alertas.id_producto, alertas.tipo_alerta, alertas.mensaje, alertas.fecha_alerta, alertas.estado 
+FROM alertas 
+WHERE alertas.estado = %s
+2026-06-22 11:32:06,006 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] ('ACTIVA',)
+2026-06-22 11:32:06,009 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:06,009 INFO sqlalchemy.engine.Engine SELECT predicciones.id_prediccion, predicciones.id_modelo, predicciones.id_producto, predicciones.fecha_prediccion, predicciones.periodo, predicciones.demanda_estimada 
+FROM predicciones
+2026-06-22 11:32:06,010 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] ()
+2026-06-22 11:32:06,012 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:06,015 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:06,016 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:06,016 INFO sqlalchemy.engine.Engine SELECT inventarios.id_inventario, inventarios.id_producto, inventarios.stock_actual, inventarios.stock_minimo, inventarios.stock_maximo, inventarios.ultima_actualizacion 
+FROM inventarios
+2026-06-22 11:32:06,017 INFO sqlalchemy.engine.Engine [cached since 126.1s ago] ()
+2026-06-22 11:32:06,018 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:06,020 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59297 - "GET /api/alertas/activas HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59296 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59299 - "GET /api/predicciones HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59301 - "GET /api/inventario HTTP/1.1" 200 OK
+2026-06-22 11:32:08,613 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:08,647 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:08,648 INFO sqlalchemy.engine.Engine [cached since 166s ago] (1,)
+2026-06-22 11:32:08,650 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:08,651 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:08,651 INFO sqlalchemy.engine.Engine [cached since 166s ago] (1,)
+2026-06-22 11:32:08,654 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:08,654 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:08,654 INFO sqlalchemy.engine.Engine [cached since 166s ago] ()
+2026-06-22 11:32:08,656 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:08,659 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:08,662 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:32:08,662 INFO sqlalchemy.engine.Engine [cached since 166s ago] ()
+INFO:     127.0.0.1:59307 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:08,668 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59305 - "GET /api/permisos HTTP/1.1" 200 OK
+2026-06-22 11:32:08,673 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:08,674 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:08,675 INFO sqlalchemy.engine.Engine [cached since 166s ago] ()
+2026-06-22 11:32:08,678 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:08,681 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:08,682 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:08,682 INFO sqlalchemy.engine.Engine [cached since 166s ago] (1,)
+2026-06-22 11:32:08,685 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:08,685 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:08,686 INFO sqlalchemy.engine.Engine [cached since 166s ago] (1,)
+INFO:     127.0.0.1:59310 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:08,688 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:08,690 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:32:08,691 INFO sqlalchemy.engine.Engine [cached since 166s ago] ()
+2026-06-22 11:32:08,694 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59313 - "GET /api/permisos HTTP/1.1" 200 OK
+2026-06-22 11:32:11,748 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:11,762 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:11,767 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] (1,)
+2026-06-22 11:32:11,772 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:11,773 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:11,776 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] ()
+2026-06-22 11:32:11,779 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:11,779 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:11,779 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] (1,)
+2026-06-22 11:32:11,781 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:11,782 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59320 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:11,784 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:32:11,785 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] ()
+2026-06-22 11:32:11,787 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:11,789 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:11,790 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:11,790 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] ()
+2026-06-22 11:32:11,792 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59319 - "GET /api/auth/users HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59323 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:11,799 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:11,800 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:11,800 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] (1,)
+2026-06-22 11:32:11,801 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:11,803 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:11,803 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] (1,)
+2026-06-22 11:32:11,804 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:11,805 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:32:11,806 INFO sqlalchemy.engine.Engine [cached since 169.1s ago] ()
+2026-06-22 11:32:11,807 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59326 - "GET /api/auth/users HTTP/1.1" 200 OK
+2026-06-22 11:32:13,197 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:13,199 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:13,199 INFO sqlalchemy.engine.Engine [cached since 170.5s ago] ()
+2026-06-22 11:32:13,201 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:13,202 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:13,203 INFO sqlalchemy.engine.Engine [cached since 170.5s ago] (1,)
+2026-06-22 11:32:13,203 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:13,205 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:13,206 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:13,206 INFO sqlalchemy.engine.Engine [cached since 170.5s ago] (1,)
+2026-06-22 11:32:13,209 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59331 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:13,212 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:32:13,213 INFO sqlalchemy.engine.Engine [cached since 170.5s ago] ()
+2026-06-22 11:32:13,216 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:13,218 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:13,219 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:13,219 INFO sqlalchemy.engine.Engine [cached since 170.5s ago] ()
+2026-06-22 11:32:13,220 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59332 - "GET /api/permisos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59335 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:13,230 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:13,231 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:13,231 INFO sqlalchemy.engine.Engine [cached since 170.6s ago] (1,)
+2026-06-22 11:32:13,233 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:13,234 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:13,235 INFO sqlalchemy.engine.Engine [cached since 170.6s ago] (1,)
+2026-06-22 11:32:13,236 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:13,237 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:32:13,238 INFO sqlalchemy.engine.Engine [cached since 170.6s ago] ()
+2026-06-22 11:32:13,239 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59338 - "GET /api/permisos HTTP/1.1" 200 OK
+2026-06-22 11:32:57,906 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:57,907 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:57,907 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] (1,)
+2026-06-22 11:32:57,909 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:57,910 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:57,911 INFO sqlalchemy.engine.Engine [cached since 215.2s ago] ()
+2026-06-22 11:32:57,912 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:57,913 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:57,915 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] (1,)
+2026-06-22 11:32:57,916 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:57,916 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59347 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:57,918 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:32:57,919 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] ()
+2026-06-22 11:32:57,921 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59346 - "GET /api/auth/users HTTP/1.1" 200 OK
+2026-06-22 11:32:57,925 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:57,926 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:32:57,927 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] ()
+2026-06-22 11:32:57,931 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:57,933 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:57,934 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:32:57,934 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] (1,)
+2026-06-22 11:32:57,936 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:32:57,937 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:32:57,937 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] (1,)
+INFO:     127.0.0.1:59350 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:32:57,939 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:32:57,941 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios
+2026-06-22 11:32:57,942 INFO sqlalchemy.engine.Engine [cached since 215.3s ago] ()
+2026-06-22 11:32:57,943 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59353 - "GET /api/auth/users HTTP/1.1" 200 OK
+2026-06-22 11:33:41,833 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:33:41,865 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:33:41,866 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] ()
+2026-06-22 11:33:41,868 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:33:41,870 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:33:41,870 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] (1,)
+2026-06-22 11:33:41,872 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:33:41,873 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:33:41,874 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:33:41,875 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] (1,)
+2026-06-22 11:33:41,878 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59360 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:33:41,881 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:33:41,882 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] ()
+2026-06-22 11:33:41,884 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:33:41,887 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:33:41,888 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles
+2026-06-22 11:33:41,888 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] ()
+2026-06-22 11:33:41,889 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59361 - "GET /api/permisos HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59364 - "GET /api/roles HTTP/1.1" 200 OK
+2026-06-22 11:33:41,899 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:33:41,901 INFO sqlalchemy.engine.Engine SELECT usuarios.id_usuario, usuarios.id_rol, usuarios.nombres, usuarios.apellidos, usuarios.correo, usuarios.password_hash, usuarios.estado, usuarios.fecha_creacion 
+FROM usuarios 
+WHERE usuarios.id_usuario = %s
+2026-06-22 11:33:41,901 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] (1,)
+2026-06-22 11:33:41,903 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:33:41,904 INFO sqlalchemy.engine.Engine SELECT roles.id_rol, roles.nombre, roles.descripcion 
+FROM roles 
+WHERE roles.id_rol = %s
+2026-06-22 11:33:41,904 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] (1,)
+2026-06-22 11:33:41,905 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:33:41,906 INFO sqlalchemy.engine.Engine SELECT permisos.id_permiso, permisos.codigo, permisos.descripcion 
+FROM permisos
+2026-06-22 11:33:41,908 INFO sqlalchemy.engine.Engine [cached since 259.2s ago] ()
+2026-06-22 11:33:41,910 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59367 - "GET /api/permisos HTTP/1.1" 200 OK
+2026-06-22 11:35:23,489 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:35:23,490 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:35:23,490 INFO sqlalchemy.engine.Engine [cached since 323.6s ago] (0, 100)
+2026-06-22 11:35:23,496 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:35:23,498 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:35:23,500 INFO sqlalchemy.engine.Engine SELECT modelos_ia.id_modelo, modelos_ia.id_dataset, modelos_ia.algoritmo, modelos_ia.version, modelos_ia.mae, modelos_ia.rmse, modelos_ia.mape, modelos_ia.fecha_entrenamiento 
+FROM modelos_ia ORDER BY modelos_ia.mape ASC 
+ LIMIT %s
+2026-06-22 11:35:23,502 INFO sqlalchemy.engine.Engine [generated in 0.00070s] (1,)
+2026-06-22 11:35:23,503 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:35:23,504 INFO sqlalchemy.engine.Engine SELECT predicciones.id_prediccion, predicciones.id_modelo, predicciones.id_producto, predicciones.fecha_prediccion, predicciones.periodo, predicciones.demanda_estimada 
+FROM predicciones
+2026-06-22 11:35:23,504 INFO sqlalchemy.engine.Engine [cached since 323.6s ago] ()
+2026-06-22 11:35:23,506 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:35:23,507 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59379 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59383 - "GET /api/modelos-ia/mejor HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59382 - "GET /api/predicciones HTTP/1.1" 200 OK
+2026-06-22 11:35:23,517 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:35:23,520 INFO sqlalchemy.engine.Engine SELECT productos.id_producto, productos.id_categoria, productos.id_proveedor, productos.codigo, productos.nombre, productos.descripcion, productos.precio_compra, productos.precio_venta, productos.estado, productos.fecha_ingreso 
+FROM productos 
+ LIMIT %s, %s
+2026-06-22 11:35:23,520 INFO sqlalchemy.engine.Engine [cached since 323.6s ago] (0, 100)
+2026-06-22 11:35:23,523 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:35:23,524 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:35:23,525 INFO sqlalchemy.engine.Engine SELECT modelos_ia.id_modelo, modelos_ia.id_dataset, modelos_ia.algoritmo, modelos_ia.version, modelos_ia.mae, modelos_ia.rmse, modelos_ia.mape, modelos_ia.fecha_entrenamiento 
+FROM modelos_ia ORDER BY modelos_ia.mape ASC 
+ LIMIT %s
+2026-06-22 11:35:23,526 INFO sqlalchemy.engine.Engine [cached since 0.02461s ago] (1,)
+2026-06-22 11:35:23,526 INFO sqlalchemy.engine.Engine BEGIN (implicit)
+2026-06-22 11:35:23,529 INFO sqlalchemy.engine.Engine SELECT predicciones.id_prediccion, predicciones.id_modelo, predicciones.id_producto, predicciones.fecha_prediccion, predicciones.periodo, predicciones.demanda_estimada 
+FROM predicciones
+2026-06-22 11:35:23,529 INFO sqlalchemy.engine.Engine [cached since 323.6s ago] ()
+2026-06-22 11:35:23,531 INFO sqlalchemy.engine.Engine ROLLBACK
+2026-06-22 11:35:23,533 INFO sqlalchemy.engine.Engine ROLLBACK
+INFO:     127.0.0.1:59387 - "GET /api/products HTTP/1.1" 200 OK
+INFO:     127.0.0.1:59390 - "GET /api/modelos-ia/mejor HTTP/1.1" 404 Not Found
+INFO:     127.0.0.1:59392 - "GET /api/predicciones HTTP/1.1" 200 OK

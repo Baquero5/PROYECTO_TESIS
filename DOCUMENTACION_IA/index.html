@@ -1,0 +1,1042 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Documentación Técnica IA - SmartInventory AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-500: #6b7280;
+            --gray-700: #374151;
+            --gray-900: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            line-height: 1.6;
+            color: var(--gray-900);
+            background: var(--gray-50);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        header {
+            background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+            color: white;
+            padding: 48px 0;
+            text-align: center;
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 12px;
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        nav {
+            background: white;
+            border-bottom: 1px solid var(--gray-200);
+            padding: 16px 0;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        nav ul {
+            display: flex;
+            gap: 24px;
+            list-style: none;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        nav a {
+            color: var(--gray-700);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        nav a:hover {
+            color: var(--primary);
+        }
+
+        main {
+            padding: 48px 0;
+        }
+
+        section {
+            background: white;
+            border-radius: 12px;
+            padding: 32px;
+            margin-bottom: 32px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        h2 {
+            font-size: 1.75rem;
+            color: var(--gray-900);
+            margin-bottom: 24px;
+            padding-bottom: 12px;
+            border-bottom: 2px solid var(--primary);
+        }
+
+        h3 {
+            font-size: 1.25rem;
+            color: var(--gray-700);
+            margin: 24px 0 12px;
+        }
+
+        p {
+            margin-bottom: 16px;
+            color: var(--gray-700);
+        }
+
+        ul, ol {
+            margin: 16px 0;
+            padding-left: 24px;
+        }
+
+        li {
+            margin-bottom: 8px;
+            color: var(--gray-700);
+        }
+
+        .highlight {
+            background: var(--gray-100);
+            padding: 16px 20px;
+            border-radius: 8px;
+            border-left: 4px solid var(--primary);
+            margin: 16px 0;
+        }
+
+        .metric-card {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin: 24px 0;
+        }
+
+        .metric-item {
+            background: var(--gray-50);
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 1px solid var(--gray-200);
+        }
+
+        .metric-item .value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .metric-item .label {
+            font-size: 0.9rem;
+            color: var(--gray-500);
+            margin-top: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 16px 0;
+        }
+
+        th, td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        th {
+            background: var(--gray-100);
+            font-weight: 600;
+            color: var(--gray-700);
+        }
+
+        tr:hover {
+            background: var(--gray-50);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .badge-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+
+        .badge-warning {
+            background: #fef3c7;
+            color: #92400e;
+        }
+
+        .chart-container {
+            height: 400px;
+            margin: 24px 0;
+        }
+
+        .step {
+            display: flex;
+            gap: 16px;
+            margin: 24px 0;
+            padding: 20px;
+            background: var(--gray-50);
+            border-radius: 8px;
+        }
+
+        .step-number {
+            width: 40px;
+            height: 40px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .step-content {
+            flex: 1;
+        }
+
+        .step-content h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+            color: var(--gray-900);
+        }
+
+        code {
+            background: var(--gray-100);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+        }
+
+        pre {
+            background: var(--gray-900);
+            color: #e5e7eb;
+            padding: 16px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 16px 0;
+        }
+
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+
+        footer {
+            background: var(--gray-900);
+            color: white;
+            text-align: center;
+            padding: 32px 0;
+            margin-top: 48px;
+        }
+
+        @media (max-width: 768px) {
+            header h1 {
+                font-size: 1.75rem;
+            }
+
+            nav ul {
+                gap: 12px;
+            }
+
+            section {
+                padding: 24px;
+            }
+
+            .metric-card {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Documentación Técnica IA</h1>
+            <p>Sistema de Predicción de Demanda - SmartInventory AI</p>
+        </div>
+    </header>
+
+    <nav>
+        <div class="container">
+            <ul>
+                <li><a href="#introduccion">Introducción</a></li>
+                <li><a href="#datos">Fuente de Datos</a></li>
+                <li><a href="#pipeline">Pipeline ML</a></li>
+                <li><a href="#modelos">Modelos</a></li>
+                <li><a href="#resultados">Resultados</a></li>
+                <li><a href="#integracion">Integración</a></li>
+                <li><a href="#futuro">Mejoras Futuras</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main>
+        <div class="container">
+            <!-- Introducción -->
+            <section id="introduccion">
+                <h2>1. Introducción</h2>
+                <p>
+                    <strong>SmartInventory AI</strong> es un sistema de gestión de inventario que integra inteligencia artificial 
+                    para predecir la demanda de productos. El objetivo principal es ayudar a las empresas a tomar mejores decisiones 
+                    de compra y reabastecimiento, reduciendo tanto el sobreinventario como los desabastecimientos.
+                </p>
+                
+                <div class="highlight">
+                    <strong>Objetivo del Proyecto:</strong> Desarrollar un sistema que combine la gestión tradicional de inventario 
+                    con modelos de machine learning para predecir la demanda futura de productos, optimizando así la cadena de suministro.
+                </div>
+
+                <h3>¿Por qué Inteligencia Artificial?</h3>
+                <ul>
+                    <li><strong>Exactitud:</strong> Los modelos ML pueden capturar patrones complejos que los métodos estadísticos tradicionales no detectan.</li>
+                    <li><strong>Automatización:</strong> Una vez entrenado, el modelo genera predicciones automáticamente sin intervención humana.</li>
+                    <li><strong>Escalabilidad:</strong> Puede predecir la demanda de miles de productos simultáneamente.</li>
+                    <li><strong>Adaptabilidad:</strong> Los modelos se reentrenan con nuevos datos para mantenerse actualizados.</li>
+                </ul>
+            </section>
+
+            <!-- Fuente de Datos -->
+            <section id="datos">
+                <h2>2. Fuente de Datos</h2>
+                
+                <h3>Dataset Utilizado: M5 Forecasting Competition</h3>
+                <p>
+                    Se utilizó el dataset de la competencia <strong>M5 Forecasting</strong> de Kaggle, que contiene datos de ventas 
+                    historias de Walmart. Este dataset es ampliamente reconocido en la comunidad de data science para problemas de 
+                    predicción de demanda.
+                </p>
+
+                <div class="metric-card">
+                    <div class="metric-item">
+                        <div class="value">~10M</div>
+                        <div class="label">Filas en datos brutos</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value">1,000</div>
+                        <div class="label">Productos seleccionados</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value">~9,500</div>
+                        <div class="label">Ventas registradas</div>
+                    </div>
+                    <div class="metric-item">
+                        <div class="value">~5.4M</div>
+                        <div class="label">Detalles de ventas</div>
+                    </div>
+                </div>
+
+                <h3>Categorías de Productos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Categoría</th>
+                            <th>Cantidad</th>
+                            <th>Porcentaje</th>
+                            <th>Ejemplo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-success">FOODS</span></td>
+                            <td>686</td>
+                            <td>68.6%</td>
+                            <td>Leche Entera 1L, Arroz Premium 5kg</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-warning">HOUSEHOLD</span></td>
+                            <td>235</td>
+                            <td>23.5%</td>
+                            <td>Detergente Líquido 2L, Jabón de Manos</td>
+                        </tr>
+                        <tr>
+                            <td><span class="badge badge-warning">HOBBIES</span></td>
+                            <td>79</td>
+                            <td>7.9%</td>
+                            <td>Baloncesto Pro, Raqueta de Tenis</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Preprocesamiento de Datos</h3>
+                <div class="step">
+                    <div class="step-number">1</div>
+                    <div class="step-content">
+                        <h4>Descarga del Dataset</h4>
+                        <p>Se descargaron los archivos CSV de la competencia M5 y se guardaron localmente.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">2</div>
+                    <div class="step-content">
+                        <h4>Transformación a Formato Largo</h4>
+                        <p>Se convirtieron los datos de formato ancho (columnas por día) a formato largo (una fila por venta), facilitando el procesamiento temporal.</p>
+                    </div>
+                </div>
+                <div class="step">
+                    <div class="step-number">3</div>
+                    <div class="step-content">
+                        <h4>Ingeniería de Features</h4>
+                        <p>Se crearon 28 variables (features) a partir de los datos originales para mejorar la precisión del modelo.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pipeline ML -->
+            <section id="pipeline">
+                <h2>3. Pipeline de Machine Learning</h2>
+                
+                <p>
+                    El pipeline de ML consta de 10 pasos ejecutados de forma secuencial, desde la descarga de datos hasta 
+                    el registro de los modelos en la base de datos.
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Paso</th>
+                            <th>Script</th>
+                            <th>Descripción</th>
+                            <th>Resultado</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td><code>01_descargar_m5.py</code></td>
+                            <td>Descarga del dataset M5</td>
+                            <td>Archivos CSV locales</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td><code>02_transformar_m5.py</code></td>
+                            <td>Transformación a formato largo</td>
+                            <td>m5_largo.csv (~10M filas)</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td><code>03_features.py</code></td>
+                            <td>Ingeniería de características</td>
+                            <td>dataset_entrenamiento.csv (28 features)</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td><code>04_poblar_bd.py</code></td>
+                            <td>Población de la base de datos</td>
+                            <td>1,000 productos, ~9,500 ventas</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td><code>05_entrenar_xgboost.py</code></td>
+                            <td>Entrenamiento de XGBoost</td>
+                            <td>xgboost_model.pkl (13.3 MB)</td>
+                        </tr>
+                        <tr>
+                            <td>6</td>
+                            <td><code>06_entrenar_lightgbm.py</code></td>
+                            <td>Entrenamiento de LightGBM</td>
+                            <td>lightgbm_model.pkl (5.6 MB)</td>
+                        </tr>
+                        <tr>
+                            <td>7</td>
+                            <td><code>07_evaluar_modelos.py</code></td>
+                            <td>Evaluación y comparativa</td>
+                            <td>Métricas + 4 gráficas PNG</td>
+                        </tr>
+                        <tr>
+                            <td>8</td>
+                            <td><code>08_predecir.py</code></td>
+                            <td>Prueba de predicción CLI</td>
+                            <td>Predicciones de prueba</td>
+                        </tr>
+                        <tr>
+                            <td>9</td>
+                            <td><code>09_registrar_modelos_bd.py</code></td>
+                            <td>Registro en base de datos</td>
+                            <td>Modelos disponibles en sistema</td>
+                        </tr>
+                        <tr>
+                            <td>10</td>
+                            <td>Frontend</td>
+                    <td>Interfaz de entrenamiento</td>
+                            <td>http://localhost:5174</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Features -->
+            <section id="features">
+                <h2>4. Variables del Modelo (Features)</h2>
+                
+                <p>
+                    Se utilizaron <strong>28 variables</strong> (features) para entrenar los modelos. Estas variables se agrupan 
+                    en 5 categorías principales:
+                </p>
+
+                <h3>4.1 Variables Calendario</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Descripción</th>
+                            <th>Ejemplo</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>dayofweek</code></td><td>Día de la semana (0-6)</td><td>0 = Lunes</td></tr>
+                        <tr><td><code>day</code></td><td>Día del mes (1-31)</td><td>15</td></tr>
+                        <tr><td><code>weekofyear</code></td><td>Semana del año (1-52)</td><td>25</td></tr>
+                        <tr><td><code>month</code></td><td>Mes del año (1-12)</td><td>6</td></tr>
+                        <tr><td><code>year</code></td><td>Año</td><td>2016</td></tr>
+                        <tr><td><code>is_month_start</code></td><td>¿Es inicio de mes?</td><td>True/False</td></tr>
+                        <tr><td><code>is_month_end</code></td><td>¿Es fin de mes?</td><td>True/False</td></tr>
+                        <tr><td><code>is_weekend</code></td><td>¿Es fin de semana?</td><td>True/False</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>4.2 Variables de Eventos</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>has_event</code></td><td>Si hay evento especial en esa fecha</td></tr>
+                        <tr><td><code>snap_CA</code></td><td>Programa SNAP activo en California</td></tr>
+                        <tr><td><code>snap_TX</code></td><td>Programa SNAP activo en Texas</td></tr>
+                        <tr><td><code>snap_WI</code></td><td>Programa SNAP activo en Wisconsin</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>4.3 Variables de Retraso (Lags)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Descripción</th>
+                            <th>Propósito</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>lag_1</code></td><td>Venta hace 1 día</td><td>Capturar tendencia reciente</td></tr>
+                        <tr><td><code>lag_7</code></td><td>Venta hace 7 días</td><td>Capturar estacionalidad semanal</td></tr>
+                        <tr><td><code>lag_14</code></td><td>Venta hace 14 días</td><td>Capturar patrón quincenal</td></tr>
+                        <tr><td><code>lag_28</code></td><td>Venta hace 28 días</td><td>Capturar estacionalidad mensual</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>4.4 Variables Rolling (Móviles)</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>rolling_mean_7/14/28</code></td><td>Promedio de ventas en ventana de 7, 14, 28 días</td></tr>
+                        <tr><td><code>rolling_std_7/14/28</code></td><td>Desviación estándar en ventana de 7, 14, 28 días</td></tr>
+                    </tbody>
+                </table>
+
+                <h3>4.5 Variables de Precio</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Variable</th>
+                            <th>Descripción</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr><td><code>price</code></td><td>Precio unitario del producto</td></tr>
+                        <tr><td><code>price_change_1</code></td><td>Cambio de precio vs día anterior</td></tr>
+                        <tr><td><code>price_ratio_7</code></td><td>Ratio de precio vs promedio 7 días</td></tr>
+                        <tr><td><code>promo_proxy</code></td><td>Proxy de promociones (precio bajo)</td></tr>
+                        <tr><td><code>is_available</code></td><td>Si el producto está disponible</td></tr>
+                    </tbody>
+                </table>
+            </section>
+
+            <!-- Modelos -->
+            <section id="modelos">
+                <h2>5. Modelos de Machine Learning</h2>
+                
+                <h3>5.1 ¿Por qué se eligieron estos modelos?</h3>
+                <p>
+                    Se seleccionaron <strong>XGBoost</strong> y <strong>LightGBM</strong> por las siguientes razones:
+                </p>
+                <ul>
+                    <li><strong>Alto rendimiento:</strong> Ambos modelos están en el top de competiciones de Kaggle para problemas de regresión.</li>
+                    <li><strong>Velocidad:</strong> LightGBM es especialmente rápido con grandes volúmenes de datos.</li>
+                    <li><strong>Manejo de datos faltantes:</strong> Ambos manejan naturalmente valores nulos.</li>
+                    <li><strong>Regularización:</strong> Incluyen técnicas para evitar overfitting.</li>
+                    <li><strong>Comunidad:</strong> Amplio soporte documental y de comunidad.</li>
+                </ul>
+
+                <h3>5.2 XGBoost (Extreme Gradient Boosting)</h3>
+                <div class="highlight">
+                    <p>
+                        <strong>¿Qué es?</strong> XGBoost es un algoritmo de ensemble learning que combina múltiples árboles de decisión 
+                        de forma secuencial. Cada nuevo árbol corrige los errores del anterior.
+                    </p>
+                </div>
+                <ul>
+                    <li><strong>Tipo:</strong> Gradient Boosting</li>
+                    <li><strong>Fortalezas:</strong> Alta precisión, manejo de features, regularización L1/L2</li>
+                    <li><strong>Debilidades:</strong> Más lento que LightGBM, mayor consumo de memoria</li>
+                    <li><strong>Uso en nuestro proyecto:</strong> Modelo base para comparar rendimiento</li>
+                </ul>
+
+                <h3>5.3 LightGBM (Light Gradient Boosting Machine)</h3>
+                <div class="highlight">
+                    <p>
+                        <strong>¿Qué es?</strong> LightGBM es una versión optimizada de Gradient Boosting desarrollada por Microsoft. 
+                        Utiliza técnicas de muestreo basado en gradientes y división de hojas por lado.
+                    </p>
+                </div>
+                <ul>
+                    <li><strong>Tipo:</strong> Gradient Boosting optimizado</li>
+                    <li><strong>Fortalezas:</strong> Velocidad de entrenamiento, menor uso de memoria, buena precisión</li>
+                    <li><strong>Debilidades:</strong> Puede overfitting con pocos datos</li>
+                    <li><strong>Uso en nuestro proyecto:</strong> Modelo ganador por mejor R² y velocidad</li>
+                </ul>
+
+                <h3>5.4 Comparativa de Modelos</h3>
+                <div class="chart-container">
+                    <canvas id="comparisonChart"></canvas>
+                </div>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Métrica</th>
+                            <th>XGBoost</th>
+                            <th>LightGBM</th>
+                            <th>Ganador</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>MAE</strong></td>
+                            <td>1.658</td>
+                            <td>1.658</td>
+                            <td>Empate</td>
+                        </tr>
+                        <tr>
+                            <td><strong>RMSE</strong></td>
+                            <td>3.650</td>
+                            <td>3.502</td>
+                            <td><span class="badge badge-success">LightGBM</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>R²</strong></td>
+                            <td>0.722</td>
+                            <td>0.744</td>
+                            <td><span class="badge badge-success">LightGBM</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>MAPE</strong></td>
+                            <td>70.25%</td>
+                            <td>70.80%</td>
+                            <td><span class="badge badge-success">XGBoost</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tiempo</strong></td>
+                            <td>19.6s</td>
+                            <td>64.9s</td>
+                            <td><span class="badge badge-success">XGBoost</span></td>
+                        </tr>
+                        <tr>
+                            <td><strong>Tamaño</strong></td>
+                            <td>13.3 MB</td>
+                            <td>5.6 MB</td>
+                            <td><span class="badge badge-success">LightGBM</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>5.5 ¿Por qué ganó LightGBM?</h3>
+                <p>
+                    Aunque XGBoost fue más rápido, <strong>LightGBM</strong> fue seleccionado como modelo principal por:
+                </p>
+                <ol>
+                    <li><strong>Mejor R² (0.744 vs 0.722):</strong> Explica mejor la varianza en los datos.</li>
+                    <li><strong>Menor RMSE (3.502 vs 3.650):</strong> Menor error cuadrático medio.</li>
+                    <li><strong>Menor tamaño (5.6 MB vs 13.3 MB):</strong> Más eficiente en almacenamiento.</li>
+                </ol>
+            </section>
+
+            <!-- Métricas -->
+            <section id="metricas">
+                <h2>6. Métricas de Evaluación</h2>
+                
+                <h3>6.1 MAE (Mean Absolute Error)</h3>
+                <div class="highlight">
+                    <strong>Fórmula:</strong> MAE = (1/n) × Σ|y_real - y_predicho|
+                </div>
+                <p>
+                    Mide el error promedio absoluto entre las predicciones y los valores reales. Un MAE de 1.658 significa que, 
+                    en promedio, las predicciones se desvían 1.658 unidades del valor real.
+                </p>
+
+                <h3>6.2 RMSE (Root Mean Squared Error)</h3>
+                <div class="highlight">
+                    <strong>Fórmula:</strong> RMSE = √[(1/n) × Σ(y_real - y_predicho)²]
+                </div>
+                <p>
+                    Similar al MAE pero penaliza más los errores grandes. Un RMSE de 3.502 indica que los errores grandes 
+                    tienen más impacto en esta métrica.
+                </p>
+
+                <h3>6.3 R² (Coeficiente de Determinación)</h3>
+                <div class="highlight">
+                    <strong>Fórmula:</strong> R² = 1 - (SS_res / SS_tot)
+                </div>
+                <p>
+                    Indica qué proporción de la varianza en los datos es explicada por el modelo. Un R² de 0.744 significa que 
+                    el modelo explica el 74.4% de la variación en la demanda.
+                </p>
+                <ul>
+                    <li><strong>R² = 1.0:</strong> Predicción perfecta</li>
+                    <li><strong>R² = 0.744:</strong> Nuestro modelo (bueno)</li>
+                    <li><strong>R² = 0.0:</strong> El modelo no explica nada</li>
+                </ul>
+
+                <h3>6.4 MAPE (Mean Absolute Percentage Error)</h3>
+                <div class="highlight">
+                    <strong>Fórmula:</strong> MAPE = (1/n) × Σ|(y_real - y_predicho)/y_real| × 100
+                </div>
+                <p>
+                    Expresa el error como porcentaje. Un MAPE del 70.8% indica el error promedio porcentual de las predicciones. 
+                    Este valor es alto porque muchos productos tienen ventas bajas o cero.
+                </p>
+            </section>
+
+            <!-- Resultados -->
+            <section id="resultados">
+                <h2>7. Resultados Obtenidos</h2>
+                
+                <h3>7.1 Resultados del Entrenamiento</h3>
+                <div class="chart-container">
+                    <canvas id="metricsChart"></canvas>
+                </div>
+
+                <h3>7.2 Análisis de Resultados</h3>
+                <ul>
+                    <li><strong>Precisión aceptable:</strong> Un R² de 0.744 es bueno para un primer modelo con datos limitados.</li>
+                    <li><strong>Error moderado:</strong> El MAE de 1.658 es razonable dado el rango de ventas.</li>
+                    <li><strong>Mejorable:</strong> El MAPE del 70% indica que hay margen de mejora, especialmente para productos con ventas bajas.</li>
+                </ul>
+
+                <h3>7.3 Limitaciones Identificadas</h3>
+                <ol>
+                    <li><strong>Datos históricos limitados:</strong> Solo se usaron 30 días de historial para features.</li>
+                    <li><strong>Productos con ventas cero:</strong> Muchos productos tienen días sin ventas, afectando las métricas.</li>
+                    <li><strong>Sin variables externas:</strong> No se incluyeron factores como clima, promociones reales, etc.</li>
+                </ol>
+            </section>
+
+            <!-- Integración -->
+            <section id="integracion">
+                <h2>8. Integración con el Sistema</h2>
+                
+                <h3>8.1 Arquitectura</h3>
+                <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                      FRONTEND (React)                       │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ Predicción   │  │ Modelos IA  │  │ Dashboard           │ │
+│  │ - Producto   │  │ - Métricas  │  │ - Gráficos          │ │
+│  │ - Categoría  │  │ - Activar   │  │ - KPIs              │ │
+│  └──────┬──────┘  └──────┬──────┘  └─────────────────────┘ │
+└─────────┼────────────────┼─────────────────────────────────┘
+          │                │
+          ▼                ▼
+┌─────────────────────────────────────────────────────────────┐
+│                      BACKEND (FastAPI)                       │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  API REST                                           │   │
+│  │  - POST /predicciones/predecir                      │   │
+│  │  - POST /predicciones/predecir-lote                 │   │
+│  │  - GET  /modelos-ia                                 │   │
+│  │  - PUT  /modelos-ia/{id}/activar                    │   │
+│  └─────────────────────────────────────────────────────┘   │
+│  ┌─────────────────────────────────────────────────────┐   │
+│  │  ML Service                                         │   │
+│  │  - load_model()                                     │   │
+│  │  - predict_demand()                                 │   │
+│  │  - prepare_features_from_history()                  │   │
+│  └─────────────────────────────────────────────────────┘   │
+└─────────────────────────────────────────────────────────────┘
+          │
+          ▼
+┌─────────────────────────────────────────────────────────────┐
+│                    BASE DE DATOS (MariaDB)                  │
+│  ┌─────────────┐  ┌─────────────┐  ┌─────────────────────┐ │
+│  │ productos    │  │ predicciones│  │ modelos_ia          │ │
+│  │ ventas       │  │             │  │ - algoritmo         │ │
+│  │ inventario   │  │             │  │ - mae, rmse, r2     │ │
+│  └─────────────┘  └─────────────┘  └─────────────────────┘ │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+                <h3>8.2 Endpoint de Predicción</h3>
+                <pre><code>POST /api/predicciones/predecir
+Content-Type: application/json
+
+{
+    "id_producto": 3007,
+    "horizonte_dias": 7,
+    "id_modelo": 1  // opcional
+}
+
+Response: 201 Created
+[
+    {
+        "fecha_prediccion": "2026-03-01",
+        "demanda_estimada": 7,
+        "confianza_min": 2,
+        "confianza_max": 22
+    },
+    ...
+]</code></pre>
+
+                <h3>8.3 Intervalos de Confianza</h3>
+                <p>
+                    El sistema calcula intervalos de confianza al 95% usando la fórmula:
+                </p>
+                <div class="highlight">
+                    <code>predicción ± z_score × residual_std × √(día)</code>
+                </div>
+                <p>
+                    Esto significa que los intervalos se amplían con el horizonte de predicción, siendo más estrechos en días 
+                    cercanos y más amplios en días lejanos.
+                </p>
+            </section>
+
+            <!-- Mejoras Futuras -->
+            <section id="futuro">
+                <h2>9. Mejoras Futuras</h2>
+                
+                <h3>9.1 A Nivel de Modelo</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mejora</th>
+                            <th>Impacto</th>
+                            <th>Complejidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Agregar más features externas (clima, eventos)</td>
+                            <td><span class="badge badge-success">Alto</span></td>
+                            <td>Media</td>
+                        </tr>
+                        <tr>
+                            <td>Usar redes LSTM para series temporales</td>
+                            <td><span class="badge badge-success">Alto</span></td>
+                            <td>Alta</td>
+                        </tr>
+                        <tr>
+                            <td>Ensemble de múltiples modelos</td>
+                            <td><span class="badge badge-warning">Medio</span></td>
+                            <td>Media</td>
+                        </tr>
+                        <tr>
+                            <td>Hiperparametrización automática (Optuna)</td>
+                            <td><span class="badge badge-warning">Medio</span></td>
+                            <td>Baja</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>9.2 A Nivel de Sistema</h3>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Mejora</th>
+                            <th>Impacto</th>
+                            <th>Complejidad</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Reentrenamiento automático periódico</td>
+                            <td><span class="badge badge-success">Alto</span></td>
+                            <td>Media</td>
+                        </tr>
+                        <tr>
+                            <td>Dashboard de monitoreo de modelos</td>
+                            <td><span class="badge badge-warning">Medio</span></td>
+                            <td>Baja</td>
+                        </tr>
+                        <tr>
+                            <td>A/B testing entre modelos</td>
+                            <td><span class="badge badge-warning">Medio</span></td>
+                            <td>Media</td>
+                        </tr>
+                        <tr>
+                            <td>API de predicción en tiempo real</td>
+                            <td><span class="badge badge-success">Alto</span></td>
+                            <td>Alta</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>9.3 Conclusión</h3>
+                <div class="highlight">
+                    <p>
+                        El sistema actual demuestra que es posible integrar machine learning en un sistema de gestión de inventario 
+                        de forma práctica. Los modelos entrenados proporcionan predicciones razonablemente precisas que pueden ayudar 
+                        a las empresas a tomar mejores decisiones de compra y reabastecimiento.
+                    </p>
+                    <p>
+                        <strong>Las principales áreas de mejora son:</strong> aumentar la cantidad y calidad de los datos de entrenamiento, 
+                        incorporar variables externas, y implementar reentrenamiento automático para mantener los modelos actualizados.
+                    </p>
+                </div>
+            </section>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>SmartInventory AI - Documentación Técnica de Inteligencia Artificial</p>
+            <p>Tesis de Grado - 2026</p>
+        </div>
+    </footer>
+
+    <script>
+        // Gráfico comparativo de modelos
+        const comparisonCtx = document.getElementById('comparisonChart').getContext('2d');
+        new Chart(comparisonCtx, {
+            type: 'bar',
+            data: {
+                labels: ['MAE', 'RMSE', 'R²'],
+                datasets: [
+                    {
+                        label: 'XGBoost',
+                        data: [1.658, 3.650, 0.722],
+                        backgroundColor: 'rgba(239, 68, 68, 0.7)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'LightGBM',
+                        data: [1.658, 3.502, 0.744],
+                        backgroundColor: 'rgba(16, 185, 129, 0.7)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Comparativa de Métricas por Modelo'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Gráfico de métricas
+        const metricsCtx = document.getElementById('metricsChart').getContext('2d');
+        new Chart(metricsCtx, {
+            type: 'radar',
+            data: {
+                labels: ['Precisión (R²)', 'Velocidad', 'Eficiencia Memoria', 'Escalabilidad', 'Facilidad Uso'],
+                datasets: [
+                    {
+                        label: 'XGBoost',
+                        data: [72, 85, 60, 75, 70],
+                        backgroundColor: 'rgba(239, 68, 68, 0.2)',
+                        borderColor: 'rgb(239, 68, 68)',
+                        borderWidth: 2
+                    },
+                    {
+                        label: 'LightGBM',
+                        data: [74, 70, 85, 80, 75],
+                        backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                        borderColor: 'rgb(16, 185, 129)',
+                        borderWidth: 2
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    title: {
+                        display: true,
+                        text: 'Análisis Comparativo de Características'
+                    }
+                },
+                scales: {
+                    r: {
+                        beginAtZero: true,
+                        max: 100
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

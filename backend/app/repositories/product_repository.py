@@ -61,3 +61,9 @@ class ProductRepository:
     async def count(self) -> int:
         result = await self.db.execute(select(func.count(Producto.id_producto)))
         return result.scalar()
+
+    async def get_by_category(self, category_id: int) -> List[Producto]:
+        result = await self.db.execute(
+            select(Producto).where(Producto.id_categoria == category_id)
+        )
+        return list(result.scalars().all())

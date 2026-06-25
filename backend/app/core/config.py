@@ -14,6 +14,9 @@ class Settings(BaseSettings):
 
     CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000"]
 
+    MODELS_PATH: str = "ml_models"
+    PREDICTION_CONFIDENCE_LEVEL: float = 0.95
+
     class Config:
         env_file = ".env"
         case_sensitive = True

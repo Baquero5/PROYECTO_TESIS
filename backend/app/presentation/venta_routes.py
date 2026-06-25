@@ -6,6 +6,7 @@ from app.repositories.detalle_venta_repository import DetalleVentaRepository
 from app.repositories.inventario_repository import InventarioRepository
 from app.schemas.venta import VentaCreate, VentaResponse, DetalleVentaResponse
 from typing import List
+from pydantic import BaseModel
 
 router = APIRouter(prefix="/api/ventas", tags=["Ventas"])
 
@@ -74,3 +75,15 @@ async def create_venta(data: VentaCreate, db: AsyncSession = Depends(get_db)):
 async def get_ventas_by_user(usuario_id: int, db: AsyncSession = Depends(get_db)):
     repo = VentaRepository(db)
     return await repo.get_by_user(usuario_id)
+
+
+class SalesHistoryResponse(BaseModel):
+    fecha: str
+    cantidad: int
+    precio: float
+
+
+@router.get("/producto/{producto_id}/historial", response_model=List[SalesHistoryResponse])
+async def get_sales_history(producto_id: int, days: int = 90, db: AsyncSession = Depends(get_db)):
+    repo = VentaRepository(db)
+    return await repo.get_sales_history_by_product(producto_id, days)

@@ -1,4 +1,4 @@
-from sqlalchemy import select, func
+from sqlalchemy import select, func, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.ventas import Venta
 from app.models.detalle_ventas import DetalleVenta
@@ -36,3 +36,22 @@ class VentaRepository:
     async def count(self) -> int:
         result = await self.db.execute(select(func.count(Venta.id_venta)))
         return result.scalar()
+
+    async def get_sales_history_by_product(self, producto_id: int, days: int = 90) -> List[dict]:
+        result = await self.db.execute(
+            text("""
+                SELECT 
+                    v.fecha_venta,
+                    SUM(dv.cantidad) as cantidad,
+                    AVG(dv.precio_unitario) as precio_unitario
+                FROM detalle_ventas dv
+                JOIN ventas v ON dv.id_venta = v.id_venta
+                WHERE dv.id_producto = :producto_id
+                    AND v.fecha_venta >= DATE_SUB(CURDATE(), INTERVAL :days DAY)
+                GROUP BY v.fecha_venta
+                ORDER BY v.fecha_venta ASC
+            """),
+            {"producto_id": producto_id, "days": days}
+        )
+        rows = result.fetchall()
+        return [{"fecha": str(row[0]), "cantidad": row[1], "precio": float(row[2])} for row in rows]

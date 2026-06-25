@@ -88,3 +88,12 @@ async def get_stats(db: AsyncSession = Depends(get_db)):
         "total_products": total,
         "total_inventory_value": round(total_value, 2)
     }
+
+
+@router.get("/categoria/{categoria_id}", response_model=List[ProductResponse])
+async def get_products_by_category(
+    categoria_id: int,
+    db: AsyncSession = Depends(get_db)
+):
+    repo = ProductRepository(db)
+    return await repo.get_by_category(categoria_id)

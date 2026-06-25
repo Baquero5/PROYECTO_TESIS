@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
 from app.core.config import get_settings
 from app.core.database import engine, Base, AsyncSessionLocal
+import os
 from app.presentation.auth_routes import router as auth_router
 from app.presentation.product_routes import router as product_router
 from app.presentation.rol_routes import router as rol_router
@@ -195,6 +196,8 @@ async def create_admin_user():
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     print(f"[START] Iniciando {settings.APP_NAME} v{settings.APP_VERSION}")
+    os.makedirs(settings.MODELS_PATH, exist_ok=True)
+    print(f"[OK] Directorio de modelos: {settings.MODELS_PATH}")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     print("[OK] Tablas creadas en la base de datos")
