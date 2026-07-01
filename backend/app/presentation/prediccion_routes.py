@@ -6,6 +6,7 @@ from app.repositories.prediccion_repository import PrediccionRepository
 from app.repositories.modelo_ia_repository import ModeloIARepository
 from app.schemas.prediccion import PrediccionCreate, PrediccionResponse, PrediccionRequest, PrediccionBatchRequest, PrediccionBatchResponse
 from app.services.ml_service import ml_service
+from app.services.auth_service import require_permission
 from app.models.predicciones import Prediccion
 from typing import List
 import pandas as pd
@@ -15,13 +16,20 @@ router = APIRouter(prefix="/api/predicciones", tags=["Predicciones"])
 
 
 @router.get("", response_model=List[PrediccionResponse])
-async def get_predicciones(db: AsyncSession = Depends(get_db)):
+async def get_predicciones(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
     repo = PrediccionRepository(db)
     return await repo.get_all()
 
 
 @router.get("/{prediccion_id}", response_model=PrediccionResponse)
-async def get_prediccion(prediccion_id: int, db: AsyncSession = Depends(get_db)):
+async def get_prediccion(
+    prediccion_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
     repo = PrediccionRepository(db)
     prediccion = await repo.get_by_id(prediccion_id)
     if not prediccion:
@@ -30,13 +38,21 @@ async def get_prediccion(prediccion_id: int, db: AsyncSession = Depends(get_db))
 
 
 @router.get("/producto/{producto_id}", response_model=List[PrediccionResponse])
-async def get_predicciones_by_product(producto_id: int, db: AsyncSession = Depends(get_db)):
+async def get_predicciones_by_product(
+    producto_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
     repo = PrediccionRepository(db)
     return await repo.get_by_product(producto_id)
 
 
 @router.get("/producto/{producto_id}/ultima", response_model=PrediccionResponse)
-async def get_latest_prediccion(producto_id: int, db: AsyncSession = Depends(get_db)):
+async def get_latest_prediccion(
+    producto_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
     repo = PrediccionRepository(db)
     prediccion = await repo.get_latest(producto_id)
     if not prediccion:
@@ -45,35 +61,56 @@ async def get_latest_prediccion(producto_id: int, db: AsyncSession = Depends(get
 
 
 @router.post("", response_model=PrediccionResponse, status_code=201)
-async def create_prediccion(data: PrediccionCreate, db: AsyncSession = Depends(get_db)):
+async def create_prediccion(
+    data: PrediccionCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
     repo = PrediccionRepository(db)
     prediccion = Prediccion(**data.model_dump())
     return await repo.create(prediccion)
 
 
 @router.post("/predecir", response_model=List[PrediccionResponse], status_code=201)
-async def predecir_demanda(data: PrediccionRequest, db: AsyncSession = Depends(get_db)):
-    """Genera predicciones de demanda usando el modelo ML seleccionado o el activo."""
+async def predecir_demanda(
+    data: PrediccionRequest,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
+    """Genera predicciones de demanda usando ensemble (XGBoost + LightGBM) o modelo individual."""
     modelo_repo = ModeloIARepository(db)
     
-    if data.id_modelo:
-        modelo = await modelo_repo.get_by_id(data.id_modelo)
-    else:
-        modelo = await modelo_repo.get_active()
-
-    if not modelo or not modelo.archivo_modelo:
-        raise HTTPException(
-            status_code=404,
-            detail="No hay modelo entrenado disponible. Entrene un modelo primero."
-        )
-
+    # Verificar si hay ensemble disponible
+    use_ensemble = False
+    modelo = None
+    
     try:
-        model = ml_service.load_model(modelo.archivo_modelo)
+        ensemble_data = ml_service.load_model("ensemble_v2.pkl")
+        use_ensemble = True
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Archivo de modelo no encontrado: {modelo.archivo_modelo}"
-        )
+        pass
+    
+    if not use_ensemble:
+        if data.id_modelo:
+            modelo = await modelo_repo.get_by_id(data.id_modelo)
+        else:
+            modelo = await modelo_repo.get_active()
+
+        if not modelo or not modelo.archivo_modelo:
+            raise HTTPException(
+                status_code=404,
+                detail="No hay modelo entrenado disponible. Entrene un modelo primero."
+            )
+
+        try:
+            model = ml_service.load_model(modelo.archivo_modelo)
+        except FileNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Archivo de modelo no encontrado: {modelo.archivo_modelo}"
+            )
+    else:
+        model = None
 
     result = await db.execute(
         text("""
@@ -103,13 +140,15 @@ async def predecir_demanda(data: PrediccionRequest, db: AsyncSession = Depends(g
             detail=f"Se necesitan al menos 30 días de historial. Hay {len(features_df)} días disponibles."
         )
 
-    predicciones_raw = ml_service.predict_demand(model, features_df, data.horizonte_dias)
+    predicciones_raw = ml_service.predict_demand(
+        model, features_df, data.horizonte_dias, use_ensemble=use_ensemble
+    )
 
     repo = PrediccionRepository(db)
 
     predicciones_obj = [
         Prediccion(
-            id_modelo=modelo.id_modelo,
+            id_modelo=modelo.id_modelo if modelo else 0,
             id_producto=data.id_producto,
             fecha_prediccion=datetime.strptime(pred["fecha"], "%Y-%m-%d").date(),
             periodo=pred["fecha"][:7],
@@ -127,28 +166,45 @@ async def predecir_demanda(data: PrediccionRequest, db: AsyncSession = Depends(g
 
 
 @router.post("/predecir-lote", response_model=PrediccionBatchResponse)
-async def predecir_lote(data: PrediccionBatchRequest, db: AsyncSession = Depends(get_db)):
-    """Genera predicciones para múltiples productos de una vez."""
+async def predecir_lote(
+    data: PrediccionBatchRequest,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
+    """Genera predicciones para múltiples productos usando ensemble o modelo individual."""
     modelo_repo = ModeloIARepository(db)
     
-    if data.id_modelo:
-        modelo = await modelo_repo.get_by_id(data.id_modelo)
-    else:
-        modelo = await modelo_repo.get_active()
-
-    if not modelo or not modelo.archivo_modelo:
-        raise HTTPException(
-            status_code=404,
-            detail="No hay modelo entrenado disponible. Entrene un modelo primero."
-        )
-
+    # Verificar si hay ensemble disponible
+    use_ensemble = False
+    modelo = None
+    
     try:
-        model = ml_service.load_model(modelo.archivo_modelo)
+        ensemble_data = ml_service.load_model("ensemble_v2.pkl")
+        use_ensemble = True
     except FileNotFoundError:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Archivo de modelo no encontrado: {modelo.archivo_modelo}"
-        )
+        pass
+    
+    if not use_ensemble:
+        if data.id_modelo:
+            modelo = await modelo_repo.get_by_id(data.id_modelo)
+        else:
+            modelo = await modelo_repo.get_active()
+
+        if not modelo or not modelo.archivo_modelo:
+            raise HTTPException(
+                status_code=404,
+                detail="No hay modelo entrenado disponible. Entrene un modelo primero."
+            )
+
+        try:
+            model = ml_service.load_model(modelo.archivo_modelo)
+        except FileNotFoundError:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Archivo de modelo no encontrado: {modelo.archivo_modelo}"
+            )
+    else:
+        model = None
 
     repo = PrediccionRepository(db)
     exitosos = []
@@ -182,11 +238,13 @@ async def predecir_lote(data: PrediccionBatchRequest, db: AsyncSession = Depends
                 errores.append(f"Producto {producto_id}: Historial insuficiente ({len(features_df)} días)")
                 continue
 
-            predicciones_raw = ml_service.predict_demand(model, features_df, data.horizonte_dias)
+            predicciones_raw = ml_service.predict_demand(
+                model, features_df, data.horizonte_dias, use_ensemble=use_ensemble
+            )
 
             predicciones_obj = [
                 Prediccion(
-                    id_modelo=modelo.id_modelo,
+                    id_modelo=modelo.id_modelo if modelo else 0,
                     id_producto=producto_id,
                     fecha_prediccion=datetime.strptime(pred["fecha"], "%Y-%m-%d").date(),
                     periodo=pred["fecha"][:7],

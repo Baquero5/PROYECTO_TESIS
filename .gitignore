@@ -21,3 +21,17 @@ Thumbs.db
 
 # Documentación personal
 Archivos/
+
+# ML Models (archivos grandes)
+*.pkl
+*.h5
+*.joblib
+*.onnx
+
+# Datasets
+*.csv
+*.zip
+
+# Documentos grandes
+*.docx
+*.pdf

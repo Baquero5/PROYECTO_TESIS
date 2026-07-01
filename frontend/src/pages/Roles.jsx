@@ -82,7 +82,15 @@ export default function Roles() {
     const handleSubmitRol = async (ev) => {
         ev.preventDefault();
         if (!formData.nombre.trim()) {
-            setToast({ message: 'El nombre es obligatorio', type: 'warning' });
+            setToast({ message: 'El nombre del rol es obligatorio', type: 'warning' });
+            return;
+        }
+        if (formData.nombre.trim().length < 2) {
+            setToast({ message: 'El nombre debe tener al menos 2 caracteres', type: 'warning' });
+            return;
+        }
+        if (formData.nombre.trim().length > 100) {
+            setToast({ message: 'El nombre no puede exceder 100 caracteres', type: 'warning' });
             return;
         }
         try {

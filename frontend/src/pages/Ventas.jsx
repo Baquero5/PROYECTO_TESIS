@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import ExportButtons from '../components/ExportButtons';
 
 export default function Ventas() {
     const [ventas, setVentas] = useState([]);
@@ -21,7 +22,7 @@ export default function Ventas() {
         try {
             const [ventasRes, prodRes, invRes] = await Promise.all([
                 api.get('/ventas'),
-                api.get('/products'),
+                api.get('/products?limit=2000'),
                 api.get('/inventario')
             ]);
             setVentas(ventasRes.data);
@@ -70,10 +71,13 @@ export default function Ventas() {
                 newErrors[`producto_${idx}`] = 'Seleccione un producto';
             }
             if (!det.cantidad || parseInt(det.cantidad) <= 0) {
-                newErrors[`cantidad_${idx}`] = 'Cantidad inválida';
+                newErrors[`cantidad_${idx}`] = 'Ingrese una cantidad válida (mínimo 1)';
+            }
+            if (det.precio_unitario !== '' && parseFloat(det.precio_unitario) < 0) {
+                newErrors[`precio_${idx}`] = 'El precio no puede ser negativo';
             }
             const stock = getStock(parseInt(det.id_producto));
-            if (parseInt(det.cantidad) > stock) {
+            if (det.id_producto && parseInt(det.cantidad) > stock) {
                 newErrors[`cantidad_${idx}`] = `Stock insuficiente (disponible: ${stock})`;
             }
         });
@@ -114,6 +118,20 @@ export default function Ventas() {
 
     const getProducto = (id) => productos.find(p => p.id_producto === id);
 
+    const exportColumns = [
+        { key: 'id_venta', label: 'ID Venta' },
+        { key: 'fecha', label: 'Fecha' },
+        { key: 'total', label: 'Total' },
+        { key: '-items', label: 'Items' },
+    ];
+
+    const exportData = filtered.map(venta => ({
+        id_venta: `#${venta.id_venta}`,
+        fecha: venta.fecha_venta || '-',
+        total: `$${venta.total}`,
+        items: venta.detalles?.length || 0,
+    }));
+
     if (loading) return <div className="content-area"><p>Cargando...</p></div>;
 
     return (
@@ -123,9 +141,16 @@ export default function Ventas() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Gestión de Ventas</h3>
-                    <button className="btn btn-primary" onClick={() => { setDetalles([]); setErrors({}); setShowModal(true); }}>
-                        + Nueva Venta
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <ExportButtons
+                            data={exportData}
+                            columns={exportColumns}
+                            moduleName="ventas"
+                        />
+                        <button className="btn btn-primary" onClick={() => { setDetalles([]); setErrors({}); setShowModal(true); }}>
+                            + Nueva Venta
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>

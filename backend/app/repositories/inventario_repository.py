@@ -43,6 +43,13 @@ class InventarioRepository:
         await self.db.refresh(inventario)
         return inventario
 
+    async def has_sufficient_stock(self, producto_id: int, cantidad: int) -> bool:
+        """Verifica si hay stock suficiente para una salida."""
+        inventario = await self.get_by_product(producto_id)
+        if not inventario:
+            return False
+        return inventario.stock_actual >= cantidad
+
     async def update_stock(self, producto_id: int, cantidad: int, tipo: str) -> Optional[Inventario]:
         inventario = await self.get_by_product(producto_id)
         if not inventario:
@@ -50,6 +57,8 @@ class InventarioRepository:
         if tipo == "ENTRADA":
             inventario.stock_actual += cantidad
         elif tipo == "SALIDA":
+            if inventario.stock_actual < cantidad:
+                raise ValueError(f"Stock insuficiente: disponible {inventario.stock_actual}, solicitado {cantidad}")
             inventario.stock_actual -= cantidad
         await self.db.commit()
         await self.db.refresh(inventario)

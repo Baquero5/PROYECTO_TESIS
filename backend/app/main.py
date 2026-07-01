@@ -188,7 +188,7 @@ async def create_admin_user():
             )
             db.add(admin)
             await db.commit()
-            print("[OK] Usuario administrador creado: admin@sistema.com / Admin123!")
+            print("[OK] Usuario administrador creado: admin@sistema.com")
         else:
             print("[INFO] Usuario administrador ya existe")
 
@@ -222,6 +222,7 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["Set-Cookie"],
 )
 
 app.include_router(auth_router)

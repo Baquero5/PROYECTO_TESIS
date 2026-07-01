@@ -4,19 +4,27 @@ from app.core.database import get_db
 from app.repositories.rol_repository import RolRepository
 from app.schemas.rol import RolCreate, RolUpdate, RolResponse
 from app.models.roles import Rol
+from app.services.auth_service import require_permission
 from typing import List
 
 router = APIRouter(prefix="/api/roles", tags=["Roles"])
 
 
 @router.get("", response_model=List[RolResponse])
-async def get_roles(db: AsyncSession = Depends(get_db)):
+async def get_roles(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("ROLES_LEER"))
+):
     repo = RolRepository(db)
     return await repo.get_all()
 
 
 @router.get("/{rol_id}", response_model=RolResponse)
-async def get_rol(rol_id: int, db: AsyncSession = Depends(get_db)):
+async def get_rol(
+    rol_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("ROLES_LEER"))
+):
     repo = RolRepository(db)
     rol = await repo.get_by_id(rol_id)
     if not rol:
@@ -25,7 +33,11 @@ async def get_rol(rol_id: int, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("", response_model=RolResponse, status_code=201)
-async def create_rol(data: RolCreate, db: AsyncSession = Depends(get_db)):
+async def create_rol(
+    data: RolCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("ROLES_CREAR"))
+):
     repo = RolRepository(db)
     if await repo.get_by_name(data.nombre):
         raise HTTPException(status_code=400, detail="El nombre del rol ya existe")
@@ -34,7 +46,12 @@ async def create_rol(data: RolCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.put("/{rol_id}", response_model=RolResponse)
-async def update_rol(rol_id: int, data: RolUpdate, db: AsyncSession = Depends(get_db)):
+async def update_rol(
+    rol_id: int,
+    data: RolUpdate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("ROLES_ACTUALIZAR"))
+):
     repo = RolRepository(db)
     rol = await repo.update(rol_id, **data.model_dump(exclude_unset=True))
     if not rol:
@@ -43,7 +60,11 @@ async def update_rol(rol_id: int, data: RolUpdate, db: AsyncSession = Depends(ge
 
 
 @router.delete("/{rol_id}")
-async def delete_rol(rol_id: int, db: AsyncSession = Depends(get_db)):
+async def delete_rol(
+    rol_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("ROLES_ELIMINAR"))
+):
     repo = RolRepository(db)
     if not await repo.delete(rol_id):
         raise HTTPException(status_code=404, detail="Rol no encontrado")

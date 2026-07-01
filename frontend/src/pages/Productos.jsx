@@ -43,12 +43,18 @@ export default function Productos() {
 
         if (!formData.codigo.trim()) {
             newErrors.codigo = 'El código es obligatorio';
+        } else if (formData.codigo.trim().length < 1) {
+            newErrors.codigo = 'Mínimo 1 carácter';
+        } else if (formData.codigo.trim().length > 50) {
+            newErrors.codigo = 'Máximo 50 caracteres';
         }
 
         if (!formData.nombre.trim()) {
             newErrors.nombre = 'El nombre es obligatorio';
         } else if (formData.nombre.trim().length < 2) {
             newErrors.nombre = 'Mínimo 2 caracteres';
+        } else if (formData.nombre.trim().length > 150) {
+            newErrors.nombre = 'Máximo 150 caracteres';
         }
 
         if (!formData.id_categoria) {
@@ -59,11 +65,15 @@ export default function Productos() {
             newErrors.id_proveedor = 'Seleccione un proveedor';
         }
 
-        if (formData.precio_compra && parseFloat(formData.precio_compra) < 0) {
+        if (formData.descripcion && formData.descripcion.length > 500) {
+            newErrors.descripcion = 'Máximo 500 caracteres';
+        }
+
+        if (formData.precio_compra !== '' && parseFloat(formData.precio_compra) < 0) {
             newErrors.precio_compra = 'No puede ser negativo';
         }
 
-        if (formData.precio_venta && parseFloat(formData.precio_venta) < 0) {
+        if (formData.precio_venta !== '' && parseFloat(formData.precio_venta) < 0) {
             newErrors.precio_venta = 'No puede ser negativo';
         }
 

@@ -7,25 +7,36 @@ from app.schemas.inventario import InventarioCreate, InventarioUpdate, Inventari
 from app.schemas.movimiento_inventario import MovimientoInventarioCreate, MovimientoInventarioResponse
 from app.models.inventarios import Inventario
 from app.models.movimientos_inventario import MovimientoInventario
+from app.services.auth_service import require_permission
 from typing import List
 
 router = APIRouter(prefix="/api/inventario", tags=["Inventario"])
 
 
 @router.get("", response_model=List[InventarioResponse])
-async def get_inventario(db: AsyncSession = Depends(get_db)):
+async def get_inventario(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_LEER"))
+):
     repo = InventarioRepository(db)
     return await repo.get_all()
 
 
 @router.get("/bajo-stock", response_model=List[InventarioResponse])
-async def get_low_stock(db: AsyncSession = Depends(get_db)):
+async def get_low_stock(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_LEER"))
+):
     repo = InventarioRepository(db)
     return await repo.get_low_stock()
 
 
 @router.get("/{inventario_id}", response_model=InventarioResponse)
-async def get_inventario_by_id(inventario_id: int, db: AsyncSession = Depends(get_db)):
+async def get_inventario_by_id(
+    inventario_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_LEER"))
+):
     repo = InventarioRepository(db)
     inventario = await repo.get_by_id(inventario_id)
     if not inventario:
@@ -34,7 +45,11 @@ async def get_inventario_by_id(inventario_id: int, db: AsyncSession = Depends(ge
 
 
 @router.get("/producto/{producto_id}", response_model=InventarioResponse)
-async def get_inventario_by_product(producto_id: int, db: AsyncSession = Depends(get_db)):
+async def get_inventario_by_product(
+    producto_id: int,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_LEER"))
+):
     repo = InventarioRepository(db)
     inventario = await repo.get_by_product(producto_id)
     if not inventario:
@@ -43,7 +58,11 @@ async def get_inventario_by_product(producto_id: int, db: AsyncSession = Depends
 
 
 @router.post("", response_model=InventarioResponse, status_code=201)
-async def create_inventario(data: InventarioCreate, db: AsyncSession = Depends(get_db)):
+async def create_inventario(
+    data: InventarioCreate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_CREAR"))
+):
     repo = InventarioRepository(db)
     if await repo.get_by_product(data.id_producto):
         raise HTTPException(status_code=400, detail="Ya existe inventario para este producto")
@@ -52,7 +71,12 @@ async def create_inventario(data: InventarioCreate, db: AsyncSession = Depends(g
 
 
 @router.put("/{inventario_id}", response_model=InventarioResponse)
-async def update_inventario(inventario_id: int, data: InventarioUpdate, db: AsyncSession = Depends(get_db)):
+async def update_inventario(
+    inventario_id: int,
+    data: InventarioUpdate,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_ACTUALIZAR"))
+):
     repo = InventarioRepository(db)
     inventario = await repo.update(inventario_id, **data.model_dump(exclude_unset=True))
     if not inventario:
@@ -64,7 +88,8 @@ async def update_inventario(inventario_id: int, data: InventarioUpdate, db: Asyn
 async def create_movimiento(
     producto_id: int,
     data: StockUpdate,
-    db: AsyncSession = Depends(get_db)
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("INVENTARIO_CREAR"))
 ):
     inventario_repo = InventarioRepository(db)
     movimiento_repo = MovimientoInventarioRepository(db)

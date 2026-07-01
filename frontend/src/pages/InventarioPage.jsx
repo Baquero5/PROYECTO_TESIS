@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import ExportButtons from '../components/ExportButtons';
 
 export default function Inventario() {
     const [inventario, setInventario] = useState([]);
@@ -28,7 +29,7 @@ export default function Inventario() {
         try {
             const [invRes, prodRes] = await Promise.all([
                 api.get('/inventario'),
-                api.get('/products')
+                api.get('/products?limit=2000')
             ]);
             setInventario(invRes.data);
             setProductos(prodRes.data);
@@ -44,6 +45,15 @@ export default function Inventario() {
         if (!formData.id_producto) {
             newErrors.id_producto = 'Seleccione un producto';
         }
+        if (formData.stock_actual !== '' && parseInt(formData.stock_actual) < 0) {
+            newErrors.stock_actual = 'No puede ser negativo';
+        }
+        if (formData.stock_minimo !== '' && parseInt(formData.stock_minimo) < 0) {
+            newErrors.stock_minimo = 'No puede ser negativo';
+        }
+        if (formData.stock_maximo !== '' && parseInt(formData.stock_maximo) < 0) {
+            newErrors.stock_maximo = 'No puede ser negativo';
+        }
         if (formData.stock_maximo && formData.stock_minimo && parseInt(formData.stock_minimo) >= parseInt(formData.stock_maximo)) {
             newErrors.stock_minimo = 'Debe ser menor que el máximo';
         }
@@ -54,7 +64,7 @@ export default function Inventario() {
     const validateMovimiento = () => {
         const newErrors = {};
         if (!movimientoData.cantidad || parseInt(movimientoData.cantidad) <= 0) {
-            newErrors.cantidad = 'Ingrese una cantidad válida';
+            newErrors.cantidad = 'Ingrese una cantidad válida (mínimo 1)';
         }
         if (movimientoData.tipo === 'SALIDA' && selectedProducto) {
             if (parseInt(movimientoData.cantidad) > selectedProducto.stock_actual) {
@@ -137,6 +147,28 @@ export default function Inventario() {
         return { class: 'badge-success', text: 'Normal' };
     };
 
+    const exportColumns = [
+        { key: 'codigo', label: 'Código' },
+        { key: 'nombre', label: 'Producto' },
+        { key: 'stock_actual', label: 'Stock Actual' },
+        { key: 'stock_minimo', label: 'Stock Mínimo' },
+        { key: 'stock_maximo', label: 'Stock Máximo' },
+        { key: 'estado', label: 'Estado' },
+    ];
+
+    const exportData = filtered.map(inv => {
+        const prod = getProducto(inv.id_producto);
+        const status = getStockStatus(inv);
+        return {
+            codigo: prod?.codigo || '',
+            nombre: prod?.nombre || '',
+            stock_actual: inv.stock_actual,
+            stock_minimo: inv.stock_minimo,
+            stock_maximo: inv.stock_maximo,
+            estado: status.text,
+        };
+    });
+
     if (loading) return <div className="content-area"><p>Cargando...</p></div>;
 
     return (
@@ -146,9 +178,16 @@ export default function Inventario() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Gestión de Inventario</h3>
-                    <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                        + Nuevo Registro
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                        <ExportButtons
+                            data={exportData}
+                            columns={exportColumns}
+                            moduleName="inventario"
+                        />
+                        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                            + Nuevo Registro
+                        </button>
+                    </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>

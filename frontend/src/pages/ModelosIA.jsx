@@ -63,7 +63,7 @@ export default function ModelosIA() {
 
     const prepareChartData = (metrica) => {
         return {
-            labels: modelos.map(m => m.algoritmo),
+            labels: modelos.map(m => `${m.algoritmo} v${m.version || '1.0'}`),
             datasets: [
                 {
                     label: metrica.toUpperCase(),
@@ -110,7 +110,7 @@ export default function ModelosIA() {
         return {
             labels: ['MAE', 'RMSE', 'R²'],
             datasets: modelos.map(modelo => ({
-                label: modelo.algoritmo,
+                label: `${modelo.algoritmo} v${modelo.version || '1.0'}`,
                 data: [
                     parseFloat(modelo.mae) || 0,
                     parseFloat(modelo.rmse) || 0,
@@ -170,7 +170,7 @@ export default function ModelosIA() {
                         }}
                     >
                         <div className="card-header">
-                            <h3 className="card-title">{modelo.algoritmo}</h3>
+                            <h3 className="card-title">{modelo.algoritmo} v{modelo.version || '1.0'}</h3>
                             <span className={`badge ${modelo.estado === 'ACTIVO' ? 'badge-success' : 'badge-secondary'}`}>
                                 {modelo.estado}
                             </span>
@@ -296,7 +296,7 @@ export default function ModelosIA() {
                         <tbody>
                             {modelos.map(modelo => (
                                 <tr key={modelo.id_modelo} style={{ backgroundColor: modelo.estado === 'ACTIVO' ? 'var(--success-light)' : 'transparent' }}>
-                                    <td><strong>{modelo.algoritmo}</strong></td>
+                                    <td><strong>{modelo.algoritmo} v{modelo.version || '1.0'}</strong></td>
                                     <td>
                                         <span className={`badge ${modelo.estado === 'ACTIVO' ? 'badge-success' : 'badge-secondary'}`}>
                                             {modelo.estado}

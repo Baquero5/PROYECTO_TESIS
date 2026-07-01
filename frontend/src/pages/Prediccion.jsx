@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import ExportButtons from '../components/ExportButtons';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -416,6 +417,32 @@ export default function Prediccion() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Historial de Predicciones</h3>
+                    <ExportButtons
+                        data={(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 50).map(pred => {
+                            const prod = getProducto(pred.id_producto);
+                            return {
+                                id_prediccion: `#${pred.id_prediccion}`,
+                                producto: prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`,
+                                periodo: pred.periodo || '-',
+                                confianza_min: pred.confianza_min || '-',
+                                demanda_estimada: pred.demanda_estimada,
+                                confianza_max: pred.confianza_max || '-',
+                                horizonte_dias: `${pred.horizonte_dias || '-'} días`,
+                                fecha_prediccion: pred.fecha_prediccion || '-',
+                            };
+                        })}
+                        columns={[
+                            { key: 'id_prediccion', label: 'ID' },
+                            { key: 'producto', label: 'Producto' },
+                            { key: 'periodo', label: 'Periodo' },
+                            { key: 'confianza_min', label: 'Demanda Min' },
+                            { key: 'demanda_estimada', label: 'Demanda Estimada' },
+                            { key: 'confianza_max', label: 'Demanda Max' },
+                            { key: 'horizonte_dias', label: 'Horizonte' },
+                            { key: 'fecha_prediccion', label: 'Fecha' },
+                        ]}
+                        moduleName="prediccion"
+                    />
                 </div>
                 {predicciones.length === 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', color: 'var(--gray-500)' }}>

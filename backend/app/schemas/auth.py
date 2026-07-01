@@ -1,18 +1,18 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, EmailStr
 from typing import Optional
 
 
 class UserCreate(BaseModel):
     id_rol: int
-    nombres: str
-    apellidos: str
-    correo: str
-    password: str
+    nombres: str = Field(..., min_length=2, max_length=100)
+    apellidos: str = Field(..., min_length=2, max_length=100)
+    correo: EmailStr
+    password: str = Field(..., min_length=6, max_length=128)
 
 
 class UserLogin(BaseModel):
-    correo: str
-    password: str
+    correo: EmailStr
+    password: str = Field(..., min_length=1)
 
 
 class UserResponse(BaseModel):

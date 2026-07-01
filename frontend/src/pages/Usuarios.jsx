@@ -34,12 +34,21 @@ export default function Usuarios() {
 
     const validate = () => {
         const e = {};
-        if (!formData.nombres.trim()) e.nombres = 'Obligatorio';
-        if (!formData.apellidos.trim()) e.apellidos = 'Obligatorio';
-        if (!formData.correo.trim()) e.correo = 'Obligatorio';
-        else if (!/\S+@\S+\.\S+/.test(formData.correo)) e.correo = 'Email inválido';
-        if (!editingId && !formData.password) e.password = 'Obligatorio';
+        if (!formData.nombres.trim()) e.nombres = 'Los nombres son obligatorios';
+        else if (formData.nombres.trim().length < 2) e.nombres = 'Mínimo 2 caracteres';
+        else if (formData.nombres.trim().length > 100) e.nombres = 'Máximo 100 caracteres';
+
+        if (!formData.apellidos.trim()) e.apellidos = 'Los apellidos son obligatorios';
+        else if (formData.apellidos.trim().length < 2) e.apellidos = 'Mínimo 2 caracteres';
+        else if (formData.apellidos.trim().length > 100) e.apellidos = 'Máximo 100 caracteres';
+
+        if (!formData.correo.trim()) e.correo = 'El correo es obligatorio';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.correo)) e.correo = 'Ingrese un correo válido';
+
+        if (!editingId && !formData.password) e.password = 'La contraseña es obligatoria';
         else if (!editingId && formData.password.length < 6) e.password = 'Mínimo 6 caracteres';
+        else if (!editingId && formData.password.length > 128) e.password = 'Máximo 128 caracteres';
+
         if (!formData.id_rol) e.id_rol = 'Seleccione un rol';
         setErrors(e);
         return Object.keys(e).length === 0;

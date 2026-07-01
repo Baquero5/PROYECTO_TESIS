@@ -176,6 +176,86 @@ Seguridad y separación de funciones por rol.
 
 ---
 
+---
+
+## 12. Mejoras al Motor de Predicción (ml_service.py)
+**Estado:** Completado ✅ (29/06/2026)
+
+### Cambios implementados en `backend/app/services/ml_service.py`
+
+#### 12.1 Precio variable en predicción
+- **Antes:** Precio constante durante todo el horizonte de predicción.
+- **Ahora:** Precio proyectado con variación histórica (promedio ± 10% desviación de últimos 7 días).
+- **Impacto:** Modelo considera fluctuaciones de precio en la demanda.
+
+#### 12.2 Festivos dinámicos de Ecuador
+- **Antes:** Lista hardcodeada de festivos US (2011-2016): Año Nuevo, 4 de julio, Acción de Gracias, Navidad.
+- **Ahora:** Festivos de Ecuador generados dinámicamente por año con algoritmo de Pascua:
+  - Fijos: Año Nuevo, Día del Trabajo, Batalla de Pichincha, Independencia de Guayaquil, Primer Grito de Independencia, Día de los Difuntos, Independencia de Cuenca, Navidad.
+  - Móviles: Carnaval (lunes y martes), Viernes Santo.
+- **Impacto:** `is_holiday` ahora es correcto para cualquier año.
+
+#### 12.3 Suavizado exponencial
+- **Antes:** Predicción cruda del modelo se usaba directamente.
+- **Ahora:** Mezcla 80% predicción + 20% promedio ponderado exponencial de últimos 7 valores.
+- **Impacto** Reduce acumulación de errores en predicciones lejanas (día 30+).
+
+#### 12.4 Corrección de fuga temporal (min_periods)
+- **Antes:** `rolling(window=N).mean()` sin `min_periods` → NaN en primeras filas.
+- **Ahora:** `rolling(window=N, min_periods=1).mean()` → datos parciales desde la primera fila.
+- **Impacto:** Elimina fuga temporal potencial, reduce pérdida de datos.
+
+### Archivos modificados
+- `backend/app/services/ml_service.py` (único archivo)
+
+---
+
+## 13. Re-entrenamiento del Modelo con Mejoras
+**Estado:** Pendiente 🔲
+
+### Problema
+Los scripts de entrenamiento están en `C:\Users\RRHH3\Desktop\VISUAL\ENTRENAMIENTO\src\` (fuera de TESIS). Tienen la lógica de features **original** (sin las mejoras de la sección 12).
+
+### Pasos para continuar (30/06/2026)
+
+#### Paso 1: Leer scripts de entrenamiento
+- Leer `03_features.py` → feature engineering original
+- Leer `10_mejorar_modelo.py` → entrenamiento v2
+- Identificar qué cambios aplicar
+
+#### Paso 2: Aplicar mejoras en scripts de entrenamiento
+- Festivos de Ecuador en `03_features.py` y `10_mejorar_modelo.py`
+- `min_periods=1` en rolling windows
+- Precio variable (si aplica en entrenamiento)
+
+#### Paso 3: Re-entrenar
+```bash
+cd C:\Users\RRHH3\Desktop\VISUAL\ENTRENAMIENTO\src
+python 10_mejorar_modelo.py
+```
+
+#### Paso 4: Registrar en BD
+```bash
+python 09_registrar_modelos_bd.py
+```
+
+#### Paso 5: Activar nuevo modelo
+- Desde el frontend (módulo Modelos IA)
+- O vía API: `PUT /api/modelos-ia/{id}/activar`
+
+### Dependencias necesarias
+- Python 3.10+
+- xgboost, lightgbm, scikit-learn, pandas, numpy, pymysql, kagglehub, matplotlib, seaborn, pyyaml
+- Dataset M5 en Kaggle (descargado por script 01)
+- MariaDB corriendo en puerto 3307
+
+### Notas
+- El script 10 también necesita `prophet` (no está en requirements.txt)
+- Los modelos generados se guardan en `ENTRENAMIENTO\models\`
+- Después de copiar a `TESIS\backend\ml_models\`, reiniciar el backend
+
+---
+
 # Resumen General
 
 ## Completado ✅
@@ -195,6 +275,7 @@ Seguridad y separación de funciones por rol.
 - Predicción por categoría y multi-select de productos.
 - Módulo de Modelos IA con gráficos comparativos.
 - Documentación técnica de IA (página web).
+- **Mejoras al motor de predicción (precio variable, festivos Ecuador, suavizado, min_periods).**
 
 ## Pendiente 🔲
 1. Exportación de reportes.
@@ -202,3 +283,4 @@ Seguridad y separación de funciones por rol.
 3. Validaciones robustas.
 4. Alertas inteligentes avanzadas.
 5. Preparación de documentación para sustentación.
+6. **Re-entrenar modelo con mejoras aplicadas.**

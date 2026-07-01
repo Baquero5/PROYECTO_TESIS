@@ -1,6 +1,7 @@
 import { NavLink, Outlet, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useState } from 'react';
+import NotificationBell from './NotificationBell';
 
 const allMenuItems = [
     { path: '/dashboard', icon: '📈', label: 'Dashboard', roles: [1, 2] },
@@ -12,6 +13,7 @@ const allMenuItems = [
     { path: '/alertas', icon: '⚠️', label: 'Alertas', roles: [1, 2] },
     { path: '/prediccion', icon: '🔮', label: 'Predicción', roles: [1, 2] },
     { path: '/modelos-ia', icon: '🤖', label: 'Modelos IA', roles: [1, 2] },
+    { path: '/reportes', icon: '📥', label: 'Reportes', roles: [1, 2] },
     { path: '/usuarios', icon: '👥', label: 'Usuarios', roles: [1, 2] },
     { path: '/roles', icon: '🔐', label: 'Roles', roles: [1, 2] },
 ];
@@ -97,6 +99,7 @@ export default function Layout() {
                         </div>
                     </div>
                     <div className="header-actions">
+                        <NotificationBell />
                         <button className="theme-toggle" onClick={toggleTheme}>
                             {darkMode ? '☀️' : '🌓'}
                         </button>

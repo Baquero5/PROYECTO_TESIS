@@ -1,12 +1,12 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from typing import Optional, List
 from datetime import date, datetime
 
 
 class DetalleVentaCreate(BaseModel):
     id_producto: int
-    cantidad: int
-    precio_unitario: float
+    cantidad: int = Field(..., ge=1)
+    precio_unitario: float = Field(..., ge=0)
 
 
 class DetalleVentaResponse(BaseModel):
@@ -23,7 +23,14 @@ class DetalleVentaResponse(BaseModel):
 
 class VentaCreate(BaseModel):
     id_usuario: int
-    detalles: List[DetalleVentaCreate]
+    detalles: List[DetalleVentaCreate] = Field(..., min_length=1)
+
+    @field_validator('detalles')
+    @classmethod
+    def validate_detalles_not_empty(cls, v):
+        if len(v) == 0:
+            raise ValueError('Debe agregar al menos un producto a la venta')
+        return v
 
 
 class VentaResponse(BaseModel):

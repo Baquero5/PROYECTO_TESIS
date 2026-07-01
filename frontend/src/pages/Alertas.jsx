@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import ExportButtons from '../components/ExportButtons';
 
 export default function Alertas() {
     const [alertas, setAlertas] = useState([]);
@@ -25,7 +26,7 @@ export default function Alertas() {
         try {
             const [alertasRes, prodRes] = await Promise.all([
                 api.get('/alertas'),
-                api.get('/products')
+                api.get('/products?limit=2000')
             ]);
             setAlertas(alertasRes.data);
             setProductos(prodRes.data);
@@ -43,6 +44,9 @@ export default function Alertas() {
         }
         if (!formData.tipo_alerta) {
             newErrors.tipo_alerta = 'Seleccione un tipo de alerta';
+        }
+        if (formData.mensaje && formData.mensaje.length > 500) {
+            newErrors.mensaje = 'Máximo 500 caracteres';
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;
@@ -121,6 +125,20 @@ export default function Alertas() {
         setFormData({ id_producto: '', tipo_alerta: 'PREVENTIVA', mensaje: '' });
         setErrors({});
         setShowModal(true);
+    };
+
+    const detectAlerts = async () => {
+        try {
+            const response = await api.post('/alertas/detectar');
+            const nuevas = response.data.alertas_creadas?.length || 0;
+            setToast({
+                message: nuevas > 0 ? `Se detectaron ${nuevas} nueva(s) alerta(s)` : 'No se detectaron nuevas alertas',
+                type: nuevas > 0 ? 'success' : 'info',
+            });
+            loadData();
+        } catch (err) {
+            setToast({ message: 'Error al detectar alertas', type: 'error' });
+        }
     };
 
     const getProducto = (id) => productos.find(p => p.id_producto === id);
@@ -236,6 +254,35 @@ export default function Alertas() {
                             <option value="preventivas">Solo Preventivas</option>
                             <option value="resueltas">Resueltas</option>
                         </select>
+                        <ExportButtons
+                            data={filtered.map(a => {
+                                const prod = getProducto(a.id_producto);
+                                return {
+                                    id_alerta: `#${a.id_alerta}`,
+                                    tipo: a.tipo_alerta,
+                                    producto: prod?.nombre || `#${a.id_producto}`,
+                                    mensaje: a.mensaje || '-',
+                                    estado: a.estado,
+                                    fecha: a.fecha_alerta ? new Date(a.fecha_alerta).toLocaleDateString() : '-',
+                                };
+                            })}
+                            columns={[
+                                { key: 'id_alerta', label: 'ID' },
+                                { key: 'tipo', label: 'Tipo' },
+                                { key: 'producto', label: 'Producto' },
+                                { key: 'mensaje', label: 'Mensaje' },
+                                { key: 'estado', label: 'Estado' },
+                                { key: 'fecha', label: 'Fecha' },
+                            ]}
+                            moduleName="alertas"
+                        />
+                        <button
+                            className="btn btn-outline"
+                            onClick={detectAlerts}
+                            style={{ fontSize: '0.8rem' }}
+                        >
+                            🔍 Detectar
+                        </button>
                         <button className="btn btn-primary" onClick={openCreateModal}>
                             + Nueva Alerta
                         </button>

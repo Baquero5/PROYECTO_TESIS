@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from app.core.database import get_db
@@ -9,6 +9,8 @@ from app.services.auth_service import (
     create_access_token,
     get_current_user,
     require_admin,
+    set_token_cookie,
+    clear_token_cookie,
 )
 from app.schemas.auth import UserCreate, UserLogin, UserResponse, Token
 from app.models.usuarios import Usuario
@@ -46,7 +48,7 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 
 @router.post("/login", response_model=Token)
-async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
+async def login(data: UserLogin, response: Response, db: AsyncSession = Depends(get_db)):
     repo = UserRepository(db)
     user = await repo.get_by_email(data.correo)
 
@@ -57,10 +59,20 @@ async def login(data: UserLogin, db: AsyncSession = Depends(get_db)):
         raise HTTPException(status_code=403, detail="Usuario desactivado")
 
     token = create_access_token({"sub": str(user.id_usuario)})
+    
+    # Establecer token en httpOnly cookie
+    set_token_cookie(response, token)
+    
     return Token(
         access_token=token,
         user=UserResponse.model_validate(user),
     )
+
+
+@router.post("/logout")
+async def logout(response: Response):
+    clear_token_cookie(response)
+    return {"message": "Sesión cerrada correctamente"}
 
 
 @router.get("/me", response_model=UserResponse)

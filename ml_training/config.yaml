@@ -1,0 +1,34 @@
+database:
+  host: localhost
+  port: 3307
+  user: root
+  password: "123456"
+  name: tesis_inventario
+
+dataset:
+  tiendas:
+    - CA_1
+    - CA_3
+    - TX_1
+    - WI_1
+    - WI_3
+  num_productos: 1000
+  fecha_inicio: "2011-01-29"
+  fecha_fin: "2016-06-24"
+
+modelos:
+  xgboost:
+    n_estimators: 1000
+    max_depth: 8
+    learning_rate: 0.05
+    subsample: 0.8
+    colsample_bytree: 0.8
+    random_state: 42
+  lightgbm:
+    n_estimators: 1000
+    num_leaves: 63
+    learning_rate: 0.05
+    feature_fraction: 0.8
+    bagging_fraction: 0.8
+    bagging_freq: 5
+    random_state: 42

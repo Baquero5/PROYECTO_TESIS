@@ -32,7 +32,12 @@ export default function Categorias() {
         if (!formData.nombre.trim()) {
             newErrors.nombre = 'El nombre es obligatorio';
         } else if (formData.nombre.trim().length < 2) {
-            newErrors.nombre = 'El nombre debe tener al menos 2 caracteres';
+            newErrors.nombre = 'Mínimo 2 caracteres';
+        } else if (formData.nombre.trim().length > 100) {
+            newErrors.nombre = 'Máximo 100 caracteres';
+        }
+        if (formData.descripcion && formData.descripcion.length > 300) {
+            newErrors.descripcion = 'Máximo 300 caracteres';
         }
         setErrors(newErrors);
         return Object.keys(newErrors).length === 0;

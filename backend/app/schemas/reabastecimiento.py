@@ -1,17 +1,17 @@
-from pydantic import BaseModel
-from typing import Optional
+from pydantic import BaseModel, Field
+from typing import Optional, Literal
 from datetime import date
 
 
 class ReabastecimientoCreate(BaseModel):
     id_producto: int
     id_prediccion: Optional[int] = None
-    cantidad_sugerida: int = 0
+    cantidad_sugerida: int = Field(0, ge=0)
 
 
 class ReabastecimientoUpdate(BaseModel):
-    estado: Optional[str] = None
-    cantidad_sugerida: Optional[int] = None
+    estado: Optional[Literal["PENDIENTE", "APROBADO", "COMPRADO", "CANCELADO"]] = None
+    cantidad_sugerida: Optional[int] = Field(None, ge=0)
 
 
 class ReabastecimientoResponse(BaseModel):
