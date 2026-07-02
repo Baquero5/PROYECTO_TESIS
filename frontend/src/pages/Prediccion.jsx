@@ -568,7 +568,7 @@ export default function Prediccion() {
                 <div className="card-header">
                     <h3 className="card-title">Historial de Predicciones</h3>
                     <ExportButtons
-                        data={(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 50).map(pred => {
+                        data={(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 200).map(pred => {
                             const prod = getProducto(pred.id_producto);
                             return {
                                 id_prediccion: `#${pred.id_prediccion}`,
@@ -600,7 +600,7 @@ export default function Prediccion() {
                         <p>No hay predicciones registradas. Seleccione un producto y genere una predicción.</p>
                     </div>
                 ) : (
-                    <div className="table-container">
+                    <div className="table-container" style={{ maxHeight: '520px', overflowY: 'auto' }}>
                         <table className="data-table">
                             <thead>
                                 <tr>
@@ -615,7 +615,7 @@ export default function Prediccion() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 50).map(pred => {
+                                {(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 200).map(pred => {
                                     const prod = getProducto(pred.id_producto);
                                     return (
                                         <tr key={pred.id_prediccion}>
