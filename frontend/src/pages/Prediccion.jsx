@@ -35,16 +35,20 @@ export default function Prediccion() {
     const [selectedCategory, setSelectedCategory] = useState('');
     const [selectedProduct, setSelectedProduct] = useState('');
     const [productosFiltrados, setProductosFiltrados] = useState([]);
-    const [horizonte, setHorizonte] = useState('30');
+    const [fechaInicio, setFechaInicio] = useState('');
+    const [fechaFin, setFechaFin] = useState('');
     const [loading, setLoading] = useState(true);
     const [generating, setGenerating] = useState(false);
     const [progreso, setProgreso] = useState(null);
     const [toast, setToast] = useState(null);
     const [historialVentas, setHistorialVentas] = useState([]);
     const [loadingHistorial, setLoadingHistorial] = useState(false);
+    const [kpis, setKpis] = useState(null);
+    const [loadingKpis, setLoadingKpis] = useState(false);
 
     useEffect(() => {
         loadData();
+        loadKpis();
     }, []);
 
     useEffect(() => {
@@ -91,6 +95,18 @@ export default function Prediccion() {
         setLoading(false);
     };
 
+    const loadKpis = async () => {
+        setLoadingKpis(true);
+        try {
+            const response = await api.get('/predicciones/kpis');
+            setKpis(response.data);
+        } catch (err) {
+            console.error('Error loading KPIs:', err);
+        } finally {
+            setLoadingKpis(false);
+        }
+    };
+
     const loadHistorial = async (productoId) => {
         setLoadingHistorial(true);
         try {
@@ -131,16 +147,33 @@ export default function Prediccion() {
         }
     };
 
+    const calcularHorizonte = () => {
+        if (!fechaInicio || !fechaFin) return 30;
+        const inicio = new Date(fechaInicio);
+        const fin = new Date(fechaFin);
+        const diffTime = Math.abs(fin - inicio);
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return diffDays;
+    };
+
     const predecirProducto = async (productoId) => {
         setGenerating(true);
         try {
-            await api.post('/predicciones/predecir', {
+            const horizonte = calcularHorizonte();
+            const payload = {
                 id_producto: productoId,
-                horizonte_dias: parseInt(horizonte),
+                horizonte_dias: horizonte,
                 id_modelo: parseInt(modeloSeleccionado)
-            });
+            };
+            
+            if (fechaInicio) {
+                payload.fecha_inicio = fechaInicio;
+            }
+            
+            await api.post('/predicciones/predecir', payload);
             setToast({ message: 'Predicción generada exitosamente', type: 'success' });
             loadData();
+            loadKpis();
         } catch (err) {
             setToast({ message: err.response?.data?.detail || 'Error al generar predicción', type: 'error' });
         } finally {
@@ -153,11 +186,18 @@ export default function Prediccion() {
         setProgreso({ total: idsProductos.length, actual: 0, exitosos: 0, fallidos: 0 });
 
         try {
-            const response = await api.post('/predicciones/predecir-lote', {
+            const horizonte = calcularHorizonte();
+            const payload = {
                 ids_productos: idsProductos,
-                horizonte_dias: parseInt(horizonte),
+                horizonte_dias: horizonte,
                 id_modelo: parseInt(modeloSeleccionado)
-            });
+            };
+            
+            if (fechaInicio) {
+                payload.fecha_inicio = fechaInicio;
+            }
+            
+            const response = await api.post('/predicciones/predecir-lote', payload);
 
             const resultado = response.data;
             setProgreso({
@@ -180,6 +220,7 @@ export default function Prediccion() {
             }
 
             loadData();
+            loadKpis();
         } catch (err) {
             setToast({ message: err.response?.data?.detail || 'Error al generar predicciones', type: 'error' });
         } finally {
@@ -353,21 +394,37 @@ export default function Prediccion() {
                     </div>
                 </div>
 
-                <div className="grid-2" style={{ gap: '16px', marginTop: '16px' }}>
+                <div className="grid-3" style={{ gap: '16px', marginTop: '16px' }}>
                     <div className="form-group">
-                        <label>Horizonte de Predicción</label>
-                        <select value={horizonte} onChange={(e) => setHorizonte(e.target.value)}>
-                            <option value="7">7 días</option>
-                            <option value="14">14 días</option>
-                            <option value="30">30 días</option>
-                            <option value="60">60 días</option>
-                        </select>
+                        <label>Fecha de Inicio</label>
+                        <input
+                            type="date"
+                            value={fechaInicio}
+                            onChange={(e) => setFechaInicio(e.target.value)}
+                            min={new Date().toISOString().split('T')[0]}
+                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--gray-300)' }}
+                        />
+                    </div>
+                    <div className="form-group">
+                        <label>Fecha de Fin</label>
+                        <input
+                            type="date"
+                            value={fechaFin}
+                            onChange={(e) => setFechaFin(e.target.value)}
+                            min={fechaInicio || new Date().toISOString().split('T')[0]}
+                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--gray-300)' }}
+                        />
+                        {fechaInicio && fechaFin && (
+                            <small style={{ color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 'bold' }}>
+                                Horizonte: {calcularHorizonte()} días
+                            </small>
+                        )}
                     </div>
                     <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
                         <button
                             className="btn btn-primary"
                             onClick={handleGenerar}
-                            disabled={generating || !modeloSeleccionado || !selectedProduct}
+                            disabled={generating || !modeloSeleccionado || !selectedProduct || !fechaInicio || !fechaFin}
                             style={{ width: '100%', padding: '8px 16px', fontSize: '0.9rem' }}
                         >
                             {generating ? 'Generando...' : 'Generar Predicción'}
@@ -414,6 +471,99 @@ export default function Prediccion() {
                 </div>
             )}
 
+            {kpis && kpis.total_productos > 0 && (
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">KPIs de Rentabilidad</h3>
+                        {loadingKpis && <span style={{ fontSize: '0.8rem', color: 'var(--gray-500)' }}>Calculando...</span>}
+                    </div>
+                    
+                    <div className="grid-4" style={{ gap: '16px', marginBottom: '20px' }}>
+                        <div className="card" style={{ backgroundColor: 'var(--primary-light)', borderLeft: '4px solid var(--primary)' }}>
+                            <div className="card-title" style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>Ingreso Total Esperado</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+                                ${kpis.ingreso_total_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                        <div className="card" style={{ backgroundColor: 'var(--success-light)', borderLeft: '4px solid var(--success)' }}>
+                            <div className="card-title" style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>Ganancia Total Esperada</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--success)' }}>
+                                ${kpis.ganancia_total_esperada.toLocaleString('es-EC', { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                        <div className="card" style={{ backgroundColor: 'var(--warning-light)', borderLeft: '4px solid var(--warning)' }}>
+                            <div className="card-title" style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>Costo Total Esperado</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--warning)' }}>
+                                ${kpis.costo_total_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}
+                            </div>
+                        </div>
+                        <div className="card" style={{ backgroundColor: 'var(--info-light)', borderLeft: '4px solid var(--info)' }}>
+                            <div className="card-title" style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>Productos con Predicción</div>
+                            <div style={{ fontSize: '1.5rem', fontWeight: 'bold', color: 'var(--info)' }}>
+                                {kpis.total_productos}
+                            </div>
+                        </div>
+                    </div>
+
+                    {kpis.producto_mayor_volumen && (
+                        <div className="grid-3" style={{ gap: '16px', marginBottom: '20px' }}>
+                            <div className="card" style={{ backgroundColor: 'var(--bg-secondary)', padding: '12px' }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '4px' }}>Mayor Volumen de Venta</div>
+                                <div style={{ fontWeight: 'bold', color: 'var(--primary)' }}>{kpis.producto_mayor_volumen.nombre}</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>
+                                    Demanda: {kpis.producto_mayor_volumen.demanda_total.toLocaleString()} unidades
+                                </div>
+                            </div>
+                            <div className="card" style={{ backgroundColor: 'var(--bg-secondary)', padding: '12px' }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '4px' }}>Mayor Rentabilidad</div>
+                                <div style={{ fontWeight: 'bold', color: 'var(--success)' }}>{kpis.producto_mayor_rentabilidad.nombre}</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>
+                                    Ganancia: ${kpis.producto_mayor_rentabilidad.ganancia_esperada.toLocaleString('es-EC', { minimumFractionDigits: 2 })}
+                                </div>
+                            </div>
+                            <div className="card" style={{ backgroundColor: 'var(--bg-secondary)', padding: '12px' }}>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginBottom: '4px' }}>Mayor Ingreso</div>
+                                <div style={{ fontWeight: 'bold', color: 'var(--warning)' }}>{kpis.producto_mayor_ingreso.nombre}</div>
+                                <div style={{ fontSize: '0.85rem', color: 'var(--gray-600)' }}>
+                                    Ingreso: ${kpis.producto_mayor_ingreso.ingreso_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    <div className="table-container">
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Demanda Est.</th>
+                                    <th>Precio Venta</th>
+                                    <th>Margen</th>
+                                    <th>Ingreso Esperado</th>
+                                    <th>Ganancia Esperada</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {kpis.productos.slice(0, 10).map(kpi => (
+                                    <tr key={kpi.id_producto}>
+                                        <td><strong>{kpi.nombre}</strong></td>
+                                        <td>{kpi.demanda_total.toLocaleString()}</td>
+                                        <td>${kpi.precio_venta.toFixed(2)}</td>
+                                        <td style={{ color: kpi.margen_porcentaje > 20 ? 'var(--success)' : 'var(--warning)' }}>
+                                            {kpi.margen_porcentaje.toFixed(1)}%
+                                        </td>
+                                        <td>${kpi.ingreso_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}</td>
+                                        <td style={{ color: 'var(--success)', fontWeight: 'bold' }}>
+                                            ${kpi.ganancia_esperada.toLocaleString('es-EC', { minimumFractionDigits: 2 })}
+                                        </td>
+                                    </tr>
+                                ))}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            )}
+
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Historial de Predicciones</h3>
@@ -424,21 +574,22 @@ export default function Prediccion() {
                                 id_prediccion: `#${pred.id_prediccion}`,
                                 producto: prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`,
                                 periodo: pred.periodo || '-',
-                                confianza_min: pred.confianza_min || '-',
                                 demanda_estimada: pred.demanda_estimada,
-                                confianza_max: pred.confianza_max || '-',
-                                horizonte_dias: `${pred.horizonte_dias || '-'} días`,
+                                precio_venta: pred.precio_venta ? `$${pred.precio_venta.toFixed(2)}` : '-',
+                                ingreso_esperado: pred.ingreso_esperado ? `$${pred.ingreso_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : '-',
+                                ganancia_esperada: pred.ganancia_esperada ? `$${pred.ganancia_esperada.toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : '-',
+                                margen_porcentaje: pred.margen_porcentaje ? `${pred.margen_porcentaje}%` : '-',
                                 fecha_prediccion: pred.fecha_prediccion || '-',
                             };
                         })}
                         columns={[
                             { key: 'id_prediccion', label: 'ID' },
                             { key: 'producto', label: 'Producto' },
-                            { key: 'periodo', label: 'Periodo' },
-                            { key: 'confianza_min', label: 'Demanda Min' },
-                            { key: 'demanda_estimada', label: 'Demanda Estimada' },
-                            { key: 'confianza_max', label: 'Demanda Max' },
-                            { key: 'horizonte_dias', label: 'Horizonte' },
+                            { key: 'demanda_estimada', label: 'Demanda' },
+                            { key: 'precio_venta', label: 'Precio' },
+                            { key: 'ingreso_esperado', label: 'Ingreso Esperado' },
+                            { key: 'ganancia_esperada', label: 'Ganancia' },
+                            { key: 'margen_porcentaje', label: 'Margen' },
                             { key: 'fecha_prediccion', label: 'Fecha' },
                         ]}
                         moduleName="prediccion"
@@ -455,11 +606,11 @@ export default function Prediccion() {
                                 <tr>
                                     <th>ID</th>
                                     <th>Producto</th>
-                                    <th>Periodo</th>
-                                    <th>Demanda Min</th>
-                                    <th>Demanda Estimada</th>
-                                    <th>Demanda Max</th>
-                                    <th>Horizonte</th>
+                                    <th>Demanda</th>
+                                    <th>Precio</th>
+                                    <th>Ingreso Esperado</th>
+                                    <th>Ganancia</th>
+                                    <th>Margen</th>
                                     <th>Fecha</th>
                                 </tr>
                             </thead>
@@ -470,11 +621,17 @@ export default function Prediccion() {
                                         <tr key={pred.id_prediccion}>
                                             <td>#{pred.id_prediccion}</td>
                                             <td>{prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`}</td>
-                                            <td>{pred.periodo || '-'}</td>
-                                            <td style={{ color: 'var(--warning)' }}>{pred.confianza_min || '-'}</td>
                                             <td><strong style={{ color: 'var(--primary)' }}>{pred.demanda_estimada}</strong></td>
-                                            <td style={{ color: 'var(--success)' }}>{pred.confianza_max || '-'}</td>
-                                            <td>{pred.horizonte_dias || '-'} días</td>
+                                            <td>${pred.precio_venta?.toFixed(2) || '-'}</td>
+                                            <td style={{ color: 'var(--success)', fontWeight: 'bold' }}>
+                                                ${pred.ingreso_esperado?.toLocaleString('es-EC', { minimumFractionDigits: 2 }) || '-'}
+                                            </td>
+                                            <td style={{ color: 'var(--success)' }}>
+                                                ${pred.ganancia_esperada?.toLocaleString('es-EC', { minimumFractionDigits: 2 }) || '-'}
+                                            </td>
+                                            <td style={{ color: pred.margen_porcentaje > 20 ? 'var(--success)' : 'var(--warning)' }}>
+                                                {pred.margen_porcentaje?.toFixed(1) || '-'}%
+                                            </td>
                                             <td>{pred.fecha_prediccion || '-'}</td>
                                         </tr>
                                     );

@@ -70,11 +70,9 @@ export default function Dashboard() {
     const getProducto = (id) => productos.find(p => p.id_producto === id);
     const getCategoria = (id) => categorias.find(c => c.id_categoria === id);
 
-    // KPIs calculados
     const stockCritico = inventario.filter(i => i.stock_actual <= i.stock_minimo).length;
     const ventasTotales = ventas.reduce((sum, v) => sum + parseFloat(v.total || 0), 0);
 
-    // === GRÁFICO 1: Ventas por Mes ===
     const ventasPorMes = useMemo(() => {
         const map = {};
         ventas.forEach(v => {
@@ -99,7 +97,6 @@ export default function Dashboard() {
         };
     }, [ventas]);
 
-    // === GRÁFICO 2: Distribución por Categoría ===
     const productosPorCategoria = useMemo(() => {
         const counts = {};
         productos.forEach(p => {
@@ -119,7 +116,6 @@ export default function Dashboard() {
         };
     }, [productos, categorias]);
 
-    // === GRÁFICO 3: Top 10 Productos Más Demandados ===
     const topDemandados = useMemo(() => {
         const demand = {};
         predicciones.forEach(p => {
@@ -145,7 +141,6 @@ export default function Dashboard() {
         };
     }, [predicciones, productos]);
 
-    // === GRÁFICO 4: Estado del Inventario ===
     const inventarioEstado = useMemo(() => {
         let critico = 0, bajo = 0, normal = 0;
         inventario.forEach(inv => {
@@ -163,7 +158,6 @@ export default function Dashboard() {
         };
     }, [inventario]);
 
-    // === GRÁFICO 5: Tendencia de Predicciones ===
     const tendenciaPredicciones = useMemo(() => {
         const sorted = [...predicciones]
             .sort((a, b) => new Date(a.fecha_prediccion) - new Date(b.fecha_prediccion))
@@ -199,7 +193,6 @@ export default function Dashboard() {
         };
     }, [predicciones]);
 
-    // === GRÁFICO 6: Rendimiento de Modelos IA ===
     const modelosMetrics = useMemo(() => {
         if (modelos.length === 0) return null;
         return {
@@ -245,17 +238,11 @@ export default function Dashboard() {
         <div className="content-area">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* KPIs */}
-            <div className="grid-4">
+            <div className="grid-4" style={{ marginBottom: '24px' }}>
                 <div className="kpi-card">
                     <div className="kpi-label">Total Productos</div>
                     <div className="kpi-value">{stats.total_products}</div>
                     <div className="kpi-change">Registrados en el sistema</div>
-                </div>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)' }}>
-                    <div className="kpi-label">Valor Inventario</div>
-                    <div className="kpi-value">${stats.total_inventory_value?.toLocaleString()}</div>
-                    <div className="kpi-change">Valor total estimado</div>
                 </div>
                 <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
                     <div className="kpi-label">Ventas Totales</div>
@@ -267,19 +254,14 @@ export default function Dashboard() {
                     <div className="kpi-value">{stockCritico}</div>
                     <div className="kpi-change">{stockCritico > 0 ? 'Requiere atención' : 'Todo normal'}</div>
                 </div>
-            </div>
-
-            <div className="grid-3" style={{ marginBottom: '0' }}>
                 <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
                     <div className="kpi-label">Alertas Activas</div>
                     <div className="kpi-value">{alertas.length}</div>
                     <div className="kpi-change">{alertas.length > 0 ? 'Pendientes' : 'Sin alertas'}</div>
                 </div>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #ec4899 0%, #db2777 100%)' }}>
-                    <div className="kpi-label">Predicciones</div>
-                    <div className="kpi-value">{predicciones.length}</div>
-                    <div className="kpi-change">Demandas generadas</div>
-                </div>
+            </div>
+
+            <div className="grid-3" style={{ marginBottom: '24px' }}>
                 <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}>
                     <div className="kpi-label">Reabastecimientos</div>
                     <div className="kpi-value">{reabastecimientos.length}</div>
@@ -287,7 +269,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Fila 1: Ventas por Mes + Distribución Categorías */}
             <div className="grid-2">
                 <div className="card">
                     <div className="card-header">
@@ -319,7 +300,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Fila 2: Top Demandados + Estado Inventario */}
             <div className="grid-2">
                 <div className="card">
                     <div className="card-header">
@@ -351,7 +331,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Fila 3: Tendencia Predicciones + Rendimiento Modelos */}
             <div className="grid-2">
                 <div className="card">
                     <div className="card-header">
@@ -387,9 +366,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            {/* Tablas */}
             <div className="grid-3">
-                {/* Stock Crítico */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Stock Crítico</h3>
@@ -419,7 +396,6 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* Últimas Ventas */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Últimas Ventas</h3>
@@ -446,7 +422,6 @@ export default function Dashboard() {
                     )}
                 </div>
 
-                {/* Reabastecimientos Pendientes */}
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Reabastecimientos Pendientes</h3>
