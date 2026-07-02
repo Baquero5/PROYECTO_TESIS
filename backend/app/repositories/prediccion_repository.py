@@ -58,3 +58,11 @@ class PrediccionRepository:
         for p in predicciones:
             await self.db.refresh(p)
         return predicciones
+
+    async def delete_by_product(self, producto_id: int) -> int:
+        from sqlalchemy import delete
+        result = await self.db.execute(
+            delete(Prediccion).where(Prediccion.id_producto == producto_id)
+        )
+        await self.db.commit()
+        return result.rowcount

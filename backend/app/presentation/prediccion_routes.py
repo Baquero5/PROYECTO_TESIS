@@ -296,6 +296,9 @@ async def predecir_demanda(
             porcentaje_confianza=95.0,
         ))
 
+    # Eliminar predicciones anteriores del producto para evitar duplicados
+    await repo.delete_by_product(data.id_producto)
+    
     predicciones_creadas = await repo.create_many(predicciones_obj)
     return predicciones_creadas
 
@@ -402,6 +405,8 @@ async def predecir_lote(
                     porcentaje_confianza=95.0,
                 ))
 
+            # Eliminar predicciones anteriores del producto para evitar duplicados
+            await repo.delete_by_product(producto_id)
             await repo.create_many(predicciones_obj)
             exitosos.append(producto_id)
 

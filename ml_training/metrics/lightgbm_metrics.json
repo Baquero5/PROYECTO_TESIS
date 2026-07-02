@@ -1,0 +1,28 @@
+{
+  "modelo": "LightGBM",
+  "mae": 1.6692,
+  "rmse": 3.5347,
+  "r2": 0.7393,
+  "mape": 71.1834,
+  "features_used": [
+    "price",
+    "dayofweek",
+    "month",
+    "is_month_end",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "lag_28",
+    "rolling_mean_7",
+    "rolling_mean_14",
+    "rolling_mean_28",
+    "rolling_std_7",
+    "rolling_std_28",
+    "price_change_1",
+    "is_holiday",
+    "month_sin",
+    "dayofweek_sin",
+    "rolling_max_28",
+    "rolling_min_28"
+  ]
+}

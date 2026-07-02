@@ -46,13 +46,18 @@ El tutor (Msc. Delia) proporciono una lista de correcciones en `D:\checklist_cor
 - Corregido en ambos endpoints: /predecir y /predecir-lote
 - Se eliminaron 18 predicciones con ano 2036 de la base de datos
 
+**8. Eliminacion de Predicciones Duplicadas**
+- Problema: re-predecir un producto creaba registros duplicados en la DB
+- Solucion: antes de crear nuevas predicciones, eliminar las existentes del producto
+- Implementado en ambos endpoints: /predecir y /predecir-lote
+- Metodo delete_by_product() agregado a PrediccionRepository
+- Implementado en rama feature/predecir-sin-duplicados
+
 #### Pendientes
 - Task #5: Exportar historial a Excel (componente ExportButtons ya existe)
 - Task #6: Verificar prediccion por categoria
-- Decidir manejo de predicciones duplicadas (re-predecir crea registros duplicados, no hay endpoint DELETE)
 
 #### Notas Tecnicas
 - El modelo ML es determinista: misma entrada produce misma salida
-- Endpoint predecir SIEMPRE crea registros nuevos (nunca actualiza), re-predecir crea duplicados
-- No existe endpoint DELETE para predicciones actualmente
+- Endpoint predecir elimina predicciones anteriores antes de crear nuevas (sin duplicados)
 - KPIs requieren predicciones existentes en DB para mostrar datos

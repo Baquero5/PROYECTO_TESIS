@@ -1,0 +1,18 @@
+{
+  "xgboost": {
+    "modelo": "XGBOOST",
+    "mae": 1.6667,
+    "rmse": 3.6016,
+    "r2": 0.7293,
+    "mape": 70.7336,
+    "pred_time_seconds": 34.7859
+  },
+  "lightgbm": {
+    "modelo": "LIGHTGBM",
+    "mae": 1.6692,
+    "rmse": 3.5347,
+    "r2": 0.7393,
+    "mape": 71.1834,
+    "pred_time_seconds": 86.7057
+  }
+}

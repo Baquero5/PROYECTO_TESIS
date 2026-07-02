@@ -70,10 +70,16 @@ Thesis project for a university program. SmartInventory AI: inventory management
 - Fixed in both /predecir and /predecir-lote endpoints
 - Deleted 18 wrong predictions with year 2036 from DB
 
+### 9. Duplicate Prediction Prevention
+- Problem: Re-predicting the same product created duplicate records in DB
+- Solution: Delete existing predictions for product before creating new ones
+- Added delete_by_product() to PrediccionRepository
+- Implemented in both /predecir and /predecir-lote endpoints
+- Implemented in branch: feature/predecir-sin-duplicados
+
 ## Remaining Tasks
 - Task #5: Exportar historial a Excel (ExportButtons component already exists)
 - Task #6: Verificar prediccion por categoria
-- Decide on duplicate prediction handling (re-predecir creates duplicate records)
 
 ## Key Files
 - frontend/src/pages/Prediccion.jsx: Main prediction page (tasks 1-4, date fix)
@@ -91,7 +97,6 @@ Thesis project for a university program. SmartInventory AI: inventory management
 
 ## Key Behaviors to Know
 - predict_demand in ml_service.py is deterministic: same input produces same output
-- predecir endpoint always creates NEW records (never updates), so re-predicting creates duplicates
-- No DELETE endpoint exists for predictions currently
+- predecir endpoint deletes old predictions before creating new ones (no duplicates)
 - KPIs endpoint requires existing predictions in DB to show data
 - calcularHorizonte() in Prediccion.jsx computes days between fechaInicio and fechaFin
