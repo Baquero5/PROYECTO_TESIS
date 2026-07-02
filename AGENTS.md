@@ -78,8 +78,9 @@ Thesis project for a university program. SmartInventory AI: inventory management
 - Implemented in branch: feature/predecir-sin-duplicados
 
 ## Remaining Tasks
-- Task #5: Exportar historial a Excel (ExportButtons component already exists)
-- Task #6: Verificar prediccion por categoria
+- Task #5: Exportar historial a Excel (ExportButtons component already exists, limit of 50 records needs removal)
+- Task #6: Verificar prediccion por categoria (code reviewed, correct, needs manual test with 235 products)
+- Optimize predecir-lote performance (235 products takes 5+ min due to sequential processing)
 
 ## Key Files
 - frontend/src/pages/Prediccion.jsx: Main prediction page (tasks 1-4, date fix)

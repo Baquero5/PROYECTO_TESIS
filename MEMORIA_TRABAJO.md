@@ -54,8 +54,9 @@ El tutor (Msc. Delia) proporciono una lista de correcciones en `D:\checklist_cor
 - Implementado en rama feature/predecir-sin-duplicados
 
 #### Pendientes
-- Task #5: Exportar historial a Excel (componente ExportButtons ya existe)
-- Task #6: Verificar prediccion por categoria
+- Task #5: Exportar historial a Excel (componente ExportButtons ya existe, pendiente quitar limite de 50 registros)
+- Task #6: Verificar prediccion por categoria (codigo analizado, correcto, falta prueba manual con 235 productos)
+- Optimizar rendimiento de predecir-lote (235 productos toma 5+ min, procesamiento secuencial)
 
 #### Notas Tecnicas
 - El modelo ML es determinista: misma entrada produce misma salida
