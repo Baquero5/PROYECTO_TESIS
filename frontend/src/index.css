@@ -429,6 +429,180 @@ body {
 
 .card, .kpi-card { animation: fadeIn 0.4s ease; }
 
+/* ========== KPI ENHANCED ========== */
+.kpi-header-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 8px;
+}
+
+.kpi-animate {
+    animation: fadeIn 0.5s ease forwards;
+    opacity: 0;
+    transform: translateY(12px);
+}
+
+/* ========== CHART CARD ========== */
+.chart-card {
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.chart-card:hover {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    transform: translateY(-2px);
+}
+
+.chart-empty {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 280px;
+    color: var(--gray-400);
+    font-size: 0.9rem;
+}
+
+.chart-empty-text {
+    color: var(--gray-400);
+    font-size: 0.9rem;
+}
+
+/* ========== CHART EXPORT BUTTON ========== */
+.chart-export-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.chart-export-btn {
+    background: var(--gray-200);
+    border: 1px solid var(--gray-300);
+    border-radius: 8px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 0.9rem;
+    transition: all 0.2s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1;
+}
+
+.chart-export-btn:hover {
+    background: var(--gray-300);
+    transform: scale(1.05);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.chart-export-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.chart-export-menu {
+    position: absolute;
+    top: 100%;
+    right: 0;
+    margin-top: 4px;
+    background: var(--gray-100);
+    border-radius: 10px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.18);
+    border: 1px solid var(--gray-200);
+    z-index: 100;
+    min-width: 180px;
+    overflow: hidden;
+    animation: fadeIn 0.15s ease;
+}
+
+.chart-export-menu button {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 10px 16px;
+    border: none;
+    background: none;
+    text-align: left;
+    cursor: pointer;
+    font-size: 0.85rem;
+    color: var(--gray-700);
+    transition: background 0.15s ease;
+}
+
+.chart-export-menu button:hover {
+    background: var(--gray-200);
+}
+
+.chart-export-menu button:not(:last-child) {
+    border-bottom: 1px solid var(--gray-200);
+}
+
+/* ========== CARD EMPTY STATE ========== */
+.card-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 120px;
+    color: var(--gray-400);
+    gap: 8px;
+}
+
+.card-empty-icon {
+    font-size: 1.8rem;
+    opacity: 0.7;
+}
+
+.card-empty p {
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+/* ========== LOADING STATE ========== */
+.loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 400px;
+    gap: 16px;
+    color: var(--gray-500);
+}
+
+.loading-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--gray-200);
+    border-top-color: var(--primary);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* ========== KPI GRID STAGGER ========== */
+.kpi-grid > *:nth-child(1) { animation-delay: 0ms; }
+.kpi-grid > *:nth-child(2) { animation-delay: 60ms; }
+.kpi-grid > *:nth-child(3) { animation-delay: 120ms; }
+.kpi-grid > *:nth-child(4) { animation-delay: 180ms; }
+
+/* ========== TABLE ROW HOVER ========== */
+.data-table tbody tr {
+    transition: background 0.15s ease;
+}
+
+.data-table tbody tr:hover {
+    background: var(--gray-100);
+}
+
+/* ========== BADGE ENHANCED ========== */
+.badge-secondary {
+    background: rgba(100, 116, 139, 0.15);
+    color: var(--gray-500);
+}
+
 /* ========== FORM VALIDATION ========== */
 .form-group input.error,
 .form-group select.error,

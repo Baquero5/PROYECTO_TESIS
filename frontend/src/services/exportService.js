@@ -107,3 +107,32 @@ export const exportModule = (data, columns, moduleName, format = 'all') => {
         exportToPDF(data, columns, moduleName, titles[moduleName] || 'Reporte');
     }
 };
+
+export const exportChartAsImage = (chartRef, filename = 'grafico', format = 'png') => {
+    if (!chartRef?.current) {
+        console.warn('No chart reference provided');
+        return;
+    }
+
+    try {
+        const chart = chartRef.current;
+        const mimeType = format === 'jpeg' ? 'image/jpeg' : 'image/png';
+        const quality = format === 'jpeg' ? 0.92 : 1.0;
+        const image = chart.toBase64Image(mimeType, quality);
+
+        const arr = image.split(',');
+        const bstr = atob(arr[1]);
+        const n = bstr.length;
+        const u8arr = new Uint8Array(n);
+        for (let i = 0; i < n; i++) {
+            u8arr[i] = bstr.charCodeAt(i);
+        }
+
+        const blob = new Blob([u8arr], { type: mimeType });
+        const date = new Date().toISOString().split('T')[0];
+        const ext = format === 'jpeg' ? 'jpg' : 'png';
+        saveAs(blob, `${filename}_${date}.${ext}`);
+    } catch (err) {
+        console.error('Error exporting chart as image:', err);
+    }
+};

@@ -1,6 +1,8 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import SparkLine from '../components/SparkLine';
+import ChartExportButton from '../components/ChartExportButton';
 import {
     Chart as ChartJS,
     CategoryScale,
@@ -15,6 +17,15 @@ import {
     Filler,
 } from 'chart.js';
 import { Bar, Doughnut, Line } from 'react-chartjs-2';
+import {
+    barOptions,
+    doughnutOptions,
+    baseChartOptions,
+    formatCurrency,
+    formatNumber,
+    CHART_COLORS,
+    PALETTE,
+} from '../config/chartConfig';
 
 ChartJS.register(
     CategoryScale, LinearScale, BarElement, PointElement,
@@ -35,6 +46,13 @@ export default function Dashboard() {
     const [predicciones, setPredicciones] = useState([]);
     const [modelos, setModelos] = useState([]);
     const [reabastecimientos, setReabastecimientos] = useState([]);
+
+    const refVentasMes = useRef(null);
+    const refTopDemandados = useRef(null);
+    const refTendencia = useRef(null);
+    const refModelos = useRef(null);
+    const refCatDoughnut = useRef(null);
+    const refInvDoughnut = useRef(null);
 
     useEffect(() => {
         loadAll();
@@ -73,6 +91,38 @@ export default function Dashboard() {
     const stockCritico = inventario.filter(i => i.stock_actual <= i.stock_minimo).length;
     const ventasTotales = ventas.reduce((sum, v) => sum + parseFloat(v.total || 0), 0);
 
+    const sparkVentasMes = useMemo(() => {
+        const map = {};
+        ventas.forEach(v => {
+            const d = new Date(v.fecha_venta);
+            const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+            map[key] = (map[key] || 0) + parseFloat(v.total || 0);
+        });
+        return Object.keys(map).sort().slice(-8).map(k => map[k]);
+    }, [ventas]);
+
+    const sparkStockCritico = useMemo(() => {
+        const vals = [];
+        inventario.forEach(inv => {
+            const ratio = inv.stock_minimo > 0 ? inv.stock_actual / inv.stock_minimo : 1;
+            vals.push(ratio);
+        });
+        return vals.slice(-8);
+    }, [inventario]);
+
+    const sparkAlertas = useMemo(() => {
+        const byMonth = {};
+        alertas.forEach(a => {
+            if (a.fecha_creacion) {
+                const d = new Date(a.fecha_creacion);
+                const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                byMonth[key] = (byMonth[key] || 0) + 1;
+            }
+        });
+        const keys = Object.keys(byMonth).sort().slice(-8);
+        return keys.length > 0 ? keys.map(k => byMonth[k]) : [alertas.length];
+    }, [alertas]);
+
     const ventasPorMes = useMemo(() => {
         const map = {};
         ventas.forEach(v => {
@@ -89,10 +139,11 @@ export default function Dashboard() {
             datasets: [{
                 label: 'Ventas ($)',
                 data: keys.map(k => map[k]),
-                backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                borderColor: '#3b82f6',
-                borderWidth: 1,
-                borderRadius: 6,
+                backgroundColor: CHART_COLORS.blue.bg,
+                borderColor: CHART_COLORS.blue.main,
+                borderWidth: 2,
+                borderRadius: 8,
+                hoverBackgroundColor: CHART_COLORS.blue.main,
             }],
         };
     }, [ventas]);
@@ -105,13 +156,13 @@ export default function Dashboard() {
             counts[name] = (counts[name] || 0) + 1;
         });
         const labels = Object.keys(counts);
-        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
         return {
             labels,
             datasets: [{
                 data: labels.map(l => counts[l]),
-                backgroundColor: colors.slice(0, labels.length),
+                backgroundColor: PALETTE.slice(0, labels.length),
                 borderWidth: 0,
+                hoverOffset: 8,
             }],
         };
     }, [productos, categorias]);
@@ -133,10 +184,11 @@ export default function Dashboard() {
             datasets: [{
                 label: 'Demanda Total',
                 data: sorted.map(([, v]) => v),
-                backgroundColor: 'rgba(139, 92, 246, 0.7)',
-                borderColor: '#8b5cf6',
-                borderWidth: 1,
-                borderRadius: 4,
+                backgroundColor: CHART_COLORS.purple.bg,
+                borderColor: CHART_COLORS.purple.main,
+                borderWidth: 2,
+                borderRadius: 6,
+                hoverBackgroundColor: CHART_COLORS.purple.main,
             }],
         };
     }, [predicciones, productos]);
@@ -152,8 +204,9 @@ export default function Dashboard() {
             labels: ['Normal', 'Bajo', 'Crítico'],
             datasets: [{
                 data: [normal, bajo, critico],
-                backgroundColor: ['#10b981', '#f59e0b', '#ef4444'],
+                backgroundColor: [CHART_COLORS.green.main, CHART_COLORS.yellow.main, CHART_COLORS.red.main],
                 borderWidth: 0,
+                hoverOffset: 6,
             }],
         };
     }, [inventario]);
@@ -163,31 +216,44 @@ export default function Dashboard() {
             .sort((a, b) => new Date(a.fecha_prediccion) - new Date(b.fecha_prediccion))
             .slice(-20);
         return {
-            labels: sorted.map((p, i) => `P${i + 1}`),
+            labels: sorted.map(p => {
+                const d = new Date(p.fecha_prediccion);
+                return `${d.getDate()} ${MONTHS_ES[d.getMonth()]}`;
+            }),
             datasets: [
                 {
                     label: 'Demanda Estimada',
                     data: sorted.map(p => p.demanda_estimada),
-                    borderColor: '#3b82f6',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: CHART_COLORS.blue.main,
+                    backgroundColor: CHART_COLORS.blue.bg,
                     fill: true,
                     tension: 0.4,
+                    borderWidth: 2.5,
+                    pointRadius: 3,
+                    pointBackgroundColor: CHART_COLORS.blue.main,
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2,
+                    pointHoverRadius: 6,
                 },
                 {
                     label: 'Confianza Max',
                     data: sorted.map(p => p.confianza_max),
-                    borderColor: '#10b981',
-                    borderDash: [5, 5],
+                    borderColor: CHART_COLORS.green.main,
+                    borderDash: [6, 4],
                     tension: 0.4,
                     pointRadius: 0,
+                    borderWidth: 1.5,
+                    fill: false,
                 },
                 {
                     label: 'Confianza Min',
                     data: sorted.map(p => p.confianza_min),
-                    borderColor: '#ef4444',
-                    borderDash: [5, 5],
+                    borderColor: CHART_COLORS.red.main,
+                    borderDash: [6, 4],
                     tension: 0.4,
                     pointRadius: 0,
+                    borderWidth: 1.5,
+                    fill: false,
                 },
             ],
         };
@@ -201,164 +267,185 @@ export default function Dashboard() {
                 {
                     label: 'MAE',
                     data: modelos.map(m => m.mae),
-                    backgroundColor: 'rgba(59, 130, 246, 0.7)',
-                    borderRadius: 4,
+                    backgroundColor: CHART_COLORS.blue.main,
+                    borderRadius: 6,
                 },
                 {
                     label: 'RMSE',
                     data: modelos.map(m => m.rmse),
-                    backgroundColor: 'rgba(239, 68, 68, 0.7)',
-                    borderRadius: 4,
+                    backgroundColor: CHART_COLORS.red.main,
+                    borderRadius: 6,
                 },
                 {
                     label: 'R² (x100)',
                     data: modelos.map(m => (m.r2 || 0) * 100),
-                    backgroundColor: 'rgba(16, 185, 129, 0.7)',
-                    borderRadius: 4,
+                    backgroundColor: CHART_COLORS.green.main,
+                    borderRadius: 6,
                 },
             ],
         };
     }, [modelos]);
 
-    if (loading) return <div className="content-area"><p>Cargando dashboard...</p></div>;
-
-    const chartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { display: false } },
-    };
-
-    const chartOptionsLegend = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: { legend: { position: 'bottom' } },
-    };
+    if (loading) return <div className="content-area"><div className="loading-container"><div className="loading-spinner"></div><p>Cargando dashboard...</p></div></div>;
 
     return (
         <div className="content-area">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
-            <div className="grid-4" style={{ marginBottom: '24px' }}>
-                <div className="kpi-card">
-                    <div className="kpi-label">Total Productos</div>
-                    <div className="kpi-value">{stats.total_products}</div>
+            <div className="grid-4 kpi-grid" style={{ marginBottom: '24px' }}>
+                <div className="kpi-card kpi-animate" style={{ animationDelay: '0ms' }}>
+                    <div className="kpi-header-row">
+                        <div className="kpi-label">Total Productos</div>
+                        <SparkLine data={sparkVentasMes.length > 0 ? sparkVentasMes : [0]} color="#ffffff" height={28} width={60} fillColor="rgba(255,255,255,0.2)" />
+                    </div>
+                    <div className="kpi-value">{formatNumber(stats.total_products)}</div>
                     <div className="kpi-change">Registrados en el sistema</div>
                 </div>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)' }}>
-                    <div className="kpi-label">Ventas Totales</div>
-                    <div className="kpi-value">${ventasTotales.toLocaleString()}</div>
+                <div className="kpi-card kpi-animate" style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)', animationDelay: '80ms' }}>
+                    <div className="kpi-header-row">
+                        <div className="kpi-label">Ventas Totales</div>
+                        <SparkLine data={sparkVentasMes.length > 0 ? sparkVentasMes : [0]} color="#93c5fd" height={28} width={60} fillColor="rgba(147, 197, 253, 0.2)" />
+                    </div>
+                    <div className="kpi-value">{formatCurrency(ventasTotales)}</div>
                     <div className="kpi-change">{ventas.length} venta(s) registrada(s)</div>
                 </div>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)' }}>
-                    <div className="kpi-label">Stock Crítico</div>
+                <div className="kpi-card kpi-animate" style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', animationDelay: '160ms' }}>
+                    <div className="kpi-header-row">
+                        <div className="kpi-label">Stock Crítico</div>
+                        <SparkLine data={sparkStockCritico.length > 0 ? sparkStockCritico : [0]} color="#fde68a" height={28} width={60} fillColor="rgba(253, 230, 138, 0.2)" />
+                    </div>
                     <div className="kpi-value">{stockCritico}</div>
                     <div className="kpi-change">{stockCritico > 0 ? 'Requiere atención' : 'Todo normal'}</div>
                 </div>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)' }}>
-                    <div className="kpi-label">Alertas Activas</div>
+                <div className="kpi-card kpi-animate" style={{ background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', animationDelay: '240ms' }}>
+                    <div className="kpi-header-row">
+                        <div className="kpi-label">Alertas Activas</div>
+                        <SparkLine data={sparkAlertas.length > 0 ? sparkAlertas : [0]} color="#c4b5fd" height={28} width={60} fillColor="rgba(196, 181, 253, 0.2)" />
+                    </div>
                     <div className="kpi-value">{alertas.length}</div>
                     <div className="kpi-change">{alertas.length > 0 ? 'Pendientes' : 'Sin alertas'}</div>
                 </div>
             </div>
 
-            <div className="grid-3" style={{ marginBottom: '24px' }}>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}>
-                    <div className="kpi-label">Reabastecimientos</div>
+            <div className="grid-3 kpi-grid" style={{ marginBottom: '24px' }}>
+                <div className="kpi-card kpi-animate" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)', animationDelay: '320ms' }}>
+                    <div className="kpi-header-row">
+                        <div className="kpi-label">Reabastecimientos</div>
+                    </div>
                     <div className="kpi-value">{reabastecimientos.length}</div>
                     <div className="kpi-change">Pendientes de compra</div>
                 </div>
             </div>
 
             <div className="grid-2">
-                <div className="card">
+                <div className="card chart-card">
                     <div className="card-header">
                         <h3 className="card-title">Ventas por Mes</h3>
+                        <ChartExportButton chartRef={refVentasMes} filename="ventas_por_mes" />
                     </div>
-                    <div style={{ height: '280px', padding: '8px' }}>
+                    <div style={{ height: '300px', padding: '12px 8px' }}>
                         {ventas.length > 0 ? (
-                            <Bar data={ventasPorMes} options={chartOptions} />
+                            <Bar ref={refVentasMes} data={ventasPorMes} options={barOptions({ formatYAs: 'currency' })} />
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--gray-500)' }}>
+                            <div className="chart-empty">
                                 <p>Sin datos de ventas</p>
                             </div>
                         )}
                     </div>
                 </div>
-                <div className="card">
+                <div className="card chart-card">
                     <div className="card-header">
                         <h3 className="card-title">Productos por Categoría</h3>
+                        <ChartExportButton chartRef={refCatDoughnut} filename="productos_categoria" />
                     </div>
-                    <div style={{ height: '280px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ height: '300px', padding: '12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {productos.length > 0 ? (
-                            <div style={{ width: '240px', height: '240px' }}>
-                                <Doughnut data={productosPorCategoria} options={chartOptionsLegend} />
+                            <div style={{ width: '260px', height: '260px' }}>
+                                <Doughnut ref={refCatDoughnut} data={productosPorCategoria} options={doughnutOptions()} />
                             </div>
                         ) : (
-                            <p style={{ color: 'var(--gray-500)' }}>Sin datos</p>
+                            <p className="chart-empty-text">Sin datos</p>
                         )}
                     </div>
                 </div>
             </div>
 
             <div className="grid-2">
-                <div className="card">
+                <div className="card chart-card">
                     <div className="card-header">
                         <h3 className="card-title">Top 10 Productos Más Demandados</h3>
+                        <ChartExportButton chartRef={refTopDemandados} filename="top_demandados" />
                     </div>
-                    <div style={{ height: '300px', padding: '8px' }}>
+                    <div style={{ height: '320px', padding: '12px 8px' }}>
                         {predicciones.length > 0 ? (
-                            <Bar data={topDemandados} options={{ ...chartOptions, indexAxis: 'y' }} />
+                            <Bar ref={refTopDemandados} data={topDemandados} options={barOptions({ isHorizontal: true, showLegend: false })} />
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--gray-500)' }}>
+                            <div className="chart-empty">
                                 <p>Genere predicciones para ver datos</p>
                             </div>
                         )}
                     </div>
                 </div>
-                <div className="card">
+                <div className="card chart-card">
                     <div className="card-header">
                         <h3 className="card-title">Estado del Inventario</h3>
+                        <ChartExportButton chartRef={refInvDoughnut} filename="inventario_estado" />
                     </div>
-                    <div style={{ height: '300px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <div style={{ height: '320px', padding: '12px 8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {inventario.length > 0 ? (
-                            <div style={{ width: '220px', height: '220px' }}>
-                                <Doughnut data={inventarioEstado} options={chartOptionsLegend} />
+                            <div style={{ width: '240px', height: '240px' }}>
+                                <Doughnut ref={refInvDoughnut} data={inventarioEstado} options={doughnutOptions()} />
                             </div>
                         ) : (
-                            <p style={{ color: 'var(--gray-500)' }}>Sin datos</p>
+                            <p className="chart-empty-text">Sin datos</p>
                         )}
                     </div>
                 </div>
             </div>
 
             <div className="grid-2">
-                <div className="card">
+                <div className="card chart-card">
                     <div className="card-header">
                         <h3 className="card-title">Tendencia de Predicciones</h3>
+                        <ChartExportButton chartRef={refTendencia} filename="tendencia_predicciones" />
                     </div>
-                    <div style={{ height: '280px', padding: '8px' }}>
+                    <div style={{ height: '300px', padding: '12px 8px' }}>
                         {predicciones.length > 0 ? (
-                            <Line data={tendenciaPredicciones} options={{
-                                ...chartOptionsLegend,
-                                plugins: { legend: { position: 'bottom' } },
-                                scales: { x: { display: false } },
+                            <Line ref={refTendencia} data={tendenciaPredicciones} options={{
+                                ...baseChartOptions({
+                                    showLegend: true,
+                                    legendPosition: 'bottom',
+                                    yTitle: 'Demanda',
+                                    xDisplay: false,
+                                }),
+                                plugins: {
+                                    ...baseChartOptions({ showLegend: true, legendPosition: 'bottom', yTitle: 'Demanda', xDisplay: false }).plugins,
+                                    tooltip: {
+                                        ...baseChartOptions({ showLegend: true, legendPosition: 'bottom', yTitle: 'Demanda', xDisplay: false }).plugins.tooltip,
+                                        callbacks: {
+                                            title: (items) => items.length ? `📅 ${items[0].label}` : '',
+                                            label: (context) => ` ${context.dataset.label}: ${formatNumber(context.parsed.y)} unidades`,
+                                        },
+                                    },
+                                },
                             }} />
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--gray-500)' }}>
+                            <div className="chart-empty">
                                 <p>Sin predicciones disponibles</p>
                             </div>
                         )}
                     </div>
                 </div>
-                <div className="card">
+                <div className="card chart-card">
                     <div className="card-header">
                         <h3 className="card-title">Rendimiento Modelos IA</h3>
+                        {modelos.length > 0 && <ChartExportButton chartRef={refModelos} filename="rendimiento_modelos" />}
                     </div>
-                    <div style={{ height: '280px', padding: '8px' }}>
+                    <div style={{ height: '300px', padding: '12px 8px' }}>
                         {modelos.length > 0 ? (
-                            <Bar data={modelosMetrics} options={chartOptionsLegend} />
+                            <Bar ref={refModelos} data={modelosMetrics} options={barOptions({ showLegend: true, legendPosition: 'bottom' })} />
                         ) : (
-                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: 'var(--gray-500)' }}>
+                            <div className="chart-empty">
                                 <p>Sin modelos entrenados</p>
                             </div>
                         )}
@@ -370,9 +457,11 @@ export default function Dashboard() {
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Stock Crítico</h3>
+                        {stockCritico > 0 && <span className="badge badge-danger">{stockCritico} producto(s)</span>}
                     </div>
                     {stockCritico === 0 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '120px', color: 'var(--gray-500)' }}>
+                        <div className="card-empty">
+                            <span className="card-empty-icon">✅</span>
                             <p>Todos con stock suficiente</p>
                         </div>
                     ) : (
@@ -399,9 +488,11 @@ export default function Dashboard() {
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Últimas Ventas</h3>
+                        {ventas.length > 0 && <span className="badge badge-info">{ventas.length} venta(s)</span>}
                     </div>
                     {ventas.length === 0 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '120px', color: 'var(--gray-500)' }}>
+                        <div className="card-empty">
+                            <span className="card-empty-icon">📭</span>
                             <p>Sin ventas registradas</p>
                         </div>
                     ) : (
@@ -412,8 +503,8 @@ export default function Dashboard() {
                                     {ventas.slice(-8).reverse().map(v => (
                                         <tr key={v.id_venta}>
                                             <td><span className="badge badge-info">#{v.id_venta}</span></td>
-                                            <td>{v.fecha_venta ? new Date(v.fecha_venta).toLocaleDateString() : '-'}</td>
-                                            <td><strong>${parseFloat(v.total).toLocaleString()}</strong></td>
+                                            <td>{v.fecha_venta ? new Date(v.fecha_venta).toLocaleDateString('es-EC') : '-'}</td>
+                                            <td><strong>{formatCurrency(parseFloat(v.total))}</strong></td>
                                         </tr>
                                     ))}
                                 </tbody>
@@ -425,9 +516,11 @@ export default function Dashboard() {
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Reabastecimientos Pendientes</h3>
+                        {reabastecimientos.length > 0 && <span className="badge badge-warning">{reabastecimientos.length}</span>}
                     </div>
                     {reabastecimientos.length === 0 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '120px', color: 'var(--gray-500)' }}>
+                        <div className="card-empty">
+                            <span className="card-empty-icon">📦</span>
                             <p>Sin reabastecimientos pendientes</p>
                         </div>
                     ) : (
