@@ -3,6 +3,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import text
 from app.core.database import get_db
 from app.repositories.prediccion_repository import PrediccionRepository
+from app.repositories.historial_prediccion_repository import HistorialPrediccionRepository
 from app.repositories.modelo_ia_repository import ModeloIARepository
 from app.schemas.prediccion import PrediccionCreate, PrediccionResponse, PrediccionRequest, PrediccionBatchRequest, PrediccionBatchResponse, KPIsResponse, KPIPrediccion
 from app.services.ml_service import ml_service
@@ -33,8 +34,8 @@ async def get_predicciones(
                 CASE WHEN p.precio_venta > 0 
                      THEN ROUND((p.precio_venta - p.precio_compra) / p.precio_venta * 100, 2)
                      ELSE 0 END as margen_porcentaje
-            FROM predicciones pr
-            INNER JOIN productos p ON pr.id_producto = p.id_producto
+            FROM prediccion pr
+            INNER JOIN producto p ON pr.id_producto = p.id_producto
             ORDER BY pr.fecha_prediccion DESC
         """)
     )
@@ -83,8 +84,8 @@ async def get_kpis_prediccion(
                 COALESCE(SUM(pred.demanda_estimada), 0) as demanda_total,
                 COALESCE(SUM(pred.confianza_min), 0) as demanda_minima,
                 COALESCE(SUM(pred.confianza_max), 0) as demanda_maxima
-            FROM productos p
-            INNER JOIN predicciones pred ON p.id_producto = pred.id_producto
+            FROM producto p
+            INNER JOIN prediccion pred ON p.id_producto = pred.id_producto
             WHERE p.estado = 1
             GROUP BY p.id_producto, p.codigo, p.nombre, p.precio_venta, p.precio_compra
             HAVING demanda_total > 0
@@ -240,8 +241,8 @@ async def predecir_demanda(
     result = await db.execute(
         text("""
             SELECT v.fecha_venta, dv.cantidad, dv.precio_unitario
-            FROM detalle_ventas dv
-            JOIN ventas v ON dv.id_venta = v.id_venta
+            FROM detalle_venta dv
+            JOIN venta v ON dv.id_venta = v.id_venta
             WHERE dv.id_producto = :producto_id
             ORDER BY v.fecha_venta ASC
         """),
@@ -270,6 +271,7 @@ async def predecir_demanda(
     )
 
     repo = PrediccionRepository(db)
+    hist_repo = HistorialPrediccionRepository(db)
 
     # Ajustar fechas si se proporciona fecha_inicio
     fecha_offset = None
@@ -296,7 +298,8 @@ async def predecir_demanda(
             porcentaje_confianza=95.0,
         ))
 
-    # Eliminar predicciones anteriores del producto para evitar duplicados
+    # Archivar predicciones anteriores en historial y eliminar de tabla activa
+    await hist_repo.archivar_por_producto(data.id_producto, motivo="REEMPLAZADA")
     await repo.delete_by_product(data.id_producto)
     
     predicciones_creadas = await repo.create_many(predicciones_obj)
@@ -345,6 +348,7 @@ async def predecir_lote(
         model = None
 
     repo = PrediccionRepository(db)
+    hist_repo = HistorialPrediccionRepository(db)
     exitosos = []
     fallidos = []
     errores = []
@@ -354,8 +358,8 @@ async def predecir_lote(
             result = await db.execute(
                 text("""
                     SELECT v.fecha_venta, dv.cantidad, dv.precio_unitario
-                    FROM detalle_ventas dv
-                    JOIN ventas v ON dv.id_venta = v.id_venta
+                    FROM detalle_venta dv
+                    JOIN venta v ON dv.id_venta = v.id_venta
                     WHERE dv.id_producto = :producto_id
                     ORDER BY v.fecha_venta ASC
                 """),
@@ -405,7 +409,8 @@ async def predecir_lote(
                     porcentaje_confianza=95.0,
                 ))
 
-            # Eliminar predicciones anteriores del producto para evitar duplicados
+            # Archivar predicciones anteriores en historial y eliminar de tabla activa
+            await hist_repo.archivar_por_producto(producto_id, motivo="REEMPLAZADA")
             await repo.delete_by_product(producto_id)
             await repo.create_many(predicciones_obj)
             exitosos.append(producto_id)

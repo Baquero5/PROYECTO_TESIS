@@ -16,6 +16,7 @@ import ModelosIA from './pages/ModelosIA';
 import Usuarios from './pages/Usuarios';
 import Roles from './pages/Roles';
 import Reportes from './pages/Reportes';
+import HistorialPredicciones from './pages/HistorialPredicciones';
 
 function AppRoutes() {
     const { user } = useAuth();
@@ -49,6 +50,11 @@ function AppRoutes() {
                 <Route path="/prediccion" element={
                     <RoleRoute allowedRoles={[1, 2]}>
                         <Prediccion />
+                    </RoleRoute>
+                } />
+                <Route path="/historial-predicciones" element={
+                    <RoleRoute allowedRoles={[1, 2]}>
+                        <HistorialPredicciones />
                     </RoleRoute>
                 } />
                 <Route path="/modelos-ia" element={

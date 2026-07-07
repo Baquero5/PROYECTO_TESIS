@@ -3,7 +3,7 @@ from app.core.database import Base
 
 
 class Permiso(Base):
-    __tablename__ = "permisos"
+    __tablename__ = "permiso"
 
     id_permiso = Column(Integer, primary_key=True, autoincrement=True)
     codigo = Column(String(50), unique=True, index=True, nullable=False)

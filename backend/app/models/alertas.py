@@ -4,10 +4,10 @@ from app.core.database import Base
 
 
 class Alerta(Base):
-    __tablename__ = "alertas"
+    __tablename__ = "alerta"
 
     id_alerta = Column(Integer, primary_key=True, autoincrement=True)
-    id_producto = Column(Integer, ForeignKey("productos.id_producto"), nullable=False)
+    id_producto = Column(Integer, ForeignKey("producto.id_producto"), nullable=False)
     tipo_alerta = Column(String(50), nullable=False)
     mensaje = Column(Text, nullable=True)
     fecha_alerta = Column(DateTime(timezone=True), server_default=func.now())

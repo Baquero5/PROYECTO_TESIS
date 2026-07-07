@@ -12,6 +12,7 @@ const allMenuItems = [
     { path: '/ventas', icon: '💰', label: 'Ventas', roles: [1, 2, 3] },
     { path: '/alertas', icon: '⚠️', label: 'Alertas', roles: [1, 2] },
     { path: '/prediccion', icon: '🔮', label: 'Predicción', roles: [1, 2] },
+    { path: '/historial-predicciones', icon: '📋', label: 'Historial Pred.', roles: [1, 2] },
     { path: '/modelos-ia', icon: '🤖', label: 'Modelos IA', roles: [1, 2] },
     { path: '/reportes', icon: '📥', label: 'Reportes', roles: [1, 2] },
     { path: '/usuarios', icon: '👥', label: 'Usuarios', roles: [1, 2] },

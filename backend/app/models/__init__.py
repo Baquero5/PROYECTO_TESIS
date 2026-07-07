@@ -25,6 +25,7 @@ from app.models.alertas import Alerta
 from app.models.dataset_entrenamiento import DatasetEntrenamiento
 from app.models.modelos_ia import ModeloIA
 from app.models.predicciones import Prediccion
+from app.models.historial_predicciones import HistorialPrediccion
 from app.models.reabastecimiento import Reabastecimiento
 
 __all__ = [
@@ -44,5 +45,6 @@ __all__ = [
     "DatasetEntrenamiento",
     "ModeloIA",
     "Prediccion",
+    "HistorialPrediccion",
     "Reabastecimiento",
 ]

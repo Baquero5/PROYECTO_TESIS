@@ -4,11 +4,11 @@ from app.core.database import Base
 
 
 class Producto(Base):
-    __tablename__ = "productos"
+    __tablename__ = "producto"
 
     id_producto = Column(Integer, primary_key=True, autoincrement=True)
-    id_categoria = Column(Integer, ForeignKey("categorias.id_categoria"), nullable=False)
-    id_proveedor = Column(Integer, ForeignKey("proveedores.id_proveedor"), nullable=False)
+    id_categoria = Column(Integer, ForeignKey("categoria.id_categoria"), nullable=False)
+    id_proveedor = Column(Integer, ForeignKey("proveedor.id_proveedor"), nullable=False)
     codigo = Column(String(50), unique=True, index=True, nullable=False)
     nombre = Column(String(150), nullable=False)
     descripcion = Column(Text, nullable=True)
