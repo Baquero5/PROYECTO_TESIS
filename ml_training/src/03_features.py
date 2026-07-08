@@ -7,9 +7,9 @@ Features: 19 variables compatibles con backend ml_service.py
 import pandas as pd
 import numpy as np
 import yaml
+import time
 from pathlib import Path
 from datetime import datetime, timedelta
-import time
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 PROC_DIR = BASE_DIR / "data" / "processed"
@@ -54,6 +54,9 @@ def get_ecuador_holidays(year: int) -> set:
     return set(fixed + variable)
 
 
+FEATURE_COLS = config["features"]
+
+
 def load_data():
     print("[1/5] Cargando m5_largo.csv...")
     t0 = time.time()
@@ -89,7 +92,6 @@ def build_lag_features(df):
     rolling_windows = [7, 14, 28]
 
     df = df.sort_values(["id", "date"]).reset_index(drop=True)
-
     grp = df.groupby("id")["y"]
 
     for lag in lags:
@@ -114,22 +116,13 @@ def build_dataset_entrenamiento(df):
     print("\n[4/5] Construyendo dataset de entrenamiento para ML...")
     t0 = time.time()
 
-    feature_cols = [
-        "id", "item_id", "dept_id", "cat_id", "store_id", "state_id",
-        "date", "y",
-        "price", "dayofweek", "month", "is_month_end",
-        "lag_1", "lag_7", "lag_14", "lag_28",
-        "rolling_mean_7", "rolling_mean_14", "rolling_mean_28",
-        "rolling_std_7", "rolling_std_28",
-        "price_change_1",
-        "is_holiday", "month_sin", "dayofweek_sin",
-        "rolling_max_28", "rolling_min_28",
-    ]
+    output_cols = ["id", "item_id", "dept_id", "cat_id", "store_id", "state_id", "date", "y"] + FEATURE_COLS
 
-    df_ml = df[feature_cols]
+    df_ml = df[output_cols]
     df_ml = df_ml.dropna(subset=["lag_28", "rolling_mean_28"])
 
     print(f"  Dataset ML: {df_ml.shape[0]:,} filas x {df_ml.shape[1]} columnas")
+    print(f"  Features: {len(FEATURE_COLS)}")
     print(f"  Tiempo: {time.time() - t0:.1f}s")
     return df_ml
 
@@ -154,13 +147,12 @@ def save_dataset_chunked(df_ml, output_path):
 
 def main():
     print("=" * 60)
-    print("FEATURE ENGINEERING - DATASET M5 (19 features backend)")
+    print("FEATURE ENGINEERING - 19 FEATURES BACKEND")
     print("=" * 60)
 
     df = load_data()
     df = build_calendar_features(df)
     df = build_lag_features(df)
-
     df_ml = build_dataset_entrenamiento(df)
 
     del df

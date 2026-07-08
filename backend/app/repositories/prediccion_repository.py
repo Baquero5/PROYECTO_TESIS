@@ -66,3 +66,14 @@ class PrediccionRepository:
         )
         await self.db.commit()
         return result.rowcount
+
+    async def delete_by_product_and_model(self, producto_id: int, modelo_id: int) -> int:
+        from sqlalchemy import delete
+        result = await self.db.execute(
+            delete(Prediccion).where(
+                Prediccion.id_producto == producto_id,
+                Prediccion.id_modelo == modelo_id
+            )
+        )
+        await self.db.commit()
+        return result.rowcount

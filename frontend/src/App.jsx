@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { AuthProvider, useAuth } from './context/AuthContext';
 import PrivateRoute from './components/PrivateRoute';
 import RoleRoute from './components/RoleRoute';
+import ErrorBoundary from './components/ErrorBoundary';
 import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
@@ -16,6 +17,7 @@ import ModelosIA from './pages/ModelosIA';
 import Usuarios from './pages/Usuarios';
 import Roles from './pages/Roles';
 import Reportes from './pages/Reportes';
+import HistorialPredicciones from './pages/HistorialPredicciones';
 
 function AppRoutes() {
     const { user } = useAuth();
@@ -51,6 +53,11 @@ function AppRoutes() {
                         <Prediccion />
                     </RoleRoute>
                 } />
+                <Route path="/historial-predicciones" element={
+                    <RoleRoute allowedRoles={[1, 2]}>
+                        <HistorialPredicciones />
+                    </RoleRoute>
+                } />
                 <Route path="/modelos-ia" element={
                     <RoleRoute allowedRoles={[1, 2]}>
                         <ModelosIA />
@@ -80,11 +87,13 @@ function AppRoutes() {
 
 function App() {
     return (
-        <AuthProvider>
-            <Router>
-                <AppRoutes />
-            </Router>
-        </AuthProvider>
+        <ErrorBoundary>
+            <AuthProvider>
+                <Router>
+                    <AppRoutes />
+                </Router>
+            </AuthProvider>
+        </ErrorBoundary>
     );
 }
 

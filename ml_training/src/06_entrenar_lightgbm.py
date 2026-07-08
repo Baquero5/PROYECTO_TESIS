@@ -23,16 +23,7 @@ with open(BASE_DIR / "config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 LGB_PARAMS = config["modelos"]["lightgbm"]
-
-FEATURE_COLS = [
-    "price", "dayofweek", "month", "is_month_end",
-    "lag_1", "lag_7", "lag_14", "lag_28",
-    "rolling_mean_7", "rolling_mean_14", "rolling_mean_28",
-    "rolling_std_7", "rolling_std_28",
-    "price_change_1",
-    "is_holiday", "month_sin", "dayofweek_sin",
-    "rolling_max_28", "rolling_min_28",
-]
+FEATURE_COLS = config["features"]
 
 
 def load_data():
@@ -64,9 +55,6 @@ def prepare_features(df):
 def train_model(X_train, y_train, X_test, y_test):
     print("\n[3/4] Entrenando LightGBM...")
     t0 = time.time()
-
-    train_data = lgb.Dataset(X_train, label=y_train)
-    test_data = lgb.Dataset(X_test, label=y_test, reference=train_data)
 
     params = {
         "objective": "regression",
@@ -104,6 +92,7 @@ def evaluate_model(model, X_test, y_test):
 
     metrics = {
         "modelo": "LightGBM",
+        "version": "1.0",
         "mae": round(float(mae), 4),
         "rmse": round(float(rmse), 4),
         "r2": round(float(r2), 4),

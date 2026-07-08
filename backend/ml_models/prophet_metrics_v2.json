@@ -1,0 +1,8 @@
+{
+  "modelo": "Prophet (entrenado por producto)",
+  "n_productos_entrenados": 50,
+  "mae": 3.8252441964961177,
+  "rmse": 8.718163320537691,
+  "r2": 0.11098910064181111,
+  "mape": 178.0322871511973
+}

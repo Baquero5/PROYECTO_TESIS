@@ -26,15 +26,11 @@ PROC_DIR = BASE_DIR / "data" / "processed"
 MODELS_DIR = BASE_DIR / "models"
 METRICS_DIR = BASE_DIR / "metrics"
 
-FEATURE_COLS = [
-    "price", "dayofweek", "month", "is_month_end",
-    "lag_1", "lag_7", "lag_14", "lag_28",
-    "rolling_mean_7", "rolling_mean_14", "rolling_mean_28",
-    "rolling_std_7", "rolling_std_28",
-    "price_change_1",
-    "is_holiday", "month_sin", "dayofweek_sin",
-    "rolling_max_28", "rolling_min_28",
-]
+with open(BASE_DIR / "config.yaml", "r") as f:
+    import yaml
+    config = yaml.safe_load(f)
+
+FEATURE_COLS = config["features"]
 
 
 def load_data_and_split():
@@ -157,7 +153,6 @@ def create_charts(results, y_test):
 
     METRICS_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Grafica 1: Comparacion de metricas (barras)
     fig, ax = plt.subplots(figsize=(10, 6))
     metric_names = ["MAE", "RMSE", "MAPE"]
     xgb_vals = [results["xgboost"]["mae"], results["xgboost"]["rmse"], results["xgboost"]["mape"]]
@@ -177,7 +172,6 @@ def create_charts(results, y_test):
     plt.close()
     print("  [OK] comparacion_metricas.png")
 
-    # Grafica 2: Scatter Actual vs Predicho
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     for i, (name, res) in enumerate(results.items()):
         ax = axes[i]
@@ -195,17 +189,12 @@ def create_charts(results, y_test):
     plt.close()
     print("  [OK] actual_vs_predicho.png")
 
-    # Grafica 3: Feature Importance
     fig, axes = plt.subplots(1, 2, figsize=(16, 8))
     for i, (name, model) in enumerate(results.items()):
         ax = axes[i]
-        importances = model.get("feature_importances_", None) if isinstance(model, dict) else None
         if hasattr(model, "feature_importances_"):
             importances = model.feature_importances_
-        elif isinstance(model, dict) and "y_pred" in model:
-            importances = None
-
-        if importances is None:
+        else:
             ax.text(0.5, 0.5, "Feature importance\nno disponible", ha="center", va="center")
             ax.set_title(name.upper())
             continue
@@ -219,7 +208,6 @@ def create_charts(results, y_test):
     plt.close()
     print("  [OK] feature_importance.png")
 
-    # Grafica 4: Distribucion de errores
     fig, axes = plt.subplots(1, 2, figsize=(14, 6))
     for i, (name, res) in enumerate(results.items()):
         ax = axes[i]
@@ -249,8 +237,8 @@ def main():
 
     results = evaluate(models, X_test, y_test)
 
-    # Guardar comparativa JSON (sin y_pred)
     comp = {name: {k: v for k, v in res.items() if k != "y_pred"} for name, res in results.items()}
+    METRICS_DIR.mkdir(parents=True, exist_ok=True)
     comp_path = METRICS_DIR / "comparativa_modelos.json"
     with open(comp_path, "w") as f:
         json.dump(comp, f, indent=2)

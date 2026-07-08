@@ -12,8 +12,8 @@ class PrediccionRequest(BaseModel):
 
 class PrediccionBatchRequest(BaseModel):
     ids_productos: List[int]
+    ids_modelos: List[int]
     horizonte_dias: int = Field(default=30, ge=1, le=365)
-    id_modelo: Optional[int] = None
     fecha_inicio: Optional[date] = None
 
 
@@ -44,6 +44,7 @@ class PrediccionResponse(BaseModel):
     ingreso_esperado: Optional[float] = None
     ganancia_esperada: Optional[float] = None
     margen_porcentaje: Optional[float] = None
+    venta_promedio_por_dia: Optional[float] = None
 
     class Config:
         from_attributes = True

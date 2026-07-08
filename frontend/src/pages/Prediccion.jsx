@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
+import MultiSelect from '../components/MultiSelect';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -31,9 +32,10 @@ export default function Prediccion() {
     const [categorias, setCategorias] = useState([]);
     const [predicciones, setPredicciones] = useState([]);
     const [modelos, setModelos] = useState([]);
-    const [modeloSeleccionado, setModeloSeleccionado] = useState('');
+    const [modelosSeleccionados, setModelosSeleccionados] = useState([]);
+    const [modeloActivoTab, setModeloActivoTab] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('');
-    const [selectedProduct, setSelectedProduct] = useState('');
+    const [selectedProducts, setSelectedProducts] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [fechaInicio, setFechaInicio] = useState('');
     const [fechaFin, setFechaFin] = useState('');
@@ -60,16 +62,29 @@ export default function Prediccion() {
             const filtrados = productos.filter(p => p.id_categoria === parseInt(selectedCategory));
             setProductosFiltrados(filtrados);
         }
-        setSelectedProduct('');
     }, [selectedCategory, productos]);
 
+    const prevCategoryRef = useRef(selectedCategory);
     useEffect(() => {
-        if (selectedProduct && selectedProduct !== 'all') {
-            loadHistorial(selectedProduct);
+        if (prevCategoryRef.current !== selectedCategory) {
+            setSelectedProducts([]);
+            prevCategoryRef.current = selectedCategory;
+        }
+    }, [selectedCategory]);
+
+    useEffect(() => {
+        if (selectedProducts.length >= 1) {
+            loadHistorial(selectedProducts[0]);
         } else {
             setHistorialVentas([]);
         }
-    }, [selectedProduct]);
+    }, [selectedProducts]);
+
+    useEffect(() => {
+        if (modelosSeleccionados.length > 0 && !modelosSeleccionados.includes(modeloActivoTab)) {
+            setModeloActivoTab(modelosSeleccionados[0]);
+        }
+    }, [modelosSeleccionados]);
 
     const loadData = async () => {
         const [prodRes, predRes, modelosRes, catRes] = await Promise.allSettled([
@@ -86,7 +101,7 @@ export default function Prediccion() {
             const listaModelos = modelosRes.value.data;
             setModelos(listaModelos);
             const activo = listaModelos.find(m => m.estado === 'ACTIVO');
-            if (activo) setModeloSeleccionado(activo.id_modelo);
+            if (activo) setModelosSeleccionados([activo.id_modelo]);
         }
 
         const hasError = [prodRes, predRes, modelosRes, catRes].some(r => r.status === 'rejected');
@@ -120,16 +135,11 @@ export default function Prediccion() {
     };
 
     const getProductosApredecir = () => {
-        if (selectedProduct === 'all') {
-            return productosFiltrados.map(p => p.id_producto);
-        } else if (selectedProduct) {
-            return [parseInt(selectedProduct)];
-        }
-        return [];
+        return selectedProducts;
     };
 
     const handleGenerar = async () => {
-        if (!modeloSeleccionado) {
+        if (modelosSeleccionados.length === 0) {
             setToast({ message: 'Seleccione un modelo IA', type: 'warning' });
             return;
         }
@@ -163,7 +173,7 @@ export default function Prediccion() {
             const payload = {
                 id_producto: productoId,
                 horizonte_dias: horizonte,
-                id_modelo: parseInt(modeloSeleccionado)
+                id_modelo: modelosSeleccionados[0]
             };
             
             if (fechaInicio) {
@@ -189,8 +199,8 @@ export default function Prediccion() {
             const horizonte = calcularHorizonte();
             const payload = {
                 ids_productos: idsProductos,
-                horizonte_dias: horizonte,
-                id_modelo: parseInt(modeloSeleccionado)
+                ids_modelos: modelosSeleccionados,
+                horizonte_dias: horizonte
             };
             
             if (fechaInicio) {
@@ -229,20 +239,79 @@ export default function Prediccion() {
         }
     };
 
-    const prediccionesProducto = selectedProduct && selectedProduct !== 'all'
-        ? predicciones.filter(p => p.id_producto === parseInt(selectedProduct))
+    const prediccionesProducto = selectedProducts.length > 0
+        ? predicciones.filter(p => selectedProducts.includes(p.id_producto))
         : [];
 
+    const prediccionesModeloActivo = modeloActivoTab
+        ? prediccionesProducto.filter(p => p.id_modelo === modeloActivoTab)
+        : prediccionesProducto;
+
     const getProducto = (id) => productos.find(p => p.id_producto === id);
+
+    const coloresModelos = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
     const prepareChartData = () => {
         const historialLabels = historialVentas.map(h => h.fecha);
         const historialData = historialVentas.map(h => h.cantidad);
 
-        const predLabels = prediccionesProducto.map(p => p.fecha_prediccion);
-        const predData = prediccionesProducto.map(p => p.demanda_estimada);
-        const predMin = prediccionesProducto.map(p => p.confianza_min);
-        const predMax = prediccionesProducto.map(p => p.confianza_max);
+        // Si hay multiples modelos seleccionados, mostrar overlay
+        const mostrarOverlay = modelosSeleccionados.length > 1;
+
+        if (mostrarOverlay) {
+            // Overlay: una linea por modelo
+            const todosFechas = new Set(historialLabels);
+            prediccionesProducto.forEach(p => todosFechas.add(p.fecha_prediccion));
+            const allLabels = Array.from(todosFechas).sort();
+
+            const datasets = [{
+                label: 'Ventas Historicas',
+                data: allLabels.map(f => {
+                    const idx = historialLabels.indexOf(f);
+                    return idx >= 0 ? historialData[idx] : null;
+                }),
+                borderColor: 'rgb(100, 116, 139)',
+                backgroundColor: 'rgba(100, 116, 139, 0.1)',
+                fill: false,
+                tension: 0.1,
+                pointRadius: 2,
+                borderDash: [5, 5],
+                borderWidth: 2
+            }];
+
+            modelosSeleccionados.forEach((modeloId, idx) => {
+                const modelo = modelos.find(m => m.id_modelo === modeloId);
+                const preds = prediccionesProducto.filter(p => p.id_modelo === modeloId);
+                const nombreModelo = modelo ? `${modelo.algoritmo} v${modelo.version || '?'}` : `Modelo ${modeloId}`;
+                const color = coloresModelos[idx % coloresModelos.length];
+                datasets.push({
+                    label: nombreModelo,
+                    data: allLabels.map(f => {
+                        const pred = preds.find(p => p.fecha_prediccion === f);
+                        return pred ? pred.demanda_estimada : null;
+                    }),
+                    borderColor: color,
+                    backgroundColor: color + '20',
+                    fill: false,
+                    tension: 0.1,
+                    pointRadius: 4,
+                    borderWidth: 2
+                });
+            });
+
+            return { labels: allLabels, datasets };
+        }
+
+        // Modo simple: un solo modelo
+        const modeloActivo = modeloActivoTab
+            ? modelos.find(m => m.id_modelo === modeloActivoTab)
+            : modelos.find(m => m.id_modelo === modelosSeleccionados[0]);
+        const nombreModelo = modeloActivo ? `${modeloActivo.algoritmo} v${modeloActivo.version || '?'}` : 'Modelo IA';
+
+        const predLabels = prediccionesModeloActivo.map(p => p.fecha_prediccion);
+        const predData = prediccionesModeloActivo.map(p => p.demanda_estimada);
+        const predMin = prediccionesModeloActivo.map(p => p.confianza_min);
+        const predMax = prediccionesModeloActivo.map(p => p.confianza_max);
 
         const allLabels = [...historialLabels, ...predLabels];
 
@@ -258,43 +327,46 @@ export default function Prediccion() {
             labels: allLabels,
             datasets: [
                 {
-                    label: 'Ventas Históricas',
+                    label: 'Ventas Historicas',
                     data: fullHistorial,
-                    borderColor: 'rgb(59, 130, 246)',
-                    backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                    borderColor: 'rgb(100, 116, 139)',
+                    backgroundColor: 'rgba(100, 116, 139, 0.1)',
                     fill: false,
                     tension: 0.1,
-                    pointRadius: 2
+                    pointRadius: 2,
+                    borderDash: [5, 5]
                 },
                 {
-                    label: 'Demanda Estimada',
+                    label: `${nombreModelo} - Limite Superior`,
+                    data: fullMax,
+                    borderColor: 'rgba(239, 68, 68, 0.6)',
+                    backgroundColor: 'rgba(239, 68, 68, 0.08)',
+                    fill: '+2',
+                    tension: 0.1,
+                    pointRadius: 0,
+                    borderDash: [6, 3],
+                    borderWidth: 1.5
+                },
+                {
+                    label: `${nombreModelo} - Prediccion`,
                     data: fullPred,
-                    borderColor: 'rgb(16, 185, 129)',
-                    backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                    borderColor: coloresModelos[0],
+                    backgroundColor: coloresModelos[0] + '20',
                     fill: false,
                     tension: 0.1,
                     pointRadius: 4,
-                    borderWidth: 2
+                    borderWidth: 2.5
                 },
                 {
-                    label: 'Confianza Min',
+                    label: `${nombreModelo} - Limite Inferior`,
                     data: fullMin,
-                    borderColor: 'rgba(245, 158, 11, 0.5)',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
-                    fill: '+1',
-                    tension: 0.1,
-                    pointRadius: 0,
-                    borderDash: [5, 5]
-                },
-                {
-                    label: 'Confianza Max',
-                    data: fullMax,
-                    borderColor: 'rgba(245, 158, 11, 0.5)',
-                    backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                    borderColor: 'rgba(59, 130, 246, 0.6)',
+                    backgroundColor: 'rgba(59, 130, 246, 0.08)',
                     fill: false,
                     tension: 0.1,
                     pointRadius: 0,
-                    borderDash: [5, 5]
+                    borderDash: [6, 3],
+                    borderWidth: 1.5
                 }
             ]
         };
@@ -305,10 +377,15 @@ export default function Prediccion() {
         maintainAspectRatio: false,
         plugins: {
             legend: {
+                display: true,
                 position: 'top',
                 labels: {
                     usePointStyle: true,
-                    padding: 15
+                    padding: 20,
+                    font: {
+                        size: 12,
+                        weight: 'bold'
+                    }
                 }
             },
             title: {
@@ -316,7 +393,12 @@ export default function Prediccion() {
             },
             tooltip: {
                 mode: 'index',
-                intersect: false
+                intersect: false,
+                callbacks: {
+                    title: function(context) {
+                        return context[0]?.label || '';
+                    }
+                }
             }
         },
         scales: {
@@ -357,7 +439,7 @@ export default function Prediccion() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Generar Predicción de Demanda</h3>
-                    {modeloSeleccionado && <span className="badge badge-success">Modelo Seleccionado</span>}
+                    {modelosSeleccionados.length > 0 && <span className="badge badge-success">Modelo Seleccionado</span>}
                 </div>
 
                 <div className="grid-3" style={{ gap: '16px' }}>
@@ -371,26 +453,32 @@ export default function Prediccion() {
                         </select>
                     </div>
                     <div className="form-group">
-                        <label>Producto</label>
-                        <select value={selectedProduct} onChange={(e) => setSelectedProduct(e.target.value)}>
-                            <option value="">Todos los productos</option>
-                            <option value="all">Todos los productos ({productosFiltrados.length})</option>
-                            {productosFiltrados.map(p => (
-                                <option key={p.id_producto} value={p.id_producto}>{p.codigo} - {p.nombre}</option>
-                            ))}
-                        </select>
+                        <label>Productos ({productosFiltrados.length} disponibles)</label>
+                        <MultiSelect
+                            items={productosFiltrados.map(p => ({
+                                value: p.id_producto,
+                                label: `${p.codigo} - ${p.nombre}`
+                            }))}
+                            selectedIds={selectedProducts}
+                            onSelectionChange={setSelectedProducts}
+                            placeholder="Seleccionar productos..."
+                            searchPlaceholder="Buscar producto..."
+                            showSelectAll={true}
+                        />
                     </div>
                     <div className="form-group">
                         <label>Modelo IA</label>
-                        <select value={modeloSeleccionado} onChange={(e) => setModeloSeleccionado(e.target.value)}>
-                            <option value="">Seleccionar modelo...</option>
-                            {modelos.map(m => (
-                                <option key={m.id_modelo} value={m.id_modelo}>
-                                    {m.algoritmo} (R²: {m.r2?.toFixed(3) || 'N/A'})
-                                    {m.estado === 'ACTIVO' ? ' - ACTIVO' : ''}
-                                </option>
-                            ))}
-                        </select>
+                        <MultiSelect
+                            items={modelos.filter(m => m.estado === 'ACTIVO').map(m => ({
+                                value: m.id_modelo,
+                                label: `${m.algoritmo} (R²: ${m.r2?.toFixed(3) || 'N/A'})`
+                            }))}
+                            selectedIds={modelosSeleccionados}
+                            onSelectionChange={setModelosSeleccionados}
+                            placeholder="Seleccionar modelo..."
+                            searchPlaceholder="Buscar modelo..."
+                            showSelectAll={false}
+                        />
                     </div>
                 </div>
 
@@ -424,7 +512,7 @@ export default function Prediccion() {
                         <button
                             className="btn btn-primary"
                             onClick={handleGenerar}
-                            disabled={generating || !modeloSeleccionado || !selectedProduct || !fechaInicio || !fechaFin}
+                            disabled={generating || modelosSeleccionados.length === 0 || selectedProducts.length === 0 || !fechaInicio || !fechaFin}
                             style={{ width: '100%', padding: '8px 16px', fontSize: '0.9rem' }}
                         >
                             {generating ? 'Generando...' : 'Generar Predicción'}
@@ -453,15 +541,39 @@ export default function Prediccion() {
                 )}
             </div>
 
-            {selectedProduct && selectedProduct !== 'all' && (
+            {prediccionesProducto.length > 0 && (
                 <div className="card">
                     <div className="card-header">
-                        <h3 className="card-title">Gráfico de Predicción</h3>
+                        <h3 className="card-title">Grafico de Prediccion</h3>
                         {loadingHistorial && <span style={{ fontSize: '0.8rem', color: 'var(--gray-500)' }}>Cargando historial...</span>}
                     </div>
+                    {modelosSeleccionados.length > 1 && (
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', padding: '0 16px 12px' }}>
+                            {modelosSeleccionados.map((modeloId, idx) => {
+                                const modelo = modelos.find(m => m.id_modelo === modeloId);
+                                return (
+                                    <span key={modeloId} style={{
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '6px',
+                                        padding: '4px 10px',
+                                        borderRadius: '12px',
+                                        fontSize: '0.75rem',
+                                        fontWeight: '600',
+                                        backgroundColor: coloresModelos[idx % coloresModelos.length] + '15',
+                                        color: coloresModelos[idx % coloresModelos.length],
+                                        border: `1px solid ${coloresModelos[idx % coloresModelos.length]}40`
+                                    }}>
+                                        <span style={{ width: '10px', height: '3px', backgroundColor: coloresModelos[idx % coloresModelos.length], borderRadius: '2px' }} />
+                                        {modelo?.algoritmo} v{modelo?.version || '?'}
+                                    </span>
+                                );
+                            })}
+                        </div>
+                    )}
                     {historialVentas.length === 0 && prediccionesProducto.length === 0 ? (
                         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '300px', color: 'var(--gray-500)' }}>
-                            <p>No hay datos disponibles para graficar. Genere una predicción primero.</p>
+                            <p>No hay datos disponibles para graficar. Genere una prediccion primero.</p>
                         </div>
                     ) : (
                         <div style={{ height: '350px', padding: '16px' }}>
@@ -568,13 +680,19 @@ export default function Prediccion() {
                 <div className="card-header">
                     <h3 className="card-title">Historial de Predicciones</h3>
                     <ExportButtons
-                        data={(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 200).map(pred => {
+                        data={(modelosSeleccionados.length > 1 && modeloActivoTab
+                            ? prediccionesModeloActivo
+                            : selectedProducts.length > 0 ? prediccionesProducto : predicciones
+                        ).slice(0, 200).map(pred => {
                             const prod = getProducto(pred.id_producto);
+                            const modelo = modelos.find(m => m.id_modelo === pred.id_modelo);
                             return {
                                 id_prediccion: `#${pred.id_prediccion}`,
                                 producto: prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`,
+                                modelo: modelosSeleccionados.length > 1 ? (modelo?.algoritmo || '-') : undefined,
                                 periodo: pred.periodo || '-',
                                 demanda_estimada: pred.demanda_estimada,
+                                venta_promedio_por_dia: pred.venta_promedio_por_dia?.toFixed(2) || '-',
                                 precio_venta: pred.precio_venta ? `$${pred.precio_venta.toFixed(2)}` : '-',
                                 ingreso_esperado: pred.ingreso_esperado ? `$${pred.ingreso_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : '-',
                                 ganancia_esperada: pred.ganancia_esperada ? `$${pred.ganancia_esperada.toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : '-',
@@ -585,7 +703,9 @@ export default function Prediccion() {
                         columns={[
                             { key: 'id_prediccion', label: 'ID' },
                             { key: 'producto', label: 'Producto' },
+                            { key: 'modelo', label: 'Modelo' },
                             { key: 'demanda_estimada', label: 'Demanda' },
+                            { key: 'venta_promedio_por_dia', label: 'Venta Prom/Dia' },
                             { key: 'precio_venta', label: 'Precio' },
                             { key: 'ingreso_esperado', label: 'Ingreso Esperado' },
                             { key: 'ganancia_esperada', label: 'Ganancia' },
@@ -600,45 +720,101 @@ export default function Prediccion() {
                         <p>No hay predicciones registradas. Seleccione un producto y genere una predicción.</p>
                     </div>
                 ) : (
-                    <div className="table-container" style={{ maxHeight: '520px', overflowY: 'auto' }}>
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>ID</th>
-                                    <th>Producto</th>
-                                    <th>Demanda</th>
-                                    <th>Precio</th>
-                                    <th>Ingreso Esperado</th>
-                                    <th>Ganancia</th>
-                                    <th>Margen</th>
-                                    <th>Fecha</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {(selectedProduct && selectedProduct !== 'all' ? prediccionesProducto : predicciones).slice(0, 200).map(pred => {
-                                    const prod = getProducto(pred.id_producto);
+                    <>
+                        {predicciones.length > 0 && (
+                            <div style={{ display: 'flex', gap: '24px', padding: '12px 16px', background: 'var(--primary-light)', borderRadius: '8px', marginBottom: '12px', fontSize: '0.9rem', color: 'var(--gray-700)', flexWrap: 'wrap' }}>
+                                <span><strong>Rango:</strong> {predicciones[predicciones.length - 1]?.fecha_prediccion || '-'} al {predicciones[0]?.fecha_prediccion || '-'}</span>
+                                <span><strong>Productos:</strong> {new Set(predicciones.map(p => p.id_producto)).size}</span>
+                                <span><strong>Promedio ventas/dia:</strong> {(predicciones.reduce((sum, p) => sum + (p.venta_promedio_por_dia || 0), 0) / predicciones.length).toFixed(2)} uds</span>
+                            </div>
+                        )}
+                        {modelosSeleccionados.length > 1 && (
+                            <div style={{ display: 'flex', gap: '4px', marginBottom: '12px', borderBottom: '2px solid var(--gray-200)', paddingBottom: '0' }}>
+                                {modelosSeleccionados.map((modeloId, idx) => {
+                                    const modelo = modelos.find(m => m.id_modelo === modeloId);
+                                    const isActive = modeloActivoTab === modeloId;
                                     return (
-                                        <tr key={pred.id_prediccion}>
-                                            <td>#{pred.id_prediccion}</td>
-                                            <td>{prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`}</td>
-                                            <td><strong style={{ color: 'var(--primary)' }}>{pred.demanda_estimada}</strong></td>
-                                            <td>${pred.precio_venta?.toFixed(2) || '-'}</td>
-                                            <td style={{ color: 'var(--success)', fontWeight: 'bold' }}>
-                                                ${pred.ingreso_esperado?.toLocaleString('es-EC', { minimumFractionDigits: 2 }) || '-'}
-                                            </td>
-                                            <td style={{ color: 'var(--success)' }}>
-                                                ${pred.ganancia_esperada?.toLocaleString('es-EC', { minimumFractionDigits: 2 }) || '-'}
-                                            </td>
-                                            <td style={{ color: pred.margen_porcentaje > 20 ? 'var(--success)' : 'var(--warning)' }}>
-                                                {pred.margen_porcentaje?.toFixed(1) || '-'}%
-                                            </td>
-                                            <td>{pred.fecha_prediccion || '-'}</td>
-                                        </tr>
+                                        <button
+                                            key={modeloId}
+                                            onClick={() => setModeloActivoTab(modeloId)}
+                                            style={{
+                                                padding: '8px 16px',
+                                                border: 'none',
+                                                borderBottom: isActive ? `3px solid ${coloresModelos[idx % coloresModelos.length]}` : '3px solid transparent',
+                                                background: 'transparent',
+                                                cursor: 'pointer',
+                                                fontWeight: isActive ? '700' : '500',
+                                                fontSize: '0.85rem',
+                                                color: isActive ? coloresModelos[idx % coloresModelos.length] : 'var(--gray-500)',
+                                                transition: 'all 0.2s',
+                                            }}
+                                        >
+                                            {modelo?.algoritmo || `Modelo ${modeloId}`}
+                                        </button>
                                     );
                                 })}
-                            </tbody>
-                        </table>
-                    </div>
+                            </div>
+                        )}
+                        <div className="table-container" style={{ maxHeight: '520px', overflowY: 'auto' }}>
+                            <table className="data-table">
+                                <thead>
+                                    <tr>
+                                        <th>ID</th>
+                                        <th>Producto</th>
+                                        {modelosSeleccionados.length > 1 && <th>Modelo</th>}
+                                        <th>Demanda</th>
+                                        <th>Venta Prom/Dia</th>
+                                        <th>Precio</th>
+                                        <th>Ingreso Esperado</th>
+                                        <th>Ganancia</th>
+                                        <th>Margen</th>
+                                        <th>Fecha</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(modelosSeleccionados.length > 1 && modeloActivoTab
+                                        ? prediccionesModeloActivo
+                                        : selectedProducts.length > 0 ? prediccionesProducto : predicciones
+                                    ).slice(0, 200).map(pred => {
+                                        const prod = getProducto(pred.id_producto);
+                                        return (
+                                            <tr key={pred.id_prediccion}>
+                                                <td>#{pred.id_prediccion}</td>
+                                                <td>{prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`}</td>
+                                                {modelosSeleccionados.length > 1 && (
+                                                    <td>
+                                                        <span style={{
+                                                            padding: '2px 8px',
+                                                            borderRadius: '12px',
+                                                            fontSize: '0.75rem',
+                                                            fontWeight: 600,
+                                                            background: coloresModelos[modelosSeleccionados.indexOf(pred.id_modelo) % coloresModelos.length] + '20',
+                                                            color: coloresModelos[modelosSeleccionados.indexOf(pred.id_modelo) % coloresModelos.length]
+                                                        }}>
+                                                            {modelos.find(m => m.id_modelo === pred.id_modelo)?.algoritmo || `M${pred.id_modelo}`}
+                                                        </span>
+                                                    </td>
+                                                )}
+                                                <td><strong style={{ color: 'var(--primary)' }}>{pred.demanda_estimada}</strong></td>
+                                                <td style={{ color: 'var(--info)', fontWeight: '600' }}>{pred.venta_promedio_por_dia?.toFixed(2) || '-'}</td>
+                                                <td>${pred.precio_venta?.toFixed(2) || '-'}</td>
+                                                <td style={{ color: 'var(--success)', fontWeight: 'bold' }}>
+                                                    ${pred.ingreso_esperado?.toLocaleString('es-EC', { minimumFractionDigits: 2 }) || '-'}
+                                                </td>
+                                                <td style={{ color: 'var(--success)' }}>
+                                                    ${pred.ganancia_esperada?.toLocaleString('es-EC', { minimumFractionDigits: 2 }) || '-'}
+                                                </td>
+                                                <td style={{ color: pred.margen_porcentaje > 20 ? 'var(--success)' : 'var(--warning)' }}>
+                                                    {pred.margen_porcentaje?.toFixed(1) || '-'}%
+                                                </td>
+                                                <td>{pred.fecha_prediccion || '-'}</td>
+                                            </tr>
+                                        );
+                                    })}
+                                </tbody>
+                            </table>
+                        </div>
+                    </>
                 )}
             </div>
 
@@ -652,11 +828,11 @@ export default function Prediccion() {
                     <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>{new Set(predicciones.map(p => p.id_producto)).size}</div>
                 </div>
                 <div className="card">
-                    <div className="card-title">Modelos Disponibles</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{modelos.length}</div>
-                    {modelos.length > 0 && (
+                    <div className="card-title">Modelos Activos</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{modelos.filter(m => m.estado === 'ACTIVO').length}</div>
+                    {modelos.filter(m => m.estado === 'ACTIVO').length > 0 && (
                         <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)', marginTop: '4px' }}>
-                            {modelos.map(m => m.algoritmo).join(' | ')}
+                            {modelos.filter(m => m.estado === 'ACTIVO').map(m => m.algoritmo).join(' | ')}
                         </div>
                     )}
                 </div>
@@ -681,7 +857,7 @@ export default function Prediccion() {
                             </thead>
                             <tbody>
                                 {modelos.map(modelo => (
-                                    <tr key={modelo.id_modelo} style={{ backgroundColor: modeloSeleccionado == modelo.id_modelo ? 'var(--primary-light)' : 'transparent' }}>
+                                    <tr key={modelo.id_modelo} style={{ backgroundColor: modelosSeleccionados.includes(modelo.id_modelo) ? 'var(--primary-light)' : 'transparent' }}>
                                         <td><strong>{modelo.algoritmo}</strong></td>
                                         <td>
                                             <span className={`badge ${modelo.estado === 'ACTIVO' ? 'badge-success' : 'badge-secondary'}`}>

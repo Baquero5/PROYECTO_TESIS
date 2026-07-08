@@ -122,7 +122,7 @@ export default function Ventas() {
         { key: 'id_venta', label: 'ID Venta' },
         { key: 'fecha', label: 'Fecha' },
         { key: 'total', label: 'Total' },
-        { key: '-items', label: 'Items' },
+        { key: 'items', label: 'Items' },
     ];
 
     const exportData = filtered.map(venta => ({

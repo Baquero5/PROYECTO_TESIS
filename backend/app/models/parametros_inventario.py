@@ -3,10 +3,10 @@ from app.core.database import Base
 
 
 class ParametroInventario(Base):
-    __tablename__ = "parametros_inventario"
+    __tablename__ = "parametro_inventario"
 
     id_parametro = Column(Integer, primary_key=True, autoincrement=True)
-    id_producto = Column(Integer, ForeignKey("productos.id_producto"), nullable=False)
+    id_producto = Column(Integer, ForeignKey("producto.id_producto"), nullable=False)
     costo_orden = Column(Numeric(10, 2), default=0.0)
     costo_mantenimiento = Column(Numeric(10, 2), default=0.0)
     lead_time_dias = Column(Integer, default=0)

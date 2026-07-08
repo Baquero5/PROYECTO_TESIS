@@ -12,6 +12,7 @@ const allMenuItems = [
     { path: '/ventas', icon: '💰', label: 'Ventas', roles: [1, 2, 3] },
     { path: '/alertas', icon: '⚠️', label: 'Alertas', roles: [1, 2] },
     { path: '/prediccion', icon: '🔮', label: 'Predicción', roles: [1, 2] },
+    { path: '/historial-predicciones', icon: '📋', label: 'Historial Pred.', roles: [1, 2] },
     { path: '/modelos-ia', icon: '🤖', label: 'Modelos IA', roles: [1, 2] },
     { path: '/reportes', icon: '📥', label: 'Reportes', roles: [1, 2] },
     { path: '/usuarios', icon: '👥', label: 'Usuarios', roles: [1, 2] },
@@ -22,7 +23,13 @@ export default function Layout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
-    const [darkMode, setDarkMode] = useState(false);
+    const [darkMode, setDarkMode] = useState(() => {
+        const saved = localStorage.getItem('darkMode') === 'true';
+        if (saved) {
+            document.documentElement.setAttribute('data-theme', 'dark');
+        }
+        return saved;
+    });
 
     const menuItems = allMenuItems.filter(item => item.roles.includes(user?.id_rol));
 
@@ -34,6 +41,7 @@ export default function Layout() {
     const toggleTheme = () => {
         const newMode = !darkMode;
         setDarkMode(newMode);
+        localStorage.setItem('darkMode', String(newMode));
         if (newMode) {
             document.documentElement.setAttribute('data-theme', 'dark');
         } else {

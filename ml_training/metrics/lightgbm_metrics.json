@@ -1,9 +1,10 @@
 {
   "modelo": "LightGBM",
-  "mae": 1.6692,
-  "rmse": 3.5347,
-  "r2": 0.7393,
-  "mape": 71.1834,
+  "version": "1.0",
+  "mae": 3.5864,
+  "rmse": 7.2066,
+  "r2": 0.808,
+  "mape": 86.0973,
   "features_used": [
     "price",
     "dayofweek",

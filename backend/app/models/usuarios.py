@@ -4,10 +4,10 @@ from app.core.database import Base
 
 
 class Usuario(Base):
-    __tablename__ = "usuarios"
+    __tablename__ = "usuario"
 
     id_usuario = Column(Integer, primary_key=True, autoincrement=True)
-    id_rol = Column(Integer, ForeignKey("roles.id_rol"), nullable=False)
+    id_rol = Column(Integer, ForeignKey("rol.id_rol"), nullable=False)
     nombres = Column(String(100), nullable=False)
     apellidos = Column(String(100), nullable=False)
     correo = Column(String(150), unique=True, index=True, nullable=False)

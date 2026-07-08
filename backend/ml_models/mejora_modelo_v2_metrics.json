@@ -1,0 +1,57 @@
+{
+  "version": "v2",
+  "mejora": "Features mejorados + Tuning + Ensemble (XGBoost+LightGBM+Prophet)",
+  "ensemble": {
+    "mae": 1.8074472299688524,
+    "rmse": 3.682888718499822,
+    "r2": 0.6975903974081518,
+    "mape": 86.45242884789855
+  },
+  "ensemble_weights": {
+    "xgboost": 0.4,
+    "lightgbm": 0.4,
+    "prophet": 0.2
+  },
+  "modelos_individuales": {
+    "xgboost": {
+      "mae": 1.6271028743277072,
+      "rmse": 3.5006964523078485,
+      "r2": 0.7267706849812203,
+      "mape": 69.70707659422975
+    },
+    "lightgbm": {
+      "mae": 1.627858152713027,
+      "rmse": 3.501664520534821,
+      "r2": 0.7266195486603986,
+      "mape": 69.51679381309349
+    },
+    "prophet": {
+      "mae": 3734.062215606493,
+      "rmse": 4364.338687602204,
+      "r2": -1.1047679753910629,
+      "mape": 22.01205025553651
+    }
+  },
+  "features_used": [
+    "price",
+    "dayofweek",
+    "month",
+    "is_month_end",
+    "lag_1",
+    "lag_7",
+    "lag_14",
+    "lag_28",
+    "rolling_mean_7",
+    "rolling_mean_14",
+    "rolling_mean_28",
+    "rolling_std_7",
+    "rolling_std_28",
+    "price_change_1",
+    "is_holiday",
+    "month_sin",
+    "dayofweek_sin",
+    "rolling_max_28",
+    "rolling_min_28"
+  ],
+  "n_features": 19
+}

@@ -4,10 +4,10 @@ REPORTE DE COMPARACION: XGBOOST vs LIGHTGBM
 
 Metrica                      XGBOOST        LIGHTGBM         Ganador
 ----------------------------------------------------------------------
-MAE                           1.6667          1.6692         XGBoost
-RMSE                          3.6016          3.5347        LightGBM
-R2                            0.7293          0.7393        LightGBM
-MAPE                         70.7336         71.1834         XGBoost
+MAE                           3.5741          3.5864         XGBoost
+RMSE                          7.2141          7.2066        LightGBM
+R2                            0.8076          0.8080        LightGBM
+MAPE                         85.1612         86.0973         XGBoost
 ----------------------------------------------------------------------
 
 Ganador general: LightGBM
@@ -15,6 +15,6 @@ XGBoost gana en 2/4 metricas
 LightGBM gana en 2/4 metricas
 
 XGBOOST:
-  Tiempo de prediccion: 34.7859s
+  Tiempo de prediccion: 2.2820s
 LIGHTGBM:
-  Tiempo de prediccion: 86.7057s
+  Tiempo de prediccion: 11.1246s

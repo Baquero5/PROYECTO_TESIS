@@ -3,19 +3,26 @@ import api from '../services/api';
 
 const AuthContext = createContext(null);
 
+function safeParseJSON(key) {
+  try {
+    const val = localStorage.getItem(key);
+    return val ? JSON.parse(val) : null;
+  } catch {
+    localStorage.removeItem(key);
+    return null;
+  }
+}
+
 export function AuthProvider({ children }) {
-  const [user, setUser] = useState(() => {
-    const saved = localStorage.getItem('user');
-    return saved ? JSON.parse(saved) : null;
-  });
-  const [token, setToken] = useState(null);
+  const [user, setUser] = useState(() => safeParseJSON('user'));
+  const [token, setToken] = useState(() => localStorage.getItem('token') || null);
 
   const login = async (correo, password) => {
     const response = await api.post('/auth/login', { correo, password });
     const { access_token, user: userData } = response.data;
 
-    // Guardar solo el usuario en localStorage para la sesión
     localStorage.setItem('user', JSON.stringify(userData));
+    localStorage.setItem('token', access_token);
     setToken(access_token);
     setUser(userData);
     return userData;
@@ -25,9 +32,10 @@ export function AuthProvider({ children }) {
     try {
       await api.post('/auth/logout');
     } catch (error) {
-      // Ignorar errores al cerrar sesión
+      // Ignorar errores al cerrar sesion
     }
     localStorage.removeItem('user');
+    localStorage.removeItem('token');
     setToken(null);
     setUser(null);
   };

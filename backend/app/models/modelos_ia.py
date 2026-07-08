@@ -4,7 +4,7 @@ from app.core.database import Base
 
 
 class ModeloIA(Base):
-    __tablename__ = "modelos_ia"
+    __tablename__ = "modelo_ia"
 
     id_modelo = Column(Integer, primary_key=True, autoincrement=True)
     id_dataset = Column(Integer, ForeignKey("dataset_entrenamiento.id_dataset"), nullable=False)
