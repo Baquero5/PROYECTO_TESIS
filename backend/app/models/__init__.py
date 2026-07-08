@@ -6,8 +6,10 @@ from app.models.rol_permisos import RolPermiso
 
 # Modelos de catálogo
 from app.models.categorias import Categoria
+from app.models.subcategorias import Subcategoria
 from app.models.proveedores import Proveedor
 from app.models.productos import Producto
+from app.models.tiendas import Tienda
 
 # Modelos de inventario
 from app.models.inventarios import Inventario
@@ -34,8 +36,10 @@ __all__ = [
     "Permiso",
     "RolPermiso",
     "Categoria",
+    "Subcategoria",
     "Proveedor",
     "Producto",
+    "Tienda",
     "Inventario",
     "MovimientoInventario",
     "Venta",

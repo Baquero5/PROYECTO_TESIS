@@ -1,83 +1,95 @@
 """
-Script para registrar modelos entrenados v2 en la BD del TESIS
+Script 09: Registrar modelos entrenados en la BD
+Entrada: models/*.pkl, metrics/comparativa_modelos.json
+Conexion: root:123456@localhost:3307/INVENTARIO
 """
 import pymysql
+import yaml
+import json
 import os
-from datetime import datetime
+from pathlib import Path
 
-DB_CONFIG = {
-    "host": "localhost",
-    "port": 3307,
-    "user": "root",
-    "password": "123456",
-    "database": "tesis_inventario",
-    "charset": "utf8mb4"
-}
+BASE_DIR = Path(__file__).resolve().parent.parent
 
-MODELS_DIR = os.path.join(os.path.dirname(__file__), "..", "..", "backend", "ml_models")
+with open(BASE_DIR / "config.yaml", "r") as f:
+    config = yaml.safe_load(f)
+
+DB_CONFIG = config["database"]
+METRICS_DIR = BASE_DIR / "metrics"
+MODELS_DIR = BASE_DIR / "models"
+
 
 def get_connection():
-    return pymysql.connect(**DB_CONFIG, autocommit=False)
+    return pymysql.connect(
+        host=DB_CONFIG["host"],
+        port=DB_CONFIG["port"],
+        user=DB_CONFIG["user"],
+        password=DB_CONFIG["password"],
+        database=DB_CONFIG["name"],
+        charset="utf8mb4",
+        autocommit=False
+    )
+
+
+def load_metrics():
+    metrics_file = METRICS_DIR / "comparativa_modelos.json"
+    if not metrics_file.exists():
+        print(f"[ERROR] No se encontro: {metrics_file}")
+        print("  Ejecuta primero 07_evaluar_modelos.py")
+        return None
+
+    with open(metrics_file, "r") as f:
+        data = json.load(f)
+    print(f"[OK] Metricas cargadas: {metrics_file}")
+    return data
+
 
 def register_models():
     conn = get_connection()
     cursor = conn.cursor()
 
     try:
+        # Verificar dataset existente
         cursor.execute("SELECT id_dataset FROM dataset_entrenamiento LIMIT 1")
         result = cursor.fetchone()
         if not result:
-            cursor.execute(
-                "INSERT INTO dataset_entrenamiento (nombre_dataset, registros, descripcion) VALUES (%s, %s, %s)",
-                ("M5 Walmart - 5 tiendas - 1000 productos", 9425000, "Dataset M5 transformado para entrenamiento ML v2 con features mejorados")
-            )
-            conn.commit()
-            dataset_id = cursor.lastrowid
-            print(f"[OK] Dataset creado (id={dataset_id})")
-        else:
-            dataset_id = result[0]
-            print(f"[INFO] Dataset existente (id={dataset_id})")
+            print("[ERROR] No hay dataset registrado. Ejecuta primero 04_poblar_bd.py")
+            return
+        dataset_id = result[0]
+        print(f"[INFO] Dataset existente (id={dataset_id})")
 
+        # Cargar metricas
+        metrics = load_metrics()
+        if metrics is None:
+            return
+
+        # Registrar modelos v1
         models = [
-            {
-                "algoritmo": "XGBOOST",
-                "version": "2.0",
-                "archivo": "xgboost_v2_model.pkl",
-                "mae": 1.6271,
-                "rmse": 3.5007,
-                "r2": 0.7268,
-                "mape": 69.71,
-            },
-            {
-                "algoritmo": "LIGHTGBM",
-                "version": "2.0",
-                "archivo": "lightgbm_v2_model.pkl",
-                "mae": 1.6279,
-                "rmse": 3.5017,
-                "r2": 0.7266,
-                "mape": 69.52,
-            },
             {
                 "algoritmo": "XGBOOST",
                 "version": "1.0",
                 "archivo": "xgboost_model.pkl",
-                "mae": 1.658,
-                "rmse": 3.6501,
-                "r2": 0.722,
-                "mape": 70.2522,
             },
             {
                 "algoritmo": "LIGHTGBM",
                 "version": "1.0",
                 "archivo": "lightgbm_model.pkl",
-                "mae": 1.6576,
-                "rmse": 3.502,
-                "r2": 0.7441,
-                "mape": 70.7965,
             },
         ]
 
         for model_info in models:
+            algo_key = model_info["algoritmo"].lower()
+            algo_metrics = metrics.get(algo_key, {})
+
+            if not algo_metrics:
+                print(f"[WARN] No se encontraron metricas para {model_info['algoritmo']}")
+                continue
+
+            mae = algo_metrics.get("mae")
+            rmse = algo_metrics.get("rmse")
+            r2 = algo_metrics.get("r2")
+            mape = algo_metrics.get("mape")
+
             cursor.execute(
                 "SELECT id_modelo FROM modelos_ia WHERE algoritmo = %s AND version = %s LIMIT 1",
                 (model_info["algoritmo"], model_info["version"])
@@ -86,11 +98,10 @@ def register_models():
 
             if existing:
                 cursor.execute(
-                    """UPDATE modelos_ia 
+                    """UPDATE modelos_ia
                        SET archivo_modelo = %s, mae = %s, rmse = %s, r2 = %s, mape = %s, estado = 'INACTIVO'
                        WHERE id_modelo = %s""",
-                    (model_info["archivo"], model_info["mae"], model_info["rmse"],
-                     model_info.get("r2"), model_info["mape"], existing[0])
+                    (model_info["archivo"], mae, rmse, r2, mape, existing[0])
                 )
                 print(f"[OK] {model_info['algoritmo']} v{model_info['version']} actualizado (id={existing[0]})")
             else:
@@ -98,16 +109,17 @@ def register_models():
                     """INSERT INTO modelos_ia (id_dataset, algoritmo, version, archivo_modelo, mae, rmse, r2, mape, estado)
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
                     (dataset_id, model_info["algoritmo"], model_info["version"], model_info["archivo"],
-                     model_info["mae"], model_info["rmse"], model_info.get("r2"), model_info["mape"], "INACTIVO")
+                     mae, rmse, r2, mape, "INACTIVO")
                 )
                 print(f"[OK] {model_info['algoritmo']} v{model_info['version']} registrado (id={cursor.lastrowid})")
 
+        # Activar LightGBM como modelo principal
         cursor.execute(
-            """UPDATE modelos_ia SET estado = 'ACTIVO' 
-               WHERE algoritmo = 'LIGHTGBM' AND version = '2.0' 
-               AND id_modelo = (SELECT id_modelo FROM (SELECT id_modelo FROM modelos_ia WHERE algoritmo = 'LIGHTGBM' AND version = '2.0' LIMIT 1) AS t)"""
+            """UPDATE modelos_ia SET estado = 'ACTIVO'
+               WHERE algoritmo = 'LIGHTGBM' AND version = '1.0'
+               AND id_modelo = (SELECT id_modelo FROM (SELECT id_modelo FROM modelos_ia WHERE algoritmo = 'LIGHTGBM' AND version = '1.0' LIMIT 1) AS t)"""
         )
-        print("[OK] LightGBM v2.0 activado como modelo principal")
+        print("[OK] LightGBM v1.0 activado como modelo principal")
 
         conn.commit()
         print("\n[OK] Modelos registrados exitosamente!")
@@ -120,8 +132,9 @@ def register_models():
         cursor.close()
         conn.close()
 
+
 if __name__ == "__main__":
     print("=" * 50)
-    print("REGISTRAR MODELOS v2 EN BASE DE DATOS")
+    print("REGISTRAR MODELOS EN BASE DE DATOS")
     print("=" * 50)
     register_models()

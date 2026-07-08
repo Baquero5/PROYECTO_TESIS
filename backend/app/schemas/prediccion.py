@@ -83,3 +83,30 @@ class KPIsResponse(BaseModel):
     producto_mayor_rentabilidad: Optional[KPIPrediccion]
     producto_mayor_ingreso: Optional[KPIPrediccion]
     productos: List[KPIPrediccion]
+
+
+class PrediccionCompararRequest(BaseModel):
+    id_producto: Optional[int] = None
+    id_productos: Optional[List[int]] = None
+    horizonte_dias: int = Field(default=30, ge=1, le=365)
+    id_modelos: List[int]
+    fecha_inicio: Optional[date] = None
+
+
+class ModeloComparacion(BaseModel):
+    id_modelo: int
+    algoritmo: str
+    version: Optional[str] = None
+    r2: Optional[float] = None
+    predicciones: List[dict]
+
+
+class ProductoComparacion(BaseModel):
+    id_producto: int
+    nombre: str
+    modelos: List[ModeloComparacion]
+
+
+class PrediccionCompararResponse(BaseModel):
+    horizonte_dias: int
+    productos: List[ProductoComparacion]

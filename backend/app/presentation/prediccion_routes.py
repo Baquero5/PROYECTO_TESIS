@@ -5,7 +5,7 @@ from app.core.database import get_db
 from app.repositories.prediccion_repository import PrediccionRepository
 from app.repositories.historial_prediccion_repository import HistorialPrediccionRepository
 from app.repositories.modelo_ia_repository import ModeloIARepository
-from app.schemas.prediccion import PrediccionCreate, PrediccionResponse, PrediccionRequest, PrediccionBatchRequest, PrediccionBatchResponse, KPIsResponse, KPIPrediccion
+from app.schemas.prediccion import PrediccionCreate, PrediccionResponse, PrediccionRequest, PrediccionBatchRequest, PrediccionBatchResponse, KPIsResponse, KPIPrediccion, PrediccionCompararRequest, PrediccionCompararResponse, ModeloComparacion, ProductoComparacion
 from app.services.ml_service import ml_service
 from app.services.auth_service import require_permission
 from app.models.predicciones import Prediccion
@@ -34,8 +34,8 @@ async def get_predicciones(
                 CASE WHEN p.precio_venta > 0 
                      THEN ROUND((p.precio_venta - p.precio_compra) / p.precio_venta * 100, 2)
                      ELSE 0 END as margen_porcentaje
-            FROM prediccion pr
-            INNER JOIN producto p ON pr.id_producto = p.id_producto
+            FROM predicciones pr
+            INNER JOIN productos p ON pr.id_producto = p.id_producto
             ORDER BY pr.fecha_prediccion DESC
         """)
     )
@@ -84,8 +84,8 @@ async def get_kpis_prediccion(
                 COALESCE(SUM(pred.demanda_estimada), 0) as demanda_total,
                 COALESCE(SUM(pred.confianza_min), 0) as demanda_minima,
                 COALESCE(SUM(pred.confianza_max), 0) as demanda_maxima
-            FROM producto p
-            INNER JOIN prediccion pred ON p.id_producto = pred.id_producto
+            FROM productos p
+            INNER JOIN predicciones pred ON p.id_producto = pred.id_producto
             WHERE p.estado = 1
             GROUP BY p.id_producto, p.codigo, p.nombre, p.precio_venta, p.precio_compra
             HAVING demanda_total > 0
@@ -241,8 +241,8 @@ async def predecir_demanda(
     result = await db.execute(
         text("""
             SELECT v.fecha_venta, dv.cantidad, dv.precio_unitario
-            FROM detalle_venta dv
-            JOIN venta v ON dv.id_venta = v.id_venta
+            FROM detalle_ventas dv
+            JOIN ventas v ON dv.id_venta = v.id_venta
             WHERE dv.id_producto = :producto_id
             ORDER BY v.fecha_venta ASC
         """),
@@ -273,6 +273,10 @@ async def predecir_demanda(
     repo = PrediccionRepository(db)
     hist_repo = HistorialPrediccionRepository(db)
 
+    # Archivar predicciones anteriores en historial y eliminar de tabla activa
+    await hist_repo.archivar_por_producto(data.id_producto, motivo="REEMPLAZADA")
+    await repo.delete_by_product(data.id_producto)
+
     # Ajustar fechas si se proporciona fecha_inicio
     fecha_offset = None
     if data.fecha_inicio and predicciones_raw:
@@ -298,10 +302,6 @@ async def predecir_demanda(
             porcentaje_confianza=95.0,
         ))
 
-    # Archivar predicciones anteriores en historial y eliminar de tabla activa
-    await hist_repo.archivar_por_producto(data.id_producto, motivo="REEMPLAZADA")
-    await repo.delete_by_product(data.id_producto)
-    
     predicciones_creadas = await repo.create_many(predicciones_obj)
     return predicciones_creadas
 
@@ -348,7 +348,6 @@ async def predecir_lote(
         model = None
 
     repo = PrediccionRepository(db)
-    hist_repo = HistorialPrediccionRepository(db)
     exitosos = []
     fallidos = []
     errores = []
@@ -358,8 +357,8 @@ async def predecir_lote(
             result = await db.execute(
                 text("""
                     SELECT v.fecha_venta, dv.cantidad, dv.precio_unitario
-                    FROM detalle_venta dv
-                    JOIN venta v ON dv.id_venta = v.id_venta
+                    FROM detalle_ventas dv
+                    JOIN ventas v ON dv.id_venta = v.id_venta
                     WHERE dv.id_producto = :producto_id
                     ORDER BY v.fecha_venta ASC
                 """),
@@ -410,6 +409,7 @@ async def predecir_lote(
                 ))
 
             # Archivar predicciones anteriores en historial y eliminar de tabla activa
+            hist_repo = HistorialPrediccionRepository(db)
             await hist_repo.archivar_por_producto(producto_id, motivo="REEMPLAZADA")
             await repo.delete_by_product(producto_id)
             await repo.create_many(predicciones_obj)
@@ -426,4 +426,110 @@ async def predecir_lote(
         productos_exitosos=exitosos,
         productos_fallidos=fallidos,
         detalle_errores=errores
+    )
+
+
+@router.post("/predecir-comparar", response_model=PrediccionCompararResponse)
+async def predecir_comparar(
+    data: PrediccionCompararRequest,
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
+    """Compara predicciones de 2 modelos para 1 o mas productos."""
+    modelo_repo = ModeloIARepository(db)
+
+    if len(data.id_modelos) < 2:
+        raise HTTPException(status_code=400, detail="Seleccione al menos 2 modelos para comparar")
+
+    ids_productos = []
+    if data.id_productos:
+        ids_productos = data.id_productos
+    elif data.id_producto:
+        ids_productos = [data.id_producto]
+
+    if not ids_productos:
+        raise HTTPException(status_code=400, detail="Seleccione al menos un producto")
+
+    modelos_obj = {}
+    for modelo_id in data.id_modelos:
+        modelo = await modelo_repo.get_by_id(modelo_id)
+        if not modelo or not modelo.archivo_modelo:
+            continue
+        try:
+            model_obj = ml_service.load_model(modelo.archivo_modelo)
+            modelos_obj[modelo_id] = (modelo, model_obj)
+        except FileNotFoundError:
+            continue
+
+    if not modelos_obj:
+        raise HTTPException(status_code=404, detail="No se pudieron cargar los modelos seleccionados")
+
+    productos_compare = []
+    for prod_id in ids_productos:
+        prod_result = await db.execute(
+            text("SELECT id_producto, nombre FROM productos WHERE id_producto = :id"),
+            {"id": prod_id}
+        )
+        prod_row = prod_result.fetchone()
+        if not prod_row:
+            continue
+
+        result = await db.execute(
+            text("""
+                SELECT v.fecha_venta, dv.cantidad, dv.precio_unitario
+                FROM detalle_ventas dv
+                JOIN ventas v ON dv.id_venta = v.id_venta
+                WHERE dv.id_producto = :producto_id
+                ORDER BY v.fecha_venta ASC
+            """),
+            {"producto_id": prod_id}
+        )
+        rows = result.fetchall()
+
+        if not rows or len(rows) < 30:
+            continue
+
+        historial_df = pd.DataFrame(rows, columns=["fecha_venta", "cantidad", "precio_unitario"])
+        features_df = ml_service.prepare_features_from_history(historial_df)
+
+        if len(features_df) < 30:
+            continue
+
+        modelos_compare = []
+        for modelo_id, (modelo, model_obj) in modelos_obj.items():
+            use_ensemble = False
+            try:
+                ml_service.load_model("ensemble_v2.pkl")
+                use_ensemble = True
+            except FileNotFoundError:
+                pass
+
+            predicciones_raw = ml_service.predict_demand(
+                model_obj, features_df, data.horizonte_dias, use_ensemble=use_ensemble
+            )
+
+            if data.fecha_inicio and predicciones_raw:
+                primera_fecha = datetime.strptime(predicciones_raw[0]["fecha"], "%Y-%m-%d").date()
+                fecha_offset = data.fecha_inicio - primera_fecha
+                for pred in predicciones_raw:
+                    fecha_pred = datetime.strptime(pred["fecha"], "%Y-%m-%d").date()
+                    pred["fecha"] = (fecha_pred + fecha_offset).isoformat()
+
+            modelos_compare.append(ModeloComparacion(
+                id_modelo=modelo.id_modelo,
+                algoritmo=modelo.algoritmo,
+                version=modelo.version,
+                r2=float(modelo.r2) if modelo.r2 else None,
+                predicciones=predicciones_raw,
+            ))
+
+        productos_compare.append(ProductoComparacion(
+            id_producto=prod_id,
+            nombre=prod_row.nombre,
+            modelos=modelos_compare,
+        ))
+
+    return PrediccionCompararResponse(
+        horizonte_dias=data.horizonte_dias,
+        productos=productos_compare,
     )

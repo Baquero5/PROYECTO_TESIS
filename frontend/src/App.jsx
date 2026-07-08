@@ -6,6 +6,8 @@ import Layout from './components/Layout';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import Categorias from './pages/Categorias';
+import Subcategorias from './pages/Subcategorias';
+import HistorialPredicciones from './pages/HistorialPredicciones';
 import Proveedores from './pages/Proveedores';
 import Productos from './pages/Productos';
 import Inventario from './pages/InventarioPage';
@@ -39,6 +41,7 @@ function AppRoutes() {
                 } />
                 <Route path="/productos" element={<Productos />} />
                 <Route path="/categorias" element={<Categorias />} />
+                <Route path="/subcategorias" element={<Subcategorias />} />
                 <Route path="/proveedores" element={<Proveedores />} />
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/ventas" element={<Ventas />} />

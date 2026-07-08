@@ -8,7 +8,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = True
 
-    DATABASE_URL: str = "mysql+aiomysql://root:123456@localhost:3307/tesis_inventario"
+    DATABASE_URL: str = "mysql+aiomysql://root:123456@localhost:3307/INVENTARIO"
     SECRET_KEY: str = secrets.token_hex(32)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30

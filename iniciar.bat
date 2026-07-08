@@ -5,10 +5,10 @@ echo ========================================
 echo.
 
 :: Backend
-start "Backend" cmd /k "cd /d C:\Users\CRISTHIAM\Desktop\VISUAL\TESIS\backend && venv\Scripts\activate && uvicorn app.main:app --reload --port 8000"
+start "Backend" cmd /k "cd /d D:\visual\TESIS_PRUEBAS\PROYECTO_TESIS\backend && venv\Scripts\activate && uvicorn app.main:app --reload --port 8000"
 
 :: Frontend
-start "Frontend" cmd /k "cd /d C:\Users\CRISTHIAM\Desktop\VISUAL\TESIS\frontend && npm run dev"
+start "Frontend" cmd /k "cd /d D:\visual\TESIS_PRUEBAS\PROYECTO_TESIS\frontend && npm run dev"
 
 echo.
 echo ========================================

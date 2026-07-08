@@ -17,8 +17,10 @@ from app.presentation.alerta_routes import router as alerta_router
 from app.presentation.dataset_routes import router as dataset_router
 from app.presentation.modelo_ia_routes import router as modelo_ia_router
 from app.presentation.prediccion_routes import router as prediccion_router
-from app.presentation.historial_prediccion_routes import router as historial_router
 from app.presentation.permiso_routes import router as permiso_router
+from app.presentation.subcategoria_routes import router as subcategoria_router
+from app.presentation.historial_prediccion_routes import router as historial_router
+from app.presentation.tienda_routes import router as tienda_router
 from app.models.usuarios import Usuario
 from app.models.roles import Rol
 from app.models.permisos import Permiso
@@ -36,7 +38,9 @@ from app.models.alertas import Alerta
 from app.models.dataset_entrenamiento import DatasetEntrenamiento
 from app.models.modelos_ia import ModeloIA
 from app.models.predicciones import Prediccion
+from app.models.subcategorias import Subcategoria
 from app.models.historial_predicciones import HistorialPrediccion
+from app.models.tiendas import Tienda
 from app.services.auth_service import hash_password
 
 settings = get_settings()
@@ -240,8 +244,10 @@ app.include_router(alerta_router)
 app.include_router(dataset_router)
 app.include_router(modelo_ia_router)
 app.include_router(prediccion_router)
-app.include_router(historial_router)
 app.include_router(permiso_router)
+app.include_router(subcategoria_router)
+app.include_router(historial_router)
+app.include_router(tienda_router)
 
 
 @app.get("/")
