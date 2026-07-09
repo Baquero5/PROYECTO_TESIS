@@ -479,19 +479,11 @@ body {
     .page-title h1 { font-size: 1.2rem; }
 }
 
-input[type=number]::-webkit-inner-spin-button,
-input[type=number]::-webkit-outer-spin-button {
+input[type=number]:not(.qty-input)::-webkit-inner-spin-button,
+input[type=number]:not(.qty-input)::-webkit-outer-spin-button {
     -webkit-appearance: none;
     margin: 0;
 }
-input[type=number] {
+input[type=number]:not(.qty-input) {
     -moz-appearance: textfield;
-}
-.qty-input::-webkit-inner-spin-button,
-.qty-input::-webkit-outer-spin-button {
-    -webkit-appearance: inner-spin-button;
-    margin: 0 2px;
-}
-.qty-input {
-    -moz-appearance: number-spinners;
 }
