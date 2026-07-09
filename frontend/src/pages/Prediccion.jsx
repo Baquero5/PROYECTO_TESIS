@@ -155,7 +155,7 @@ export default function Prediccion() {
             return;
         }
 
-        if (idsProductos.length === 1) {
+        if (modelosSeleccionados.length === 1 && idsProductos.length === 1) {
             await predecirProducto(idsProductos[0]);
         } else {
             await predecirLote(idsProductos);

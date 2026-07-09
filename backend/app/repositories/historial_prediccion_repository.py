@@ -44,13 +44,15 @@ class HistorialPrediccionRepository:
         )
         return list(result.scalars().all())
 
-    async def archivar_por_producto(self, producto_id: int, motivo: str = "REEMPLAZADA") -> int:
-        """Mueve las predicciones actuales de un producto al historial."""
+    async def archivar_por_producto(self, producto_id: int, motivo: str = "REEMPLAZADA", modelo_id: int = None) -> int:
+        """Mueve las predicciones actuales de un producto al historial. Opcionalmente filtra por modelo."""
         from app.models.predicciones import Prediccion
 
-        predicciones = await self.db.execute(
-            select(Prediccion).where(Prediccion.id_producto == producto_id)
-        )
+        query = select(Prediccion).where(Prediccion.id_producto == producto_id)
+        if modelo_id is not None:
+            query = query.where(Prediccion.id_modelo == modelo_id)
+        
+        predicciones = await self.db.execute(query)
         rows = predicciones.scalars().all()
 
         if not rows:

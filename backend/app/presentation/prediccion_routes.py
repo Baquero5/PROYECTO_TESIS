@@ -426,7 +426,7 @@ async def predecir_lote(
                 ))
 
             # Archivar y eliminar predicciones anteriores de ESTE producto + modelo
-            await hist_repo.archivar_por_producto(producto_id, motivo="REEMPLAZADA")
+            await hist_repo.archivar_por_producto(producto_id, motivo="REEMPLAZADA", modelo_id=modelo_id)
             await repo.delete_by_product_and_model(producto_id, modelo_id)
             await repo.create_many(predicciones_obj)
             return True, None
