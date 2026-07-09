@@ -59,17 +59,17 @@ class MLService:
 
     def get_v2_feature_columns(self) -> List[str]:
         """
-        Features del modelo v2 - 19 variables.
+        Features del modelo - 19 variables (nombres en español).
         Estas features son las que el modelo espera durante la predicción.
         """
         return [
-            "price", "dayofweek", "month", "is_month_end",
-            "lag_1", "lag_7", "lag_14", "lag_28",
-            "rolling_mean_7", "rolling_mean_14", "rolling_mean_28",
-            "rolling_std_7", "rolling_std_28",
-            "price_change_1",
-            "is_holiday", "month_sin", "dayofweek_sin",
-            "rolling_max_28", "rolling_min_28",
+            "precio", "dia_semana", "mes", "fin_de_mes",
+            "rezago_1", "rezago_7", "rezago_14", "rezago_28",
+            "media_movil_7", "media_movil_14", "media_movil_28",
+            "desviacion_estandar_7", "desviacion_estandar_28",
+            "cambio_precio_1",
+            "es_festivo", "mes_seno", "dia_semana_seno",
+            "maximo_movil_28", "minimo_movil_28",
         ]
 
     def get_feature_columns(self) -> List[str]:
@@ -131,40 +131,23 @@ class MLService:
         Agrega features v2 al dataframe.
         Incluye: festivos Ecuador, estacionalidad, tendencia, payday.
         """
-        # Estación del año
-        if "season" not in df.columns:
-            df["season"] = df["date"].dt.month.map({
-                1: 0, 2: 0, 3: 1, 4: 1, 5: 1, 6: 2,
-                7: 2, 8: 2, 9: 3, 10: 3, 11: 3, 12: 0
-            })
-
         # Festivos de Ecuador (generados dinámicamente por año)
         all_holidays = []
         for y in range(df["date"].dt.year.min(), df["date"].dt.year.max() + 1):
             all_holidays.extend(self._get_ecuador_holidays(y))
 
-        if "is_holiday" not in df.columns:
-            df["is_holiday"] = df["date"].dt.strftime("%Y-%m-%d").isin(all_holidays).astype(int)
+        if "es_festivo" not in df.columns:
+            df["es_festivo"] = df["date"].dt.strftime("%Y-%m-%d").isin(all_holidays).astype(int)
 
-        # Payday: día 15 y fin de mes
-        if "is_payday" not in df.columns:
-            df["is_payday"] = ((df["date"].dt.day == 15) | (df["date"].dt.is_month_end)).astype(int)
-
-        # Componentes cíclicos
-        if "month_sin" not in df.columns:
-            df["month_sin"] = np.sin(2 * np.pi * df["month"] / 12)
-            df["month_cos"] = np.cos(2 * np.pi * df["month"] / 12)
-            df["dayofweek_sin"] = np.sin(2 * np.pi * df["dayofweek"] / 7)
-            df["dayofweek_cos"] = np.cos(2 * np.pi * df["dayofweek"] / 7)
-
-        # Tendencia temporal
-        if "trend" not in df.columns:
-            df["trend"] = (df["date"] - df["date"].min()).dt.days
+        # Componentes ciclicos
+        if "mes_seno" not in df.columns:
+            df["mes_seno"] = np.sin(2 * np.pi * df["mes"] / 12)
+            df["dia_semana_seno"] = np.sin(2 * np.pi * df["dia_semana"] / 7)
 
         # Rolling max/min
-        if "rolling_max_28" not in df.columns:
-            df["rolling_max_28"] = df["cantidad"].rolling(28, min_periods=1).max()
-            df["rolling_min_28"] = df["cantidad"].rolling(28, min_periods=1).min()
+        if "maximo_movil_28" not in df.columns:
+            df["maximo_movil_28"] = df["cantidad"].rolling(28, min_periods=1).max()
+            df["minimo_movil_28"] = df["cantidad"].rolling(28, min_periods=1).min()
 
         return df
 
@@ -180,38 +163,25 @@ class MLService:
         df = df.sort_values("date").reset_index(drop=True)
 
         # Features de calendario
-        df["dayofweek"] = df["date"].dt.dayofweek
-        df["day"] = df["date"].dt.day
-        df["weekofyear"] = df["date"].dt.isocalendar().week.astype(int)
-        df["month"] = df["date"].dt.month
-        df["year"] = df["date"].dt.year
-        df["is_month_start"] = df["date"].dt.is_month_start.astype(int)
-        df["is_month_end"] = df["date"].dt.is_month_end.astype(int)
-        df["is_weekend"] = (df["dayofweek"] >= 5).astype(int)
+        df["dia_semana"] = df["date"].dt.dayofweek
+        df["mes"] = df["date"].dt.month
+        df["fin_de_mes"] = df["date"].dt.is_month_end.astype(int)
 
-        # Lags
-        df["lag_1"] = df["cantidad"].shift(1)
-        df["lag_7"] = df["cantidad"].shift(7)
-        df["lag_14"] = df["cantidad"].shift(14)
-        df["lag_28"] = df["cantidad"].shift(28)
+        # Rezagos (lags)
+        df["rezago_1"] = df["cantidad"].shift(1)
+        df["rezago_7"] = df["cantidad"].shift(7)
+        df["rezago_14"] = df["cantidad"].shift(14)
+        df["rezago_28"] = df["cantidad"].shift(28)
 
-        # Rolling statistics (expanding: solo usa datos estrictamente pasados)
+        # Estadisticas moviles
         for window in [7, 14, 28]:
-            df[f"rolling_mean_{window}"] = df["cantidad"].rolling(window=window, min_periods=1).mean()
-            df[f"rolling_std_{window}"] = df["cantidad"].rolling(window=window, min_periods=1).std().fillna(0)
+            df[f"media_movil_{window}"] = df["cantidad"].rolling(window=window, min_periods=1).mean()
+        df["desviacion_estandar_7"] = df["cantidad"].rolling(window=7, min_periods=1).std().fillna(0)
+        df["desviacion_estandar_28"] = df["cantidad"].rolling(window=28, min_periods=1).std().fillna(0)
 
-        # Price features
-        df["price"] = df["precio_unitario"]
-        df["price_change_1"] = df["price"].pct_change(1).fillna(0)
-        df["price_ratio_7"] = df["price"].rolling(7, min_periods=1).mean().fillna(df["price"])
-        df["promo_proxy"] = (df["price"] < df["price"].rolling(7, min_periods=1).mean()).astype(int)
-
-        # Otros
-        df["is_available"] = 1
-        df["has_event"] = 0
-        df["snap_CA"] = 0
-        df["snap_TX"] = 0
-        df["snap_WI"] = 0
+        # Precio
+        df["precio"] = df["precio_unitario"]
+        df["cambio_precio_1"] = df["precio"].pct_change(1).fillna(0)
 
         # Features v2
         df = self.add_v2_features(df)
@@ -277,10 +247,10 @@ class MLService:
         # Buffer de historial para actualizar lags correctamente
         cantidades = list(historial_df["cantidad"].values[-28:])
         last_row = historial_df.iloc[-1:].copy()
-        last_price = float(last_row["price"].values[0])
+        last_price = float(last_row["precio"].values[0])
 
-        # Proyección de precio: usar promedio y desviación de los últimos 7 días
-        historial_precios = historial_df["price"].values
+        # Proyeccion de precio: usar promedio y desviacion de los ultimos 7 dias
+        historial_precios = historial_df["precio"].values
         precio_promedio_7d = float(np.mean(historial_precios[-7:]))
         precio_std_7d = float(np.std(historial_precios[-7:]))
 
@@ -332,47 +302,47 @@ class MLService:
             last_row["cantidad"] = pred
 
             # Actualizar lags correctamente desde el buffer
-            last_row["lag_1"] = cantidades[-1]
-            last_row["lag_7"] = cantidades[-7] if len(cantidades) >= 7 else cantidades[0]
-            last_row["lag_14"] = cantidades[-14] if len(cantidades) >= 14 else cantidades[0]
-            last_row["lag_28"] = cantidades[-28] if len(cantidades) >= 28 else cantidades[0]
+            last_row["rezago_1"] = cantidades[-1]
+            last_row["rezago_7"] = cantidades[-7] if len(cantidades) >= 7 else cantidades[0]
+            last_row["rezago_14"] = cantidades[-14] if len(cantidades) >= 14 else cantidades[0]
+            last_row["rezago_28"] = cantidades[-28] if len(cantidades) >= 28 else cantidades[0]
 
-            # Actualizar rolling statistics desde el buffer
+            # Actualizar estadisticas moviles desde el buffer
             for window in [7, 14, 28]:
                 if len(cantidades) >= window:
                     window_data = cantidades[-window:]
-                    last_row[f"rolling_mean_{window}"] = np.mean(window_data)
-                    last_row[f"rolling_std_{window}"] = np.std(window_data) if len(window_data) > 1 else 0
+                    last_row[f"media_movil_{window}"] = np.mean(window_data)
+
+            last_row["desviacion_estandar_7"] = np.std(cantidades[-7:]) if len(cantidades) >= 7 else 0
+            last_row["desviacion_estandar_28"] = np.std(cantidades[-28:]) if len(cantidades) >= 28 else 0
 
             # Actualizar features v2
-            if "rolling_max_28" in feature_cols:
-                last_row["rolling_max_28"] = max(cantidades) if cantidades else 0
-                last_row["rolling_min_28"] = min(cantidades) if cantidades else 0
+            if "maximo_movil_28" in feature_cols:
+                last_row["maximo_movil_28"] = max(cantidades) if cantidades else 0
+                last_row["minimo_movil_28"] = min(cantidades) if cantidades else 0
 
-            if "month_sin" in feature_cols:
+            if "mes_seno" in feature_cols:
                 new_month = new_date.month
-                last_row["month_sin"] = np.sin(2 * np.pi * new_month / 12)
-                last_row["month_cos"] = np.cos(2 * np.pi * new_month / 12)
-                last_row["dayofweek_sin"] = np.sin(2 * np.pi * new_date.weekday() / 7)
-                last_row["dayofweek_cos"] = np.cos(2 * np.pi * new_date.weekday() / 7)
+                last_row["mes_seno"] = np.sin(2 * np.pi * new_month / 12)
+                last_row["dia_semana_seno"] = np.sin(2 * np.pi * new_date.weekday() / 7)
 
-            if "is_holiday" in feature_cols:
+            if "es_festivo" in feature_cols:
                 ecuador_holidays = self._get_ecuador_holidays(new_date.year)
-                last_row["is_holiday"] = int(new_date.strftime("%Y-%m-%d") in ecuador_holidays)
+                last_row["es_festivo"] = int(new_date.strftime("%Y-%m-%d") in ecuador_holidays)
 
-            # Proyectar precio con variación histórica (si hay variabilidad)
+            # Proyectar precio con variacion historica
             if precio_std_7d > 0:
                 variacion = np.random.normal(0, precio_std_7d * 0.1)
                 new_price = max(0, round(precio_promedio_7d + variacion, 2))
             else:
                 new_price = precio_promedio_7d
 
-            # Actualizar price_change_1 (% cambio vs precio anterior)
-            if last_row["price"].values[0] > 0:
-                last_row["price_change_1"] = (new_price - last_row["price"].values[0]) / last_row["price"].values[0]
+            # Actualizar cambio_precio_1
+            if last_row["precio"].values[0] > 0:
+                last_row["cambio_precio_1"] = (new_price - last_row["precio"].values[0]) / last_row["precio"].values[0]
             else:
-                last_row["price_change_1"] = 0.0
-            last_row["price"] = new_price
+                last_row["cambio_precio_1"] = 0.0
+            last_row["precio"] = new_price
 
         return predicciones
 
