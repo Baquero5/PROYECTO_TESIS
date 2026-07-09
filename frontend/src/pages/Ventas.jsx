@@ -259,15 +259,15 @@ export default function Ventas() {
                                                     </td>
                                                     <td>{stock}</td>
                                                     <td>
-                                                        <input type="number" min="1" max={stock} value={det.cantidad}
+                                                        <input type="number" className="qty-input" min="1" max={stock} value={det.cantidad}
                                                             onChange={(e) => updateDetalle(idx, 'cantidad', e.target.value)}
                                                             style={{ padding: '8px', borderRadius: '6px', border: `1px solid ${errors[`cantidad_${idx}`] ? 'var(--danger)' : 'var(--gray-300)'}`, width: '80px' }} />
                                                         {errors[`cantidad_${idx}`] && <div className="field-error">{errors[`cantidad_${idx}`]}</div>}
                                                     </td>
                                                     <td>
                                                         <input type="number" step="0.01" value={det.precio_unitario}
-                                                            onChange={(e) => updateDetalle(idx, 'precio_unitario', e.target.value)}
-                                                            style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--gray-300)', width: '100px' }} />
+                                                            readOnly
+                                                            style={{ padding: '8px', borderRadius: '6px', border: '1px solid var(--gray-300)', width: '100px', backgroundColor: 'var(--gray-50)', color: 'var(--gray-500)', cursor: 'not-allowed' }} />
                                                     </td>
                                                     <td><strong>${(det.cantidad * det.precio_unitario).toFixed(2)}</strong></td>
                                                     <td>

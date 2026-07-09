@@ -487,3 +487,11 @@ input[type=number]::-webkit-outer-spin-button {
 input[type=number] {
     -moz-appearance: textfield;
 }
+.qty-input::-webkit-inner-spin-button,
+.qty-input::-webkit-outer-spin-button {
+    -webkit-appearance: inner-spin-button;
+    margin: 0 2px;
+}
+.qty-input {
+    -moz-appearance: number-spinners;
+}
