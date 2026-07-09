@@ -33,20 +33,20 @@ class MLService:
 
     def load_ensemble(self) -> Tuple[object, object, Dict[str, float]]:
         """
-        Carga el ensemble v2 (XGBoost + LightGBM) con sus pesos.
+        Carga el ensemble (XGBoost + LightGBM) con sus pesos.
         Retorna: (xgb_model, lgb_model, weights)
         """
         if self._xgb_model is not None and self._lgb_model is not None:
             return self._xgb_model, self._lgb_model, self._ensemble_weights
 
-        ensemble_path = os.path.join(self.models_path, "ensemble_v2.pkl")
+        ensemble_path = os.path.join(self.models_path, "ensemble.pkl")
         if not os.path.exists(ensemble_path):
             raise FileNotFoundError(f"Ensemble no encontrado: {ensemble_path}")
 
-        ensemble_data = self.load_model("ensemble_v2.pkl")
+        ensemble_data = self.load_model("ensemble.pkl")
         
-        xgb_file = ensemble_data.get("xgb_model_file", "xgboost_v2_model.pkl")
-        lgb_file = ensemble_data.get("lgb_model_file", "lightgbm_v2_model.pkl")
+        xgb_file = ensemble_data.get("xgb_model_file", "xgboost_model.pkl")
+        lgb_file = ensemble_data.get("lgb_model_file", "lightgbm_model.pkl")
         
         self._xgb_model = self.load_model(xgb_file)
         self._lgb_model = self.load_model(lgb_file)
@@ -381,20 +381,16 @@ class MLService:
         models = {}
         ml_models_dir = self.models_path
         if os.path.exists(ml_models_dir):
-            # Primero verificar si existe ensemble
-            if os.path.exists(os.path.join(ml_models_dir, "ensemble_v2.pkl")):
-                models["ensemble_v2"] = "ensemble_v2.pkl"
+            # Verificar ensemble
+            if os.path.exists(os.path.join(ml_models_dir, "ensemble.pkl")):
+                models["ensemble"] = "ensemble.pkl"
             
             for f in os.listdir(ml_models_dir):
                 if f.endswith(".pkl"):
-                    if "xgboost_v2" in f:
-                        models["xgboost_v2"] = f
-                    elif "lightgbm_v2" in f:
-                        models["lightgbm_v2"] = f
-                    elif "xgboost" in f and "v2" not in f:
-                        models["xgboost_v1"] = f
-                    elif "lightgbm" in f and "v2" not in f:
-                        models["lightgbm_v1"] = f
+                    if "xgboost" in f:
+                        models["xgboost"] = f
+                    elif "lightgbm" in f:
+                        models["lightgbm"] = f
         return models
 
     def save_model(self, model, filename: str) -> str:
