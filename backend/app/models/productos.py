@@ -8,6 +8,7 @@ class Producto(Base):
 
     id_producto = Column(Integer, primary_key=True, autoincrement=True)
     id_categoria = Column(Integer, ForeignKey("categoria.id_categoria"), nullable=False)
+    id_subcategoria = Column(Integer, ForeignKey("subcategoria.id_subcategoria"), nullable=True)
     id_proveedor = Column(Integer, ForeignKey("proveedor.id_proveedor"), nullable=False)
     codigo = Column(String(50), unique=True, index=True, nullable=False)
     nombre = Column(String(150), nullable=False)

@@ -5,7 +5,7 @@
     "rmse": 7.2141,
     "r2": 0.8076,
     "mape": 85.1612,
-    "pred_time_seconds": 2.282
+    "pred_time_seconds": 3.2088
   },
   "lightgbm": {
     "modelo": "LIGHTGBM",
@@ -13,6 +13,6 @@
     "rmse": 7.2066,
     "r2": 0.808,
     "mape": 86.0973,
-    "pred_time_seconds": 11.1246
+    "pred_time_seconds": 11.4922
   }
 }

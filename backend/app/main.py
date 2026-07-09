@@ -8,6 +8,7 @@ from app.presentation.auth_routes import router as auth_router
 from app.presentation.product_routes import router as product_router
 from app.presentation.rol_routes import router as rol_router
 from app.presentation.categoria_routes import router as categoria_router
+from app.presentation.subcategoria_routes import router as subcategoria_router
 from app.presentation.proveedor_routes import router as proveedor_router
 from app.presentation.inventario_routes import router as inventario_router
 from app.presentation.venta_routes import router as venta_router
@@ -231,6 +232,7 @@ app.include_router(auth_router)
 app.include_router(product_router)
 app.include_router(rol_router)
 app.include_router(categoria_router)
+app.include_router(subcategoria_router)
 app.include_router(proveedor_router)
 app.include_router(inventario_router)
 app.include_router(venta_router)

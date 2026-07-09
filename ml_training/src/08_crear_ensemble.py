@@ -13,94 +13,94 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-PROC_DIR = BASE_DIR / "data" / "processed"
-MODELS_DIR = BASE_DIR / "models"
-METRICS_DIR = BASE_DIR / "metrics"
+DIRECTORIO_BASE = Path(__file__).resolve().parent.parent
+DIRECTORIO_PROCESADO = DIRECTORIO_BASE / "data" / "processed"
+DIRECTORIO_MODELOS = DIRECTORIO_BASE / "models"
+DIRECTORIO_METRICAS = DIRECTORIO_BASE / "metrics"
 
-with open(BASE_DIR / "config.yaml", "r") as f:
+with open(DIRECTORIO_BASE / "config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-FEATURE_COLS = config["features"]
-ENSEMBLE_WEIGHTS = config["ensemble"]
+COLUMNAS_FEATURES = config["features"]
+PESOS_ENSEMBLE = config["ensemble"]
 
 
-def load_data():
+def cargar_datos():
     print("[1/4] Cargando dataset...")
-    df = pd.read_csv(PROC_DIR / "dataset_entrenamiento.csv")
-    X = df[FEATURE_COLS].fillna(0)
+    df = pd.read_csv(DIRECTORIO_PROCESADO / "dataset_entrenamiento.csv")
+    X = df[COLUMNAS_FEATURES].fillna(0)
     y = df["y"].fillna(0)
     _, X_test, _, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
     print(f"  Test: {X_test.shape[0]:,} muestras")
     return X_test, y_test
 
 
-def load_models():
+def cargar_modelos():
     print("\n[2/4] Cargando modelos...")
-    xgb_model = joblib.load(MODELS_DIR / "xgboost_model.pkl")
-    lgb_model = joblib.load(MODELS_DIR / "lightgbm_model.pkl")
+    modelo_xgb = joblib.load(DIRECTORIO_MODELOS / "xgboost_model.pkl")
+    modelo_lgb = joblib.load(DIRECTORIO_MODELOS / "lightgbm_model.pkl")
     print("  [OK] XGBoost cargado")
     print("  [OK] LightGBM cargado")
-    return xgb_model, lgb_model
+    return modelo_xgb, modelo_lgb
 
 
-def create_ensemble(xgb_model, lgb_model, X_test, y_test):
+def crear_ensemble(modelo_xgb, modelo_lgb, X_test, y_test):
     print("\n[3/4] Creando ensemble ponderado...")
 
-    w_xgb = ENSEMBLE_WEIGHTS["xgboost_weight"]
-    w_lgb = ENSEMBLE_WEIGHTS["lightgbm_weight"]
+    peso_xgb = PESOS_ENSEMBLE["xgboost_weight"]
+    peso_lgb = PESOS_ENSEMBLE["lightgbm_weight"]
 
-    xgb_pred = np.maximum(xgb_model.predict(X_test), 0)
-    lgb_pred = np.maximum(lgb_model.predict(X_test), 0)
+    pred_xgb = np.maximum(modelo_xgb.predict(X_test), 0)
+    pred_lgb = np.maximum(modelo_lgb.predict(X_test), 0)
 
-    ensemble_pred = w_xgb * xgb_pred + w_lgb * lgb_pred
-    ensemble_pred = np.maximum(ensemble_pred, 0)
+    pred_ensemble = peso_xgb * pred_xgb + peso_lgb * pred_lgb
+    pred_ensemble = np.maximum(pred_ensemble, 0)
 
-    mae = float(mean_absolute_error(y_test, ensemble_pred))
-    rmse = float(np.sqrt(mean_squared_error(y_test, ensemble_pred)))
-    r2 = float(r2_score(y_test, ensemble_pred))
-    mape = float(np.mean(np.abs((y_test - ensemble_pred) / np.maximum(y_test, 1))) * 100)
+    mae = float(mean_absolute_error(y_test, pred_ensemble))
+    rmse = float(np.sqrt(mean_squared_error(y_test, pred_ensemble)))
+    r2 = float(r2_score(y_test, pred_ensemble))
+    mape = float(np.mean(np.abs((y_test - pred_ensemble) / np.maximum(y_test, 1))) * 100)
 
-    print(f"  Pesos: XGBoost={w_xgb}, LightGBM={w_lgb}")
+    print(f"  Pesos: XGBoost={peso_xgb}, LightGBM={peso_lgb}")
     print(f"  Ensemble Metrics:")
     print(f"    MAE:  {mae:.4f}")
     print(f"    RMSE: {rmse:.4f}")
     print(f"    R2:   {r2:.4f}")
     print(f"    MAPE: {mape:.4f}%")
 
-    metrics = {
+    metricas = {
         "modelo": "Ensemble (XGBoost + LightGBM)",
         "version": "1.0",
         "mae": round(mae, 4),
         "rmse": round(rmse, 4),
         "r2": round(r2, 4),
         "mape": round(mape, 4),
-        "pesos": {"xgboost": w_xgb, "lightgbm": w_lgb},
-        "features_used": FEATURE_COLS,
+        "pesos": {"xgboost": peso_xgb, "lightgbm": peso_lgb},
+        "features_used": COLUMNAS_FEATURES,
     }
 
-    return metrics
+    return metricas
 
 
-def save_ensemble(metrics):
+def guardar_ensemble(metricas):
     print("\n[4/4] Guardando ensemble...")
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    METRICS_DIR.mkdir(parents=True, exist_ok=True)
+    DIRECTORIO_MODELOS.mkdir(parents=True, exist_ok=True)
+    DIRECTORIO_METRICAS.mkdir(parents=True, exist_ok=True)
 
-    ensemble_data = {
+    datos_ensemble = {
         "xgb_model_file": "xgboost_model.pkl",
         "lgb_model_file": "lightgbm_model.pkl",
-        "xgb_weight": ENSEMBLE_WEIGHTS["xgboost_weight"],
-        "lgb_weight": ENSEMBLE_WEIGHTS["lightgbm_weight"],
+        "xgb_weight": PESOS_ENSEMBLE["xgboost_weight"],
+        "lgb_weight": PESOS_ENSEMBLE["lightgbm_weight"],
     }
-    joblib.dump(ensemble_data, MODELS_DIR / "ensemble.pkl")
+    joblib.dump(datos_ensemble, DIRECTORIO_MODELOS / "ensemble.pkl")
     print("  [OK] ensemble.pkl guardado")
 
-    joblib.dump(ENSEMBLE_WEIGHTS, MODELS_DIR / "ensemble_weights.pkl")
+    joblib.dump(PESOS_ENSEMBLE, DIRECTORIO_MODELOS / "ensemble_weights.pkl")
     print("  [OK] ensemble_weights.pkl guardado")
 
-    with open(METRICS_DIR / "ensemble_metrics.json", "w") as f:
-        json.dump(metrics, f, indent=2)
+    with open(DIRECTORIO_METRICAS / "ensemble_metrics.json", "w") as f:
+        json.dump(metricas, f, indent=2)
     print("  [OK] ensemble_metrics.json guardado")
 
 
@@ -109,10 +109,10 @@ def main():
     print("CREAR ENSEMBLE XGBOOST + LIGHTGBM")
     print("=" * 60)
 
-    X_test, y_test = load_data()
-    xgb_model, lgb_model = load_models()
-    metrics = create_ensemble(xgb_model, lgb_model, X_test, y_test)
-    save_ensemble(metrics)
+    X_test, y_test = cargar_datos()
+    modelo_xgb, modelo_lgb = cargar_modelos()
+    metricas = crear_ensemble(modelo_xgb, modelo_lgb, X_test, y_test)
+    guardar_ensemble(metricas)
 
     print("\n[OK] Ensemble creado exitosamente!")
 

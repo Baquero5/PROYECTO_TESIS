@@ -7,7 +7,7 @@ class Settings(BaseSettings):
     APP_VERSION: str = "1.0.0"
     DEBUG: bool = False
 
-    DATABASE_URL: str = "mysql+aiomysql://root:123456@localhost:3307/tesis_inventario"
+    DATABASE_URL: str = "mysql+aiomysql://root:123456@localhost:3307/TESIS"
     SECRET_KEY: str = "smartinventory-tesis-2026-secret-key-fijo"
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60

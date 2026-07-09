@@ -5,13 +5,14 @@ import Toast from '../components/Toast';
 export default function Productos() {
     const [productos, setProductos] = useState([]);
     const [categorias, setCategorias] = useState([]);
+    const [subcategorias, setSubcategorias] = useState([]);
     const [proveedores, setProveedores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editingId, setEditingId] = useState(null);
     const [search, setSearch] = useState('');
     const [formData, setFormData] = useState({
-        id_categoria: '', id_proveedor: '', codigo: '', nombre: '',
+        id_categoria: '', id_subcategoria: '', id_proveedor: '', codigo: '', nombre: '',
         descripcion: '', precio_compra: '', precio_venta: ''
     });
     const [errors, setErrors] = useState({});
@@ -23,14 +24,16 @@ export default function Productos() {
 
     const loadData = async () => {
         try {
-            const [prodRes, catRes, provRes] = await Promise.all([
+            const [prodRes, catRes, subRes, provRes] = await Promise.allSettled([
                 api.get('/products'),
                 api.get('/categorias'),
+                api.get('/subcategorias'),
                 api.get('/proveedores')
             ]);
-            setProductos(prodRes.data);
-            setCategorias(catRes.data);
-            setProveedores(provRes.data);
+            if (prodRes.status === 'fulfilled') setProductos(prodRes.value.data);
+            if (catRes.status === 'fulfilled') setCategorias(catRes.value.data);
+            if (subRes.status === 'fulfilled') setSubcategorias(subRes.value.data);
+            if (provRes.status === 'fulfilled') setProveedores(provRes.value.data);
         } catch (err) {
             setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {
@@ -91,6 +94,7 @@ export default function Productos() {
             const data = {
                 ...formData,
                 id_categoria: parseInt(formData.id_categoria),
+                id_subcategoria: formData.id_subcategoria ? parseInt(formData.id_subcategoria) : null,
                 id_proveedor: parseInt(formData.id_proveedor),
                 precio_compra: parseFloat(formData.precio_compra) || 0,
                 precio_venta: parseFloat(formData.precio_venta) || 0
@@ -113,6 +117,7 @@ export default function Productos() {
     const handleEdit = (prod) => {
         setFormData({
             id_categoria: prod.id_categoria,
+            id_subcategoria: prod.id_subcategoria || '',
             id_proveedor: prod.id_proveedor,
             codigo: prod.codigo,
             nombre: prod.nombre,
@@ -137,12 +142,13 @@ export default function Productos() {
     };
 
     const resetForm = () => {
-        setFormData({ id_categoria: '', id_proveedor: '', codigo: '', nombre: '', descripcion: '', precio_compra: '', precio_venta: '' });
+        setFormData({ id_categoria: '', id_subcategoria: '', id_proveedor: '', codigo: '', nombre: '', descripcion: '', precio_compra: '', precio_venta: '' });
         setEditingId(null);
         setErrors({});
     };
 
     const getCategoriaName = (id) => categorias.find(c => c.id_categoria === id)?.nombre || '-';
+    const getSubcategoriaName = (id) => subcategorias.find(s => s.id_subcategoria === id)?.nombre || '-';
     const getProveedorName = (id) => proveedores.find(p => p.id_proveedor === id)?.razon_social || '-';
 
     const filtered = productos.filter(p =>
@@ -181,6 +187,7 @@ export default function Productos() {
                                 <th>Código</th>
                                 <th>Nombre</th>
                                 <th>Categoría</th>
+                                <th>Subcategoría</th>
                                 <th>Proveedor</th>
                                 <th>P. Compra</th>
                                 <th>P. Venta</th>
@@ -191,12 +198,13 @@ export default function Productos() {
                         </thead>
                         <tbody>
                             {filtered.length === 0 ? (
-                                <tr><td colSpan="9" style={{ textAlign: 'center', padding: '20px' }}>No hay productos</td></tr>
+                                <tr><td colSpan="10" style={{ textAlign: 'center', padding: '20px' }}>No hay productos</td></tr>
                             ) : filtered.map(prod => (
                                 <tr key={prod.id_producto}>
                                     <td><span className="badge badge-info">{prod.codigo}</span></td>
                                     <td><strong>{prod.nombre}</strong></td>
                                     <td>{getCategoriaName(prod.id_categoria)}</td>
+                                    <td>{getSubcategoriaName(prod.id_subcategoria)}</td>
                                     <td>{getProveedorName(prod.id_proveedor)}</td>
                                     <td>${prod.precio_compra}</td>
                                     <td>${prod.precio_venta}</td>
@@ -248,7 +256,7 @@ export default function Productos() {
                                 <div className="form-group">
                                     <label>Categoría *</label>
                                     <select value={formData.id_categoria}
-                                        onChange={(e) => { setFormData({ ...formData, id_categoria: e.target.value }); setErrors({ ...errors, id_categoria: '' }); }}
+                                        onChange={(e) => { setFormData({ ...formData, id_categoria: e.target.value, id_subcategoria: '' }); setErrors({ ...errors, id_categoria: '' }); }}
                                         className={errors.id_categoria ? 'error' : ''}>
                                         <option value="">Seleccionar...</option>
                                         {categorias.map(c => (
@@ -257,6 +265,20 @@ export default function Productos() {
                                     </select>
                                     {errors.id_categoria && <div className="field-error">{errors.id_categoria}</div>}
                                 </div>
+                                <div className="form-group">
+                                    <label>Subcategoría</label>
+                                    <select value={formData.id_subcategoria}
+                                        onChange={(e) => setFormData({ ...formData, id_subcategoria: e.target.value })}>
+                                        <option value="">Seleccionar...</option>
+                                        {subcategorias
+                                            .filter(s => formData.id_categoria && s.id_categoria === parseInt(formData.id_categoria))
+                                            .map(s => (
+                                            <option key={s.id_subcategoria} value={s.id_subcategoria}>{s.nombre}</option>
+                                        ))}
+                                    </select>
+                                </div>
+                            </div>
+                            <div className="grid-2">
                                 <div className="form-group">
                                     <label>Proveedor *</label>
                                     <select value={formData.id_proveedor}

@@ -15,6 +15,6 @@ XGBoost gana en 2/4 metricas
 LightGBM gana en 2/4 metricas
 
 XGBOOST:
-  Tiempo de prediccion: 2.2820s
+  Tiempo de prediccion: 3.2088s
 LIGHTGBM:
-  Tiempo de prediccion: 11.1246s
+  Tiempo de prediccion: 11.4922s

@@ -7,31 +7,31 @@ import json
 import os
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-MODELS_DIR = BASE_DIR / "models"
-METRICS_DIR = BASE_DIR / "metrics"
+DIRECTORIO_BASE = Path(__file__).resolve().parent.parent
+DIRECTORIO_MODELOS = DIRECTORIO_BASE / "models"
+DIRECTORIO_METRICAS = DIRECTORIO_BASE / "metrics"
 
 DB_CONFIG = {
     "host": "localhost",
     "port": 3307,
     "user": "root",
     "password": "123456",
-    "database": "tesis_inventario",
+    "database": "TESIS",
     "charset": "utf8mb4"
 }
 
-BACKEND_MODELS_DIR = Path(__file__).resolve().parent.parent.parent / "backend" / "ml_models"
+DIRECTORIO_MODELOS_BACKEND = Path(__file__).resolve().parent.parent.parent / "backend" / "ml_models"
 
 
-def get_connection():
+def obtener_conexion():
     return pymysql.connect(**DB_CONFIG, autocommit=False)
 
 
-def copy_models_to_backend():
+def copiar_modelos_a_backend():
     print("[1/3] Copiando modelos a backend/ml_models/...")
-    BACKEND_MODELS_DIR.mkdir(parents=True, exist_ok=True)
+    DIRECTORIO_MODELOS_BACKEND.mkdir(parents=True, exist_ok=True)
 
-    model_files = [
+    archivos_modelos = [
         "xgboost_model.pkl",
         "lightgbm_model.pkl",
         "ensemble.pkl",
@@ -39,39 +39,39 @@ def copy_models_to_backend():
         "feature_columns.pkl",
     ]
 
-    for filename in model_files:
-        src = MODELS_DIR / filename
-        dst = BACKEND_MODELS_DIR / filename
-        if src.exists():
+    for archivo in archivos_modelos:
+        origen = DIRECTORIO_MODELOS / archivo
+        destino = DIRECTORIO_MODELOS_BACKEND / archivo
+        if origen.exists():
             import shutil
-            shutil.copy2(src, dst)
-            size = dst.stat().st_size / 1024
-            print(f"  [OK] {filename} ({size:.1f} KB)")
+            shutil.copy2(origen, destino)
+            tamano = destino.stat().st_size / 1024
+            print(f"  [OK] {archivo} ({tamano:.1f} KB)")
         else:
-            print(f"  [SKIP] {filename} no existe")
+            print(f"  [SKIP] {archivo} no existe")
 
 
-def register_models():
+def registrar_modelos():
     print("\n[2/3] Registrando modelos en BD...")
-    conn = get_connection()
-    cursor = conn.cursor()
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
 
     try:
         cursor.execute("SELECT id_dataset FROM dataset_entrenamiento LIMIT 1")
-        result = cursor.fetchone()
-        if not result:
+        resultado = cursor.fetchone()
+        if not resultado:
             print("  [ERROR] No hay dataset registrado. Ejecuta primero 04_poblar_bd.py")
             return
-        dataset_id = result[0]
-        print(f"  Dataset ID: {dataset_id}")
+        id_dataset = resultado[0]
+        print(f"  Dataset ID: {id_dataset}")
 
-        models_to_register = []
+        modelos_a_registrar = []
 
-        xgb_metrics_path = METRICS_DIR / "xgboost_metrics.json"
-        if xgb_metrics_path.exists():
-            with open(xgb_metrics_path) as f:
+        ruta_xgb = DIRECTORIO_METRICAS / "xgboost_metrics.json"
+        if ruta_xgb.exists():
+            with open(ruta_xgb) as f:
                 m = json.load(f)
-            models_to_register.append({
+            modelos_a_registrar.append({
                 "algoritmo": "XGBOOST",
                 "version": "1.0",
                 "archivo": "xgboost_model.pkl",
@@ -81,11 +81,11 @@ def register_models():
                 "mape": m["mape"],
             })
 
-        lgb_metrics_path = METRICS_DIR / "lightgbm_metrics.json"
-        if lgb_metrics_path.exists():
-            with open(lgb_metrics_path) as f:
+        ruta_lgb = DIRECTORIO_METRICAS / "lightgbm_metrics.json"
+        if ruta_lgb.exists():
+            with open(ruta_lgb) as f:
                 m = json.load(f)
-            models_to_register.append({
+            modelos_a_registrar.append({
                 "algoritmo": "LIGHTGBM",
                 "version": "1.0",
                 "archivo": "lightgbm_model.pkl",
@@ -95,11 +95,11 @@ def register_models():
                 "mape": m["mape"],
             })
 
-        ensemble_metrics_path = METRICS_DIR / "ensemble_metrics.json"
-        if ensemble_metrics_path.exists():
-            with open(ensemble_metrics_path) as f:
+        ruta_ensemble = DIRECTORIO_METRICAS / "ensemble_metrics.json"
+        if ruta_ensemble.exists():
+            with open(ruta_ensemble) as f:
                 m = json.load(f)
-            models_to_register.append({
+            modelos_a_registrar.append({
                 "algoritmo": "ENSEMBLE",
                 "version": "1.0",
                 "archivo": "ensemble.pkl",
@@ -109,30 +109,30 @@ def register_models():
                 "mape": m["mape"],
             })
 
-        for model_info in models_to_register:
+        for info_modelo in modelos_a_registrar:
             cursor.execute(
                 "SELECT id_modelo FROM modelo_ia WHERE algoritmo = %s AND version = %s LIMIT 1",
-                (model_info["algoritmo"], model_info["version"])
+                (info_modelo["algoritmo"], info_modelo["version"])
             )
-            existing = cursor.fetchone()
+            existente = cursor.fetchone()
 
-            if existing:
+            if existente:
                 cursor.execute(
                     """UPDATE modelo_ia
                        SET archivo_modelo = %s, mae = %s, rmse = %s, r2 = %s, mape = %s, estado = 'INACTIVO'
                        WHERE id_modelo = %s""",
-                    (model_info["archivo"], model_info["mae"], model_info["rmse"],
-                     model_info.get("r2"), model_info["mape"], existing[0])
+                    (info_modelo["archivo"], info_modelo["mae"], info_modelo["rmse"],
+                     info_modelo.get("r2"), info_modelo["mape"], existente[0])
                 )
-                print(f"  [OK] {model_info['algoritmo']} v{model_info['version']} actualizado")
+                print(f"  [OK] {info_modelo['algoritmo']} v{info_modelo['version']} actualizado")
             else:
                 cursor.execute(
                     """INSERT INTO modelo_ia (id_dataset, algoritmo, version, archivo_modelo, mae, rmse, r2, mape, estado)
                        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
-                    (dataset_id, model_info["algoritmo"], model_info["version"], model_info["archivo"],
-                     model_info["mae"], model_info["rmse"], model_info.get("r2"), model_info["mape"], "INACTIVO")
+                    (id_dataset, info_modelo["algoritmo"], info_modelo["version"], info_modelo["archivo"],
+                     info_modelo["mae"], info_modelo["rmse"], info_modelo.get("r2"), info_modelo["mape"], "INACTIVO")
                 )
-                print(f"  [OK] {model_info['algoritmo']} v{model_info['version']} registrado (id={cursor.lastrowid})")
+                print(f"  [OK] {info_modelo['algoritmo']} v{info_modelo['version']} registrado (id={cursor.lastrowid})")
 
         cursor.execute(
             """UPDATE modelo_ia SET estado = 'ACTIVO'
@@ -141,33 +141,33 @@ def register_models():
         )
         print("  [OK] LightGBM v1.0 activado como modelo principal")
 
-        conn.commit()
+        conexion.commit()
         print("\n  [OK] Modelos registrados exitosamente!")
 
     except Exception as e:
-        conn.rollback()
+        conexion.rollback()
         print(f"  [ERROR] {e}")
         raise
     finally:
         cursor.close()
-        conn.close()
+        conexion.close()
 
 
-def verify_registration():
+def verificar_registro():
     print("\n[3/3] Verificando registros...")
-    conn = get_connection()
-    cursor = conn.cursor()
+    conexion = obtener_conexion()
+    cursor = conexion.cursor()
 
     cursor.execute("SELECT id_modelo, algoritmo, version, estado, mae, rmse, r2, mape FROM modelo_ia ORDER BY id_modelo")
-    rows = cursor.fetchall()
+    filas = cursor.fetchall()
 
     print(f"\n  {'ID':<5} {'Algoritmo':<12} {'Version':<8} {'Estado':<10} {'MAE':>8} {'RMSE':>8} {'R2':>8} {'MAPE':>8}")
     print("  " + "-" * 80)
-    for row in rows:
-        print(f"  {row[0]:<5} {row[1]:<12} {row[2]:<8} {row[3]:<10} {row[4]:>8.4f} {row[5]:>8.4f} {row[6]:>8.4f} {row[7]:>8.4f}")
+    for fila in filas:
+        print(f"  {fila[0]:<5} {fila[1]:<12} {fila[2]:<8} {fila[3]:<10} {fila[4]:>8.4f} {fila[5]:>8.4f} {fila[6]:>8.4f} {fila[7]:>8.4f}")
 
     cursor.close()
-    conn.close()
+    conexion.close()
 
 
 def main():
@@ -175,9 +175,9 @@ def main():
     print("REGISTRAR MODELOS EN BASE DE DATOS")
     print("=" * 60)
 
-    copy_models_to_backend()
-    register_models()
-    verify_registration()
+    copiar_modelos_a_backend()
+    registrar_modelos()
+    verificar_registro()
 
     print("\n[OK] Proceso completado!")
 

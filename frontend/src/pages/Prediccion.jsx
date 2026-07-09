@@ -30,11 +30,13 @@ ChartJS.register(
 export default function Prediccion() {
     const [productos, setProductos] = useState([]);
     const [categorias, setCategorias] = useState([]);
+    const [subcategorias, setSubcategorias] = useState([]);
     const [predicciones, setPredicciones] = useState([]);
     const [modelos, setModelos] = useState([]);
     const [modelosSeleccionados, setModelosSeleccionados] = useState([]);
     const [modeloActivoTab, setModeloActivoTab] = useState(null);
     const [selectedCategory, setSelectedCategory] = useState('');
+    const [selectedSubcategory, setSelectedSubcategory] = useState('');
     const [selectedProducts, setSelectedProducts] = useState([]);
     const [productosFiltrados, setProductosFiltrados] = useState([]);
     const [fechaInicio, setFechaInicio] = useState('');
@@ -54,20 +56,21 @@ export default function Prediccion() {
     }, []);
 
     useEffect(() => {
-        if (selectedCategory === '') {
-            setProductosFiltrados(productos);
-        } else if (selectedCategory === 'all') {
-            setProductosFiltrados(productos);
-        } else {
-            const filtrados = productos.filter(p => p.id_categoria === parseInt(selectedCategory));
-            setProductosFiltrados(filtrados);
+        let filtrados = productos;
+        if (selectedCategory !== '' && selectedCategory !== 'all') {
+            filtrados = filtrados.filter(p => p.id_categoria === parseInt(selectedCategory));
         }
-    }, [selectedCategory, productos]);
+        if (selectedSubcategory !== '' && selectedSubcategory !== 'all') {
+            filtrados = filtrados.filter(p => p.id_subcategoria === parseInt(selectedSubcategory));
+        }
+        setProductosFiltrados(filtrados);
+    }, [selectedCategory, selectedSubcategory, productos]);
 
     const prevCategoryRef = useRef(selectedCategory);
     useEffect(() => {
         if (prevCategoryRef.current !== selectedCategory) {
             setSelectedProducts([]);
+            setSelectedSubcategory('');
             prevCategoryRef.current = selectedCategory;
         }
     }, [selectedCategory]);
@@ -87,16 +90,18 @@ export default function Prediccion() {
     }, [modelosSeleccionados]);
 
     const loadData = async () => {
-        const [prodRes, predRes, modelosRes, catRes] = await Promise.allSettled([
+        const [prodRes, predRes, modelosRes, catRes, subRes] = await Promise.allSettled([
             api.get('/products?limit=2000'),
             api.get('/predicciones'),
             api.get('/modelos-ia'),
-            api.get('/categorias')
+            api.get('/categorias'),
+            api.get('/subcategorias')
         ]);
 
         if (prodRes.status === 'fulfilled') setProductos(prodRes.value.data);
         if (predRes.status === 'fulfilled') setPredicciones(predRes.value.data);
         if (catRes.status === 'fulfilled') setCategorias(catRes.value.data);
+        if (subRes.status === 'fulfilled') setSubcategorias(subRes.value.data);
         if (modelosRes.status === 'fulfilled') {
             const listaModelos = modelosRes.value.data;
             setModelos(listaModelos);
@@ -104,7 +109,7 @@ export default function Prediccion() {
             if (activo) setModelosSeleccionados([activo.id_modelo]);
         }
 
-        const hasError = [prodRes, predRes, modelosRes, catRes].some(r => r.status === 'rejected');
+        const hasError = [prodRes, predRes, modelosRes, catRes, subRes].some(r => r.status === 'rejected');
         if (hasError) setToast({ message: 'Algunos datos no se pudieron cargar', type: 'warning' });
 
         setLoading(false);
@@ -449,6 +454,17 @@ export default function Prediccion() {
                             <option value="">Todas las categorías</option>
                             {categorias.map(c => (
                                 <option key={c.id_categoria} value={c.id_categoria}>{c.nombre}</option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Subcategoría</label>
+                        <select value={selectedSubcategory} onChange={(e) => setSelectedSubcategory(e.target.value)}>
+                            <option value="">Todas las subcategorías</option>
+                            {subcategorias
+                                .filter(s => selectedCategory === '' || selectedCategory === 'all' || s.id_categoria === parseInt(selectedCategory))
+                                .map(s => (
+                                <option key={s.id_subcategoria} value={s.id_subcategoria}>{s.nombre}</option>
                             ))}
                         </select>
                     </div>

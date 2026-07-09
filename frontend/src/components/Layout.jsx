@@ -7,6 +7,7 @@ const allMenuItems = [
     { path: '/dashboard', icon: '📈', label: 'Dashboard', roles: [1, 2] },
     { path: '/productos', icon: '📦', label: 'Productos', roles: [1, 2, 3] },
     { path: '/categorias', icon: '🏷️', label: 'Categorías', roles: [1, 2, 3] },
+    { path: '/subcategorias', icon: '📋', label: 'Subcategorías', roles: [1, 2, 3] },
     { path: '/proveedores', icon: '🚚', label: 'Proveedores', roles: [1, 2, 3] },
     { path: '/inventario', icon: '📊', label: 'Inventario', roles: [1, 2, 3] },
     { path: '/ventas', icon: '💰', label: 'Ventas', roles: [1, 2, 3] },

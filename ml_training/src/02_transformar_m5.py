@@ -10,81 +10,81 @@ import yaml
 import time
 from pathlib import Path
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-RAW_DIR = BASE_DIR / "data" / "raw"
-PROC_DIR = BASE_DIR / "data" / "processed"
+DIRECTORIO_BASE = Path(__file__).resolve().parent.parent
+DIRECTORIO_RAW = DIRECTORIO_BASE / "data" / "raw"
+DIRECTORIO_PROCESADO = DIRECTORIO_BASE / "data" / "processed"
 
-with open(BASE_DIR / "config.yaml", "r") as f:
+with open(DIRECTORIO_BASE / "config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
 TIENDAS = config["dataset"]["tiendas"]
 NUM_PRODUCTOS = config["dataset"]["num_productos"]
 SUBCATS = config["dataset"]["subcategorias"]
 
-ID_COLS = ["id", "item_id", "dept_id", "cat_id", "store_id", "state_id"]
+COLUMNAS_ID = ["id", "item_id", "dept_id", "cat_id", "store_id", "state_id"]
 
 
-def load_raw_data():
+def cargar_datos_crudos():
     print("[1/6] Cargando archivos CSV...")
     t0 = time.time()
 
-    sales = pd.read_csv(RAW_DIR / "sales_train_validation.csv")
-    print(f"  - sales_train_validation.csv: {sales.shape[0]:,} filas x {sales.shape[1]} columnas")
+    ventas = pd.read_csv(DIRECTORIO_RAW / "sales_train_validation.csv")
+    print(f"  - sales_train_validation.csv: {ventas.shape[0]:,} filas x {ventas.shape[1]} columnas")
 
-    calendar = pd.read_csv(RAW_DIR / "calendar.csv")
-    print(f"  - calendar.csv: {calendar.shape[0]:,} filas")
+    calendario = pd.read_csv(DIRECTORIO_RAW / "calendar.csv")
+    print(f"  - calendar.csv: {calendario.shape[0]:,} filas")
 
-    prices = pd.read_csv(RAW_DIR / "sell_prices.csv")
-    print(f"  - sell_prices.csv: {prices.shape[0]:,} filas")
+    precios = pd.read_csv(DIRECTORIO_RAW / "sell_prices.csv")
+    print(f"  - sell_prices.csv: {precios.shape[0]:,} filas")
 
     print(f"  Cargado en {time.time() - t0:.1f}s")
-    return sales, calendar, prices
+    return ventas, calendario, precios
 
 
-def select_balanced_products(sales):
+def seleccionar_productos_balanceados(ventas):
     print(f"\n[2/6] Seleccionando {NUM_PRODUCTOS} productos balanceados...")
 
-    foods = sales[sales["cat_id"] == "FOODS"].copy()
-    foods_5stores = foods[foods["store_id"].isin(TIENDAS)].copy()
+    alimentos = ventas[ventas["cat_id"] == "FOODS"].copy()
+    alimentos_5tiendas = alimentos[alimentos["store_id"].isin(TIENDAS)].copy()
 
-    value_cols = [c for c in foods_5stores.columns if c.startswith("d_")]
-    foods_5stores["total_demand"] = foods_5stores[value_cols].sum(axis=1)
+    columnas_val = [c for c in alimentos_5tiendas.columns if c.startswith("d_")]
+    alimentos_5tiendas["demanda_total"] = alimentos_5tiendas[columnas_val].sum(axis=1)
 
-    item_stats = foods_5stores.groupby(["item_id", "dept_id"]).agg(
-        total_demand=("total_demand", "sum"),
-        num_stores=("store_id", "nunique")
+    estadisticas_productos = alimentos_5tiendas.groupby(["item_id", "dept_id"]).agg(
+        demanda_total=("demanda_total", "sum"),
+        num_tiendas=("store_id", "nunique")
     ).reset_index()
 
-    selected_items = []
+    productos_seleccionados = []
     for dept, info in SUBCATS.items():
-        dept_items = item_stats[item_stats["dept_id"] == dept]
-        n_per_subcat = NUM_PRODUCTOS // len(SUBCATS)
+        productos_dept = estadisticas_productos[estadisticas_productos["dept_id"] == dept]
+        n_por_subcat = NUM_PRODUCTOS // len(SUBCATS)
         if dept == "FOODS_3":
-            n_per_subcat = NUM_PRODUCTOS - n_per_subcat * (len(SUBCATS) - 1)
-        top = dept_items.nlargest(n_per_subcat, "total_demand")
-        selected_items.append(top)
+            n_por_subcat = NUM_PRODUCTOS - n_por_subcat * (len(SUBCATS) - 1)
+        top = productos_dept.nlargest(n_por_subcat, "demanda_total")
+        productos_seleccionados.append(top)
         print(f"  {info['nombre']}: {len(top)} productos")
 
-    selected = pd.concat(selected_items)
-    print(f"\n  Total productos seleccionados: {len(selected)}")
+    seleccionados = pd.concat(productos_seleccionados)
+    print(f"\n  Total productos seleccionados: {len(seleccionados)}")
 
-    sales_filtered = foods_5stores[foods_5stores["item_id"].isin(selected["item_id"])].copy()
-    sales_filtered.drop(columns=["total_demand"], inplace=True, errors="ignore")
+    ventas_filtradas = alimentos_5tiendas[alimentos_5tiendas["item_id"].isin(seleccionados["item_id"])].copy()
+    ventas_filtradas.drop(columns=["demanda_total"], inplace=True, errors="ignore")
 
-    print(f"  Registros (item x store): {sales_filtered.shape[0]:,}")
-    return sales_filtered
+    print(f"  Registros (item x tienda): {ventas_filtradas.shape[0]:,}")
+    return ventas_filtradas
 
 
-def melt_to_long(sales_filtered):
+def convertir_a_largo(ventas_filtradas):
     print("\n[3/6] Convirtiendo de formato ancho a largo (MELT)...")
     t0 = time.time()
 
-    value_cols = [c for c in sales_filtered.columns if c.startswith("d_")]
-    print(f"  Columnas a melt: {len(value_cols)} (d_1 a d_{len(value_cols)})")
+    columnas_val = [c for c in ventas_filtradas.columns if c.startswith("d_")]
+    print(f"  Columnas a melt: {len(columnas_val)} (d_1 a d_{len(columnas_val)})")
 
-    df = sales_filtered.melt(
-        id_vars=ID_COLS,
-        value_vars=value_cols,
+    df = ventas_filtradas.melt(
+        id_vars=COLUMNAS_ID,
+        value_vars=columnas_val,
         var_name="d",
         value_name="y"
     )
@@ -95,20 +95,20 @@ def melt_to_long(sales_filtered):
     return df
 
 
-def merge_calendar_and_prices(df, calendar, prices):
-    print("\n[4/6] Mergeando con calendar y precios...")
+def combinar_calendario_y_precios(df, calendario, precios):
+    print("\n[4/6] Mergeando con calendario y precios...")
 
-    calendar["date"] = pd.to_datetime(calendar["date"])
-    df = df.merge(calendar, on="d", how="left")
-    print(f"  Despues de merge con calendar: {df.shape[0]:,} filas")
+    calendario["date"] = pd.to_datetime(calendario["date"])
+    df = df.merge(calendario, on="d", how="left")
+    print(f"  Despues de merge con calendario: {df.shape[0]:,} filas")
 
-    df = df.merge(prices, on=["store_id", "item_id", "wm_yr_wk"], how="left")
+    df = df.merge(precios, on=["store_id", "item_id", "wm_yr_wk"], how="left")
     print(f"  Despues de merge con precios: {df.shape[0]:,} filas")
 
     return df
 
 
-def sort_and_clean(df):
+def ordenar_y_limpiar(df):
     print("\n[5/6] Ordenando y limpiando...")
     df = df.sort_values(["id", "date"]).reset_index(drop=True)
 
@@ -125,23 +125,24 @@ def sort_and_clean(df):
     return df
 
 
-def save_dataset(df):
+def guardar_dataset(df):
     print("\n[6/6] Guardando m5_largo.csv...")
     t0 = time.time()
 
-    output_path = PROC_DIR / "m5_largo.csv"
-    chunk_size = 500_000
-    total_rows = len(df)
+    DIRECTORIO_PROCESADO.mkdir(parents=True, exist_ok=True)
+    ruta_salida = DIRECTORIO_PROCESADO / "m5_largo.csv"
+    tamano_chunk = 500_000
+    total_filas = len(df)
 
-    for i in range(0, total_rows, chunk_size):
-        chunk = df.iloc[i:i + chunk_size]
+    for i in range(0, total_filas, tamano_chunk):
+        chunk = df.iloc[i:i + tamano_chunk]
         if i == 0:
-            chunk.to_csv(output_path, index=False, mode="w")
+            chunk.to_csv(ruta_salida, index=False, mode="w")
         else:
-            chunk.to_csv(output_path, index=False, mode="a", header=False)
+            chunk.to_csv(ruta_salida, index=False, mode="a", header=False)
 
-    size_mb = output_path.stat().st_size / (1024 * 1024)
-    print(f"  Tamanio: {size_mb:.1f} MB")
+    tamano_mb = ruta_salida.stat().st_size / (1024 * 1024)
+    print(f"  Tamano: {tamano_mb:.1f} MB")
     print(f"  Tiempo: {time.time() - t0:.1f}s")
 
 
@@ -151,14 +152,14 @@ def main():
     print(f"Config: {NUM_PRODUCTOS} productos, {len(TIENDAS)} tiendas, {len(SUBCATS)} subcategorias")
     print("=" * 60)
 
-    PROC_DIR.mkdir(parents=True, exist_ok=True)
+    DIRECTORIO_PROCESADO.mkdir(parents=True, exist_ok=True)
 
-    sales, calendar, prices = load_raw_data()
-    sales_filtered = select_balanced_products(sales)
-    df = melt_to_long(sales_filtered)
-    df = merge_calendar_and_prices(df, calendar, prices)
-    df = sort_and_clean(df)
-    save_dataset(df)
+    ventas, calendario, precios = cargar_datos_crudos()
+    ventas_filtradas = seleccionar_productos_balanceados(ventas)
+    df = convertir_a_largo(ventas_filtradas)
+    df = combinar_calendario_y_precios(df, calendario, precios)
+    df = ordenar_y_limpiar(df)
+    guardar_dataset(df)
 
     print(f"\n[OK] Transformacion completada!")
 

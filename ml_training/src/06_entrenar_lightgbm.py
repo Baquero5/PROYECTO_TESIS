@@ -14,28 +14,28 @@ from pathlib import Path
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-PROC_DIR = BASE_DIR / "data" / "processed"
-MODELS_DIR = BASE_DIR / "models"
-METRICS_DIR = BASE_DIR / "metrics"
+DIRECTORIO_BASE = Path(__file__).resolve().parent.parent
+DIRECTORIO_PROCESADO = DIRECTORIO_BASE / "data" / "processed"
+DIRECTORIO_MODELOS = DIRECTORIO_BASE / "models"
+DIRECTORIO_METRICAS = DIRECTORIO_BASE / "metrics"
 
-with open(BASE_DIR / "config.yaml", "r") as f:
+with open(DIRECTORIO_BASE / "config.yaml", "r") as f:
     config = yaml.safe_load(f)
 
-LGB_PARAMS = config["modelos"]["lightgbm"]
-FEATURE_COLS = config["features"]
+PARAMS_LGB = config["modelos"]["lightgbm"]
+COLUMNAS_FEATURES = config["features"]
 
 
-def load_data():
+def cargar_datos():
     print("[1/4] Cargando dataset de entrenamiento...")
-    df = pd.read_csv(PROC_DIR / "dataset_entrenamiento.csv")
+    df = pd.read_csv(DIRECTORIO_PROCESADO / "dataset_entrenamiento.csv")
     print(f"  Filas: {df.shape[0]:,} | Columnas: {df.shape[1]}")
     return df
 
 
-def prepare_features(df):
+def preparar_features(df):
     print("\n[2/4] Preparando features...")
-    X = df[FEATURE_COLS].copy()
+    X = df[COLUMNAS_FEATURES].copy()
     y = df["y"].copy()
 
     X = X.fillna(0)
@@ -52,37 +52,37 @@ def prepare_features(df):
     return X_train, X_test, y_train, y_test
 
 
-def train_model(X_train, y_train, X_test, y_test):
+def entrenar_modelo(X_train, y_train, X_test, y_test):
     print("\n[3/4] Entrenando LightGBM...")
     t0 = time.time()
 
     params = {
         "objective": "regression",
         "metric": "rmse",
-        "n_estimators": LGB_PARAMS["n_estimators"],
-        "num_leaves": LGB_PARAMS["num_leaves"],
-        "learning_rate": LGB_PARAMS["learning_rate"],
-        "feature_fraction": LGB_PARAMS["feature_fraction"],
-        "bagging_fraction": LGB_PARAMS["bagging_fraction"],
-        "bagging_freq": LGB_PARAMS["bagging_freq"],
-        "random_state": LGB_PARAMS["random_state"],
+        "n_estimators": PARAMS_LGB["n_estimators"],
+        "num_leaves": PARAMS_LGB["num_leaves"],
+        "learning_rate": PARAMS_LGB["learning_rate"],
+        "feature_fraction": PARAMS_LGB["feature_fraction"],
+        "bagging_fraction": PARAMS_LGB["bagging_fraction"],
+        "bagging_freq": PARAMS_LGB["bagging_freq"],
+        "random_state": PARAMS_LGB["random_state"],
         "verbose": -1,
     }
 
-    model = lgb.LGBMRegressor(**params)
-    model.fit(
+    modelo = lgb.LGBMRegressor(**params)
+    modelo.fit(
         X_train, y_train,
         eval_set=[(X_train, y_train), (X_test, y_test)],
         callbacks=[lgb.log_evaluation(50)],
     )
 
     print(f"  Tiempo de entrenamiento: {time.time() - t0:.1f}s")
-    return model
+    return modelo
 
 
-def evaluate_model(model, X_test, y_test):
+def evaluar_modelo(modelo, X_test, y_test):
     print("\n[4/4] Evaluando modelo...")
-    y_pred = model.predict(X_test)
+    y_pred = modelo.predict(X_test)
     y_pred = np.maximum(y_pred, 0)
 
     mae = mean_absolute_error(y_test, y_pred)
@@ -90,14 +90,14 @@ def evaluate_model(model, X_test, y_test):
     r2 = r2_score(y_test, y_pred)
     mape = np.mean(np.abs((y_test - y_pred) / np.maximum(y_test, 1))) * 100
 
-    metrics = {
+    metricas = {
         "modelo": "LightGBM",
         "version": "1.0",
         "mae": round(float(mae), 4),
         "rmse": round(float(rmse), 4),
         "r2": round(float(r2), 4),
         "mape": round(float(mape), 4),
-        "features_used": FEATURE_COLS,
+        "features_used": COLUMNAS_FEATURES,
     }
 
     print(f"  MAE:  {mae:.4f}")
@@ -105,21 +105,21 @@ def evaluate_model(model, X_test, y_test):
     print(f"  R2:   {r2:.4f}")
     print(f"  MAPE: {mape:.4f}%")
 
-    return metrics, y_pred
+    return metricas, y_pred
 
 
-def save_model(model, metrics):
-    MODELS_DIR.mkdir(parents=True, exist_ok=True)
-    METRICS_DIR.mkdir(parents=True, exist_ok=True)
+def guardar_modelo(modelo, metricas):
+    DIRECTORIO_MODELOS.mkdir(parents=True, exist_ok=True)
+    DIRECTORIO_METRICAS.mkdir(parents=True, exist_ok=True)
 
-    model_path = MODELS_DIR / "lightgbm_model.pkl"
-    joblib.dump(model, model_path)
-    print(f"\n  Modelo guardado: {model_path}")
+    ruta_modelo = DIRECTORIO_MODELOS / "lightgbm_model.pkl"
+    joblib.dump(modelo, ruta_modelo)
+    print(f"\n  Modelo guardado: {ruta_modelo}")
 
-    metrics_path = METRICS_DIR / "lightgbm_metrics.json"
-    with open(metrics_path, "w") as f:
-        json.dump(metrics, f, indent=2)
-    print(f"  Metricas guardadas: {metrics_path}")
+    ruta_metricas = DIRECTORIO_METRICAS / "lightgbm_metrics.json"
+    with open(ruta_metricas, "w") as f:
+        json.dump(metricas, f, indent=2)
+    print(f"  Metricas guardadas: {ruta_metricas}")
 
 
 def main():
@@ -127,11 +127,11 @@ def main():
     print("ENTRENAR MODELO LIGHTGBM")
     print("=" * 60)
 
-    df = load_data()
-    X_train, X_test, y_train, y_test = prepare_features(df)
-    model = train_model(X_train, y_train, X_test, y_test)
-    metrics, y_pred = evaluate_model(model, X_test, y_test)
-    save_model(model, metrics)
+    df = cargar_datos()
+    X_train, X_test, y_train, y_test = preparar_features(df)
+    modelo = entrenar_modelo(X_train, y_train, X_test, y_test)
+    metricas, y_pred = evaluar_modelo(modelo, X_test, y_test)
+    guardar_modelo(modelo, metricas)
 
     print("\n[OK] LightGBM entrenado y guardado exitosamente!")
 
