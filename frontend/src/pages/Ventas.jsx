@@ -11,6 +11,9 @@ export default function Ventas() {
     const [showModal, setShowModal] = useState(false);
     const [search, setSearch] = useState('');
     const [detalles, setDetalles] = useState([]);
+    const [ventaDetalle, setVentaDetalle] = useState(null);
+    const [showDetalle, setShowDetalle] = useState(false);
+    const [loadingDetalle, setLoadingDetalle] = useState(false);
     const [errors, setErrors] = useState({});
     const [toast, setToast] = useState(null);
 
@@ -118,6 +121,19 @@ export default function Ventas() {
 
     const getProducto = (id) => productos.find(p => p.id_producto === id);
 
+    const verDetalle = async (ventaId) => {
+        setLoadingDetalle(true);
+        try {
+            const response = await api.get(`/ventas/${ventaId}`);
+            setVentaDetalle(response.data);
+            setShowDetalle(true);
+        } catch (err) {
+            setToast({ message: 'Error al cargar detalle', type: 'error' });
+        } finally {
+            setLoadingDetalle(false);
+        }
+    };
+
     const exportColumns = [
         { key: 'id_venta', label: 'ID Venta' },
         { key: 'fecha', label: 'Fecha' },
@@ -182,7 +198,7 @@ export default function Ventas() {
                                     <td>{venta.fecha_venta || '-'}</td>
                                     <td><strong>${venta.total}</strong></td>
                                     <td>
-                                        <button className="btn btn-outline">Ver Detalle</button>
+                                        <button className="btn btn-outline" onClick={() => verDetalle(venta.id_venta)}>Ver Detalle</button>
                                     </td>
                                 </tr>
                             ))}
@@ -275,6 +291,59 @@ export default function Ventas() {
                                 <button type="submit" className="btn btn-primary" disabled={detalles.length === 0}>Crear Venta</button>
                             </div>
                         </form>
+                    </div>
+                </div>
+            )}
+
+            {showDetalle && ventaDetalle && (
+                <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+                    <div style={{ background: 'var(--gray-100)', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', boxShadow: 'var(--shadow-lg)' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+                            <h3 style={{ fontSize: '1.2rem' }}>Detalle Venta #{ventaDetalle.id_venta}</h3>
+                            <button onClick={() => setShowDetalle(false)} style={{ background: 'none', border: 'none', fontSize: '1.5rem', cursor: 'pointer', color: 'var(--gray-500)' }}>&times;</button>
+                        </div>
+
+                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '20px', padding: '12px', background: 'var(--bg-secondary)', borderRadius: '8px' }}>
+                            <div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)' }}>Fecha</div>
+                                <div style={{ fontWeight: 'bold' }}>{ventaDetalle.fecha_venta}</div>
+                            </div>
+                            <div>
+                                <div style={{ fontSize: '0.8rem', color: 'var(--gray-500)' }}>Total</div>
+                                <div style={{ fontWeight: 'bold', color: 'var(--success)', fontSize: '1.1rem' }}>${ventaDetalle.total?.toLocaleString('es-EC', { minimumFractionDigits: 2 })}</div>
+                            </div>
+                        </div>
+
+                        <h4 style={{ fontSize: '0.95rem', marginBottom: '12px', color: 'var(--gray-700)' }}>Productos</h4>
+                        <table className="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cant.</th>
+                                    <th>Precio</th>
+                                    <th>Subtotal</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {ventaDetalle.detalles?.length === 0 ? (
+                                    <tr><td colSpan="4" style={{ textAlign: 'center', padding: '16px', color: 'var(--gray-500)' }}>Sin detalles</td></tr>
+                                ) : ventaDetalle.detalles?.map(det => {
+                                    const prod = getProducto(det.id_producto);
+                                    return (
+                                        <tr key={det.id_detalle}>
+                                            <td>{prod ? `${prod.codigo} - ${prod.nombre}` : `#${det.id_producto}`}</td>
+                                            <td>{det.cantidad}</td>
+                                            <td>${det.precio_unitario?.toFixed(2)}</td>
+                                            <td><strong>${det.subtotal?.toFixed(2)}</strong></td>
+                                        </tr>
+                                    );
+                                })}
+                            </tbody>
+                        </table>
+
+                        <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
+                            <button className="btn btn-outline" onClick={() => setShowDetalle(false)}>Cerrar</button>
+                        </div>
                     </div>
                 </div>
             )}
