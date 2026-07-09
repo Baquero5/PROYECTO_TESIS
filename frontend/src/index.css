@@ -478,3 +478,12 @@ body {
     .top-header { padding: 0 16px; }
     .page-title h1 { font-size: 1.2rem; }
 }
+
+input[type=number]::-webkit-inner-spin-button,
+input[type=number]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
