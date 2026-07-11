@@ -38,6 +38,8 @@ async def get_historial(
             codigo_producto=reg["codigo_producto"],
             nombre_producto=reg["nombre_producto"],
             nombre_modelo=reg["nombre_modelo"],
+            nombre_subcategoria=reg["nombre_subcategoria"],
+            nombre_categoria=reg["nombre_categoria"],
         ))
 
     return HistorialPrediccionListResponse(total=total, registros=response)

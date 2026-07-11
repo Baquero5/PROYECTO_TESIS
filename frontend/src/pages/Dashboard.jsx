@@ -29,12 +29,12 @@ export default function Dashboard() {
     const [stats, setStats] = useState({ total_products: 0, total_inventory_value: 0 });
     const [productos, setProductos] = useState([]);
     const [categorias, setCategorias] = useState([]);
+    const [subcategorias, setSubcategorias] = useState([]);
     const [inventario, setInventario] = useState([]);
     const [ventas, setVentas] = useState([]);
     const [alertas, setAlertas] = useState([]);
     const [predicciones, setPredicciones] = useState([]);
     const [modelos, setModelos] = useState([]);
-    const [reabastecimientos, setReabastecimientos] = useState([]);
 
     useEffect(() => {
         loadAll();
@@ -45,30 +45,31 @@ export default function Dashboard() {
             api.get('/products/stats/summary'),
             api.get('/products?limit=2000'),
             api.get('/categorias'),
+            api.get('/subcategorias'),
             api.get('/inventario'),
             api.get('/ventas'),
             api.get('/alertas/activas'),
             api.get('/predicciones'),
             api.get('/modelos-ia'),
-            api.get('/reabastecimiento/pendientes'),
         ]);
 
-        const [s, p, c, i, v, a, pr, m, r] = results;
+        const [s, p, c, sub, i, v, a, pr, m] = results;
         if (s.status === 'fulfilled') setStats(s.value.data);
         if (p.status === 'fulfilled') setProductos(p.value.data);
         if (c.status === 'fulfilled') setCategorias(c.value.data);
+        if (sub.status === 'fulfilled') setSubcategorias(sub.value.data);
         if (i.status === 'fulfilled') setInventario(i.value.data);
         if (v.status === 'fulfilled') setVentas(v.value.data);
         if (a.status === 'fulfilled') setAlertas(a.value.data);
         if (pr.status === 'fulfilled') setPredicciones(pr.value.data);
         if (m.status === 'fulfilled') setModelos(m.value.data);
-        if (r.status === 'fulfilled') setReabastecimientos(r.value.data);
 
         setLoading(false);
     };
 
     const getProducto = (id) => productos.find(p => p.id_producto === id);
     const getCategoria = (id) => categorias.find(c => c.id_categoria === id);
+    const getSubcategoria = (id) => subcategorias.find(s => s.id_subcategoria === id);
 
     const stockCritico = inventario.filter(i => i.stock_actual <= i.stock_minimo).length;
     const ventasTotales = ventas.reduce((sum, v) => sum + parseFloat(v.total || 0), 0);
@@ -97,15 +98,15 @@ export default function Dashboard() {
         };
     }, [ventas]);
 
-    const productosPorCategoria = useMemo(() => {
+    const productosPorSubcategoria = useMemo(() => {
         const counts = {};
         productos.forEach(p => {
-            const cat = getCategoria(p.id_categoria);
-            const name = cat?.nombre || 'Sin categoría';
+            const sub = getSubcategoria(p.id_subcategoria);
+            const name = sub?.nombre || 'Sin subcategoría';
             counts[name] = (counts[name] || 0) + 1;
         });
         const labels = Object.keys(counts);
-        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+        const colors = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16'];
         return {
             labels,
             datasets: [{
@@ -114,7 +115,7 @@ export default function Dashboard() {
                 borderWidth: 0,
             }],
         };
-    }, [productos, categorias]);
+    }, [productos, subcategorias]);
 
     const topDemandados = useMemo(() => {
         const demand = {};
@@ -261,14 +262,6 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className="grid-3" style={{ marginBottom: '24px' }}>
-                <div className="kpi-card" style={{ background: 'linear-gradient(135deg, #06b6d4 0%, #0891b2 100%)' }}>
-                    <div className="kpi-label">Reabastecimientos</div>
-                    <div className="kpi-value">{reabastecimientos.length}</div>
-                    <div className="kpi-change">Pendientes de compra</div>
-                </div>
-            </div>
-
             <div className="grid-2">
                 <div className="card">
                     <div className="card-header">
@@ -286,12 +279,12 @@ export default function Dashboard() {
                 </div>
                 <div className="card">
                     <div className="card-header">
-                        <h3 className="card-title">Productos por Categoría</h3>
+                        <h3 className="card-title">Productos por Subcategoría</h3>
                     </div>
                     <div style={{ height: '280px', padding: '8px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                         {productos.length > 0 ? (
                             <div style={{ width: '240px', height: '240px' }}>
-                                <Doughnut data={productosPorCategoria} options={chartOptionsLegend} />
+                                <Doughnut data={productosPorSubcategoria} options={chartOptionsLegend} />
                             </div>
                         ) : (
                             <p style={{ color: 'var(--gray-500)' }}>Sin datos</p>
@@ -366,7 +359,7 @@ export default function Dashboard() {
                 </div>
             </div>
 
-            <div className="grid-3">
+            <div className="grid-2">
                 <div className="card">
                     <div className="card-header">
                         <h3 className="card-title">Stock Crítico</h3>
@@ -416,35 +409,6 @@ export default function Dashboard() {
                                             <td><strong>${parseFloat(v.total).toLocaleString()}</strong></td>
                                         </tr>
                                     ))}
-                                </tbody>
-                            </table>
-                        </div>
-                    )}
-                </div>
-
-                <div className="card">
-                    <div className="card-header">
-                        <h3 className="card-title">Reabastecimientos Pendientes</h3>
-                    </div>
-                    {reabastecimientos.length === 0 ? (
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '120px', color: 'var(--gray-500)' }}>
-                            <p>Sin reabastecimientos pendientes</p>
-                        </div>
-                    ) : (
-                        <div className="table-container" style={{ maxHeight: '250px', overflow: 'auto' }}>
-                            <table className="data-table">
-                                <thead><tr><th>Producto</th><th>Cantidad</th><th>Estado</th></tr></thead>
-                                <tbody>
-                                    {reabastecimientos.slice(0, 8).map(r => {
-                                        const prod = getProducto(r.id_producto);
-                                        return (
-                                            <tr key={r.id_reabastecimiento}>
-                                                <td><strong>{prod?.nombre || `#${r.id_producto}`}</strong></td>
-                                                <td>{r.cantidad_sugerida}</td>
-                                                <td><span className="badge badge-warning">{r.estado}</span></td>
-                                            </tr>
-                                        );
-                                    })}
                                 </tbody>
                             </table>
                         </div>

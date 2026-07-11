@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
@@ -12,6 +12,9 @@ export default function Inventario() {
     const [selectedProducto, setSelectedProducto] = useState(null);
     const [search, setSearch] = useState('');
     const [filter, setFilter] = useState('todos');
+    const [visibleCount, setVisibleCount] = useState(25);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const tableContainerRef = useRef(null);
     const [formData, setFormData] = useState({
         id_producto: '', stock_actual: '', stock_minimo: '', stock_maximo: ''
     });
@@ -141,6 +144,41 @@ export default function Inventario() {
         return matchesSearch;
     });
 
+    const sorted = [...filtered].sort((a, b) => {
+        const prodA = getProducto(a.id_producto);
+        const prodB = getProducto(b.id_producto);
+        if (prodA && prodB) return prodA.nombre.localeCompare(prodB.nombre);
+        return 0;
+    });
+
+    const handleScroll = useCallback(() => {
+        const container = tableContainerRef.current;
+        if (!container || loadingMore) return;
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+            if (visibleCount < sorted.length) {
+                setLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleCount(prev => Math.min(prev + 25, sorted.length));
+                    setLoadingMore(false);
+                }, 300);
+            }
+        }
+    }, [visibleCount, sorted.length, loadingMore]);
+
+    useEffect(() => {
+        const container = tableContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleScroll);
+            return () => container.removeEventListener('scroll', handleScroll);
+        }
+    }, [handleScroll]);
+
+    useEffect(() => {
+        setVisibleCount(25);
+    }, [search, filter]);
+
+    const visibleInventario = sorted.slice(0, visibleCount);
+
     const getStockStatus = (inv) => {
         if (inv.stock_actual <= inv.stock_minimo) return { class: 'badge-danger', text: 'Bajo' };
         if (inv.stock_actual >= inv.stock_maximo * 0.8) return { class: 'badge-warning', text: 'Alto' };
@@ -209,23 +247,23 @@ export default function Inventario() {
                     </select>
                 </div>
 
-                <div className="table-container">
+                <div className="table-container" ref={tableContainerRef} style={{ maxHeight: '500px', overflow: 'auto' }}>
                     <table className="data-table">
-                        <thead>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                             <tr>
-                                <th>Código</th>
-                                <th>Producto</th>
-                                <th>Stock Actual</th>
-                                <th>Stock Mínimo</th>
-                                <th>Stock Máximo</th>
-                                <th>Estado</th>
-                                <th>Acciones</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Código</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Producto</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Stock Actual</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Stock Mínimo</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Stock Máximo</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Estado</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.length === 0 ? (
+                            {visibleInventario.length === 0 ? (
                                 <tr><td colSpan="7" style={{ textAlign: 'center', padding: '20px' }}>No hay registros</td></tr>
-                            ) : filtered.map(inv => {
+                            ) : visibleInventario.map(inv => {
                                 const prod = getProducto(inv.id_producto);
                                 const status = getStockStatus(inv);
                                 return (
@@ -243,12 +281,19 @@ export default function Inventario() {
                                     </tr>
                                 );
                             })}
+                            {loadingMore && (
+                                <tr>
+                                    <td colSpan="7" style={{ textAlign: 'center', padding: '12px', color: 'var(--gray-500)' }}>
+                                        Cargando más registros...
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
-                <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--gray-500)' }}>
-                    Total: {filtered.length} | Stock bajo: {inventario.filter(i => i.stock_actual <= i.stock_minimo).length}
+                <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--gray-500)', display: 'flex', justifyContent: 'space-between' }}>
+                    <span>Mostrando {visibleCount} de {sorted.length} registro(s) | Stock bajo: {inventario.filter(i => i.stock_actual <= i.stock_minimo).length}</span>
                 </div>
             </div>
 

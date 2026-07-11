@@ -21,10 +21,14 @@ class HistorialPrediccionRepository:
                     h.confianza_min, h.confianza_max, h.horizonte_dias,
                     h.porcentaje_confianza, h.fecha_archivado, h.motivo,
                     p.codigo as codigo_producto, p.nombre as nombre_producto,
-                    m.algoritmo as nombre_modelo
+                    m.algoritmo as nombre_modelo,
+                    s.nombre as nombre_subcategoria,
+                    c.nombre as nombre_categoria
                 FROM historial_prediccion h
                 INNER JOIN producto p ON h.id_producto = p.id_producto
                 INNER JOIN modelo_ia m ON h.id_modelo = m.id_modelo
+                LEFT JOIN subcategoria s ON p.id_subcategoria = s.id_subcategoria
+                LEFT JOIN categoria c ON s.id_categoria = c.id_categoria
                 ORDER BY h.fecha_archivado DESC
                 LIMIT :limit OFFSET :skip
             """),

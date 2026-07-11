@@ -1,27 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
 
 export default function HistorialPredicciones() {
     const [registros, setRegistros] = useState([]);
-    const [total, setTotal] = useState(0);
-    const [page, setPage] = useState(0);
     const [loading, setLoading] = useState(true);
     const [search, setSearch] = useState('');
     const [toast, setToast] = useState(null);
-    const limit = 20;
+    const [visibleCount, setVisibleCount] = useState(25);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const [filterProducto, setFilterProducto] = useState('');
+    const [filterSubcategoria, setFilterSubcategoria] = useState('');
+    const [filterModelo, setFilterModelo] = useState('');
+    const tableContainerRef = useRef(null);
 
     useEffect(() => {
         loadData();
-    }, [page]);
+    }, []);
 
     const loadData = async () => {
         setLoading(true);
         try {
-            const res = await api.get(`/historial-predicciones?skip=${page * limit}&limit=${limit}`);
+            const res = await api.get('/historial-predicciones?skip=0&limit=1000');
             setRegistros(res.data.registros);
-            setTotal(res.data.total);
         } catch (err) {
             setToast({ message: 'Error al cargar historial', type: 'error' });
         } finally {
@@ -29,14 +31,50 @@ export default function HistorialPredicciones() {
         }
     };
 
-    const filtered = registros.filter(r =>
-        (r.nombre_producto || '').toLowerCase().includes(search.toLowerCase()) ||
-        (r.codigo_producto || '').toLowerCase().includes(search.toLowerCase()) ||
-        (r.nombre_modelo || '').toLowerCase().includes(search.toLowerCase()) ||
-        (r.motivo || '').toLowerCase().includes(search.toLowerCase())
-    );
+    const uniqueProductos = [...new Map(registros.map(r => [r.codigo_producto, r.nombre_producto])).entries()]
+        .map(([codigo, nombre]) => ({ codigo, nombre }))
+        .sort((a, b) => a.nombre.localeCompare(b.nombre));
 
-    const totalPages = Math.ceil(total / limit);
+    const uniqueSubcategorias = [...new Set(registros.map(r => r.nombre_subcategoria).filter(Boolean))].sort();
+    const uniqueModelos = [...new Set(registros.map(r => r.nombre_modelo).filter(Boolean))].sort();
+
+    const filtered = registros.filter(r => {
+        const matchSearch = !search ||
+            (r.nombre_producto || '').toLowerCase().includes(search.toLowerCase()) ||
+            (r.codigo_producto || '').toLowerCase().includes(search.toLowerCase()) ||
+            (r.nombre_modelo || '').toLowerCase().includes(search.toLowerCase()) ||
+            (r.motivo || '').toLowerCase().includes(search.toLowerCase());
+        const matchProducto = !filterProducto || r.codigo_producto === filterProducto;
+        const matchSubcategoria = !filterSubcategoria || r.nombre_subcategoria === filterSubcategoria;
+        const matchModelo = !filterModelo || r.nombre_modelo === filterModelo;
+        return matchSearch && matchProducto && matchSubcategoria && matchModelo;
+    }).sort((a, b) => (a.fecha_archivado || '').localeCompare(b.fecha_archivado || ''));
+
+    const handleScroll = useCallback(() => {
+        const container = tableContainerRef.current;
+        if (!container || loadingMore) return;
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+            if (visibleCount < filtered.length) {
+                setLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleCount(prev => Math.min(prev + 25, filtered.length));
+                    setLoadingMore(false);
+                }, 300);
+            }
+        }
+    }, [visibleCount, filtered.length, loadingMore]);
+
+    useEffect(() => {
+        const container = tableContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleScroll);
+            return () => container.removeEventListener('scroll', handleScroll);
+        }
+    }, [handleScroll]);
+
+    useEffect(() => {
+        setVisibleCount(25);
+    }, [search, filterProducto, filterSubcategoria, filterModelo]);
 
     const formatDate = (d) => {
         if (!d) return '-';
@@ -68,7 +106,7 @@ export default function HistorialPredicciones() {
                 <div>
                     <h1 style={{ fontSize: '1.75rem', fontWeight: 700, margin: 0 }}>Historial de Predicciones</h1>
                     <p style={{ color: '#6b7280', margin: '0.25rem 0 0 0', fontSize: '0.9rem' }}>
-                        Registro de predicciones archivadas ({total} en total)
+                        Registro de predicciones archivadas ({filtered.length} en total)
                     </p>
                 </div>
                 <ExportButtons
@@ -90,18 +128,52 @@ export default function HistorialPredicciones() {
                 />
             </div>
 
-            <div style={{ marginBottom: '1rem' }}>
+            <div style={{ display: 'flex', gap: '12px', marginBottom: '1rem', flexWrap: 'wrap', alignItems: 'center' }}>
+                <select
+                    value={filterProducto}
+                    onChange={(e) => setFilterProducto(e.target.value)}
+                    style={{ padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.85rem', minWidth: '180px' }}
+                >
+                    <option value="">Todos los productos</option>
+                    {uniqueProductos.map(p => (
+                        <option key={p.codigo} value={p.codigo}>{p.codigo} - {p.nombre}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={filterSubcategoria}
+                    onChange={(e) => setFilterSubcategoria(e.target.value)}
+                    style={{ padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.85rem', minWidth: '160px' }}
+                >
+                    <option value="">Todas las subcategorías</option>
+                    {uniqueSubcategorias.map(s => (
+                        <option key={s} value={s}>{s}</option>
+                    ))}
+                </select>
+
+                <select
+                    value={filterModelo}
+                    onChange={(e) => setFilterModelo(e.target.value)}
+                    style={{ padding: '0.5rem 0.75rem', border: '1px solid #d1d5db', borderRadius: '0.5rem', fontSize: '0.85rem', minWidth: '140px' }}
+                >
+                    <option value="">Todos los modelos</option>
+                    {uniqueModelos.map(m => (
+                        <option key={m} value={m}>{m}</option>
+                    ))}
+                </select>
+
                 <input
                     type="text"
-                    placeholder="Buscar por producto, código, modelo..."
+                    placeholder="Buscar..."
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     style={{
-                        width: '100%', maxWidth: '400px',
                         padding: '0.5rem 0.75rem',
                         border: '1px solid #d1d5db',
                         borderRadius: '0.5rem',
-                        fontSize: '0.875rem'
+                        fontSize: '0.85rem',
+                        flex: 1,
+                        minWidth: '150px'
                     }}
                 />
             </div>
@@ -110,9 +182,9 @@ export default function HistorialPredicciones() {
                 background: 'white', borderRadius: '0.75rem',
                 border: '1px solid #e5e7eb', overflow: 'hidden'
             }}>
-                <div style={{ overflowX: 'auto' }}>
+                <div ref={tableContainerRef} style={{ overflowX: 'auto', maxHeight: '600px', overflowY: 'auto' }}>
                     <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '0.85rem' }}>
-                        <thead>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                             <tr style={{ background: '#f9fafb', borderBottom: '2px solid #e5e7eb' }}>
                                 <th style={thStyle}>Fecha Archivo</th>
                                 <th style={thStyle}>Producto</th>
@@ -131,7 +203,7 @@ export default function HistorialPredicciones() {
                                         No hay registros en el historial
                                     </td>
                                 </tr>
-                            ) : filtered.map((reg) => (
+                            ) : filtered.slice(0, visibleCount).map((reg) => (
                                 <tr key={reg.id_historial} style={{ borderBottom: '1px solid #f3f4f6' }}>
                                     <td style={tdStyle}>{formatDateTime(reg.fecha_archivado)}</td>
                                     <td style={tdStyle}>
@@ -168,43 +240,17 @@ export default function HistorialPredicciones() {
                         </tbody>
                     </table>
                 </div>
+                {loadingMore && (
+                    <div style={{ padding: '1rem', textAlign: 'center', color: '#6b7280', fontSize: '0.85rem' }}>
+                        Cargando más registros...
+                    </div>
+                )}
+                {visibleCount >= filtered.length && filtered.length > 0 && (
+                    <div style={{ padding: '0.75rem', textAlign: 'center', color: '#9ca3af', fontSize: '0.8rem', borderTop: '1px solid #f3f4f6' }}>
+                        Mostrando {filtered.length} de {filtered.length} registros
+                    </div>
+                )}
             </div>
-
-            {totalPages > 1 && (
-                <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', marginTop: '1rem' }}>
-                    <button
-                        onClick={() => setPage(p => Math.max(0, p - 1))}
-                        disabled={page === 0}
-                        style={{
-                            padding: '0.4rem 0.75rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '0.375rem',
-                            background: page === 0 ? '#f9fafb' : 'white',
-                            cursor: page === 0 ? 'not-allowed' : 'pointer',
-                            fontSize: '0.8rem'
-                        }}
-                    >
-                        Anterior
-                    </button>
-                    <span style={{ fontSize: '0.85rem', color: '#6b7280' }}>
-                        Página {page + 1} de {totalPages}
-                    </span>
-                    <button
-                        onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
-                        disabled={page >= totalPages - 1}
-                        style={{
-                            padding: '0.4rem 0.75rem',
-                            border: '1px solid #d1d5db',
-                            borderRadius: '0.375rem',
-                            background: page >= totalPages - 1 ? '#f9fafb' : 'white',
-                            cursor: page >= totalPages - 1 ? 'not-allowed' : 'pointer',
-                            fontSize: '0.8rem'
-                        }}
-                    >
-                        Siguiente
-                    </button>
-                </div>
-            )}
         </div>
     );
 }

@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
@@ -10,6 +10,9 @@ export default function Ventas() {
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [search, setSearch] = useState('');
+    const [visibleCount, setVisibleCount] = useState(25);
+    const [loadingMore, setLoadingMore] = useState(false);
+    const tableContainerRef = useRef(null);
     const [detalles, setDetalles] = useState([]);
     const [ventaDetalle, setVentaDetalle] = useState(null);
     const [showDetalle, setShowDetalle] = useState(false);
@@ -119,6 +122,36 @@ export default function Ventas() {
         v.id_venta.toString().includes(search)
     );
 
+    const sorted = [...filtered].sort((a, b) => b.id_venta - a.id_venta);
+
+    const handleScroll = useCallback(() => {
+        const container = tableContainerRef.current;
+        if (!container || loadingMore) return;
+        if (container.scrollTop + container.clientHeight >= container.scrollHeight - 50) {
+            if (visibleCount < sorted.length) {
+                setLoadingMore(true);
+                setTimeout(() => {
+                    setVisibleCount(prev => Math.min(prev + 25, sorted.length));
+                    setLoadingMore(false);
+                }, 300);
+            }
+        }
+    }, [visibleCount, sorted.length, loadingMore]);
+
+    useEffect(() => {
+        const container = tableContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', handleScroll);
+            return () => container.removeEventListener('scroll', handleScroll);
+        }
+    }, [handleScroll]);
+
+    useEffect(() => {
+        setVisibleCount(25);
+    }, [search]);
+
+    const visibleVentas = sorted.slice(0, visibleCount);
+
     const getProducto = (id) => productos.find(p => p.id_producto === id);
 
     const verDetalle = async (ventaId) => {
@@ -179,20 +212,20 @@ export default function Ventas() {
                     />
                 </div>
 
-                <div className="table-container">
+                <div className="table-container" ref={tableContainerRef} style={{ maxHeight: '500px', overflow: 'auto' }}>
                     <table className="data-table">
-                        <thead>
+                        <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
                             <tr>
-                                <th>ID</th>
-                                <th>Fecha</th>
-                                <th>Total</th>
-                                <th>Acciones</th>
+                                <th style={{ background: 'var(--gray-200)' }}>ID</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Fecha</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Total</th>
+                                <th style={{ background: 'var(--gray-200)' }}>Acciones</th>
                             </tr>
                         </thead>
                         <tbody>
-                            {filtered.length === 0 ? (
+                            {visibleVentas.length === 0 ? (
                                 <tr><td colSpan="4" style={{ textAlign: 'center', padding: '20px' }}>No hay ventas</td></tr>
-                            ) : filtered.map(venta => (
+                            ) : visibleVentas.map(venta => (
                                 <tr key={venta.id_venta}>
                                     <td><span className="badge badge-info">#{venta.id_venta}</span></td>
                                     <td>{venta.fecha_venta || '-'}</td>
@@ -202,12 +235,19 @@ export default function Ventas() {
                                     </td>
                                 </tr>
                             ))}
+                            {loadingMore && (
+                                <tr>
+                                    <td colSpan="4" style={{ textAlign: 'center', padding: '12px', color: 'var(--gray-500)' }}>
+                                        Cargando más ventas...
+                                    </td>
+                                </tr>
+                            )}
                         </tbody>
                     </table>
                 </div>
 
                 <div style={{ marginTop: '12px', fontSize: '0.8rem', color: 'var(--gray-500)' }}>
-                    Total: {filtered.length} venta(s)
+                    Mostrando {visibleVentas.length} de {sorted.length} venta(s)
                 </div>
             </div>
 
@@ -315,15 +355,16 @@ export default function Ventas() {
                         </div>
 
                         <h4 style={{ fontSize: '0.95rem', marginBottom: '12px', color: 'var(--gray-700)' }}>Productos</h4>
-                        <table className="data-table">
-                            <thead>
-                                <tr>
-                                    <th>Producto</th>
-                                    <th>Cant.</th>
-                                    <th>Precio</th>
-                                    <th>Subtotal</th>
-                                </tr>
-                            </thead>
+                        <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+                            <table className="data-table">
+                                <thead style={{ position: 'sticky', top: 0, zIndex: 1 }}>
+                                    <tr>
+                                        <th style={{ background: 'var(--gray-200)' }}>Producto</th>
+                                        <th style={{ background: 'var(--gray-200)' }}>Cant.</th>
+                                        <th style={{ background: 'var(--gray-200)' }}>Precio</th>
+                                        <th style={{ background: 'var(--gray-200)' }}>Subtotal</th>
+                                    </tr>
+                                </thead>
                             <tbody>
                                 {ventaDetalle.detalles?.length === 0 ? (
                                     <tr><td colSpan="4" style={{ textAlign: 'center', padding: '16px', color: 'var(--gray-500)' }}>Sin detalles</td></tr>
@@ -340,6 +381,7 @@ export default function Ventas() {
                                 })}
                             </tbody>
                         </table>
+                        </div>
 
                         <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '20px' }}>
                             <button className="btn btn-outline" onClick={() => setShowDetalle(false)}>Cerrar</button>

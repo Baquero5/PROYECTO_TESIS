@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { exportToCSV, exportToExcel, exportToPDF } from '../services/exportService';
 
-export default function ExportButtons({ data, columns, moduleName, title }) {
+export default function ExportButtons({ data, columns, moduleName, title, metadata }) {
     const [showDropdown, setShowDropdown] = useState(false);
 
     if (!data || data.length === 0) return null;
@@ -24,7 +24,7 @@ export default function ExportButtons({ data, columns, moduleName, title }) {
                 exportToExcel(data, columns, moduleName);
                 break;
             case 'pdf':
-                exportToPDF(data, columns, moduleName, pdfTitle);
+                exportToPDF(data, columns, moduleName, pdfTitle, metadata);
                 break;
         }
         setShowDropdown(false);

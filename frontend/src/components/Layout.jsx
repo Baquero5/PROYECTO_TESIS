@@ -24,6 +24,9 @@ export default function Layout() {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
     const [sidebarOpen, setSidebarOpen] = useState(false);
+    const [collapsed, setCollapsed] = useState(() => {
+        return localStorage.getItem('sidebarCollapsed') === 'true';
+    });
     const [darkMode, setDarkMode] = useState(() => {
         const saved = localStorage.getItem('darkMode') === 'true';
         if (saved) {
@@ -50,6 +53,12 @@ export default function Layout() {
         }
     };
 
+    const toggleSidebar = () => {
+        const newCollapsed = !collapsed;
+        setCollapsed(newCollapsed);
+        localStorage.setItem('sidebarCollapsed', String(newCollapsed));
+    };
+
     const fullName = user ? `${user.nombres || ''} ${user.apellidos || ''}`.trim() : '';
     const initials = fullName
         ? fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
@@ -57,10 +66,24 @@ export default function Layout() {
 
     return (
         <div className="app-container">
-            <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+            <aside className={`sidebar ${sidebarOpen ? 'open' : ''} ${collapsed ? 'collapsed' : ''}`}>
                 <div className="sidebar-header">
-                    <h2>SmartInventory</h2>
-                    <p>IA para Optimización</p>
+                    <div className="sidebar-header-text">
+                        {!collapsed && (
+                            <>
+                                <h2>SmartInventory</h2>
+                                <p>IA para Optimización</p>
+                            </>
+                        )}
+                        {collapsed && <span style={{ fontSize: '1.5rem' }}>📦</span>}
+                    </div>
+                    <button 
+                        className="sidebar-toggle" 
+                        onClick={toggleSidebar}
+                        title={collapsed ? 'Expandir menú' : 'Colapsar menú'}
+                    >
+                        {collapsed ? '»' : '«'}
+                    </button>
                 </div>
                 <ul className="nav-menu">
                     {menuItems.map((item) => (
@@ -69,8 +92,9 @@ export default function Layout() {
                                 to={item.path}
                                 className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}
                                 onClick={() => setSidebarOpen(false)}
+                                title={collapsed ? item.label : ''}
                             >
-                                <span>{item.icon}</span> {item.label}
+                                <span>{item.icon}</span> {!collapsed && item.label}
                             </NavLink>
                         </li>
                     ))}
@@ -78,6 +102,7 @@ export default function Layout() {
                         <button
                             onClick={handleLogout}
                             className="nav-link"
+                            title={collapsed ? 'Cerrar Sesión' : ''}
                             style={{
                                 width: '100%',
                                 background: 'none',
@@ -88,7 +113,7 @@ export default function Layout() {
                                 fontSize: '0.9rem',
                             }}
                         >
-                            Cerrar Sesión
+                            <span>🚪</span> {!collapsed && 'Cerrar Sesión'}
                         </button>
                     </li>
                 </ul>

@@ -50,23 +50,55 @@ export const exportToExcel = (data, columns, filename, sheetName = 'Datos') => {
     saveAs(blob, getFileName(filename, 'xlsx'));
 };
 
-export const exportToPDF = (data, columns, filename, title = 'Reporte') => {
+export const exportToPDF = (data, columns, filename, title = 'Reporte', metadata = {}) => {
     const doc = new jsPDF('l', 'mm', 'a4');
 
     doc.setFontSize(18);
     doc.text(title, 14, 22);
 
     doc.setFontSize(10);
-    doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 14, 30);
-    doc.text(`Total registros: ${data.length}`, 14, 36);
+    let yPos = 30;
+
+    doc.text(`Fecha: ${new Date().toLocaleDateString('es-ES')}`, 14, yPos);
+    doc.text(`Total registros: ${data.length}`, 120, yPos);
+
+    if (metadata.fechaInicio) {
+        doc.text(`Fecha Inicio: ${metadata.fechaInicio}`, 14, yPos + 6);
+    }
+    if (metadata.fechaFin) {
+        doc.text(`Fecha Fin: ${metadata.fechaFin}`, 120, yPos + 6);
+    }
+    if (metadata.modelo) {
+        doc.text(`Modelo: ${metadata.modelo}`, 14, yPos + 12);
+    }
+
+    const startY = metadata.modelo ? yPos + 18 : (metadata.fechaInicio || metadata.fechaFin) ? yPos + 12 : yPos + 6;
 
     const tableColumns = columns.map(col => col.label);
-    const tableRows = data.map(row => columns.map(col => String(row[col.key] ?? '')));
+    const sortedData = [...data].sort((a, b) => {
+        const idA = String(a.id_prediccion || '').replace('#', '');
+        const idB = String(b.id_prediccion || '').replace('#', '');
+        return Number(idA) - Number(idB);
+    });
+    const tableRows = sortedData.map(row => columns.map(col => String(row[col.key] ?? '')));
+
+    const centerColumns = columns
+        .map((col, i) => i)
+        .filter(i => {
+            const key = columns[i].key;
+            return ['id_prediccion', 'demanda_estimada', 'venta_promedio_por_dia', 'precio_venta',
+                    'ingreso_esperado', 'ganancia_esperada', 'margen_porcentaje', 'fecha_prediccion'].includes(key);
+        });
+
+    const cellStyles = {};
+    centerColumns.forEach(i => {
+        cellStyles[i] = { halign: 'center' };
+    });
 
     autoTable(doc, {
         head: [tableColumns],
         body: tableRows,
-        startY: 42,
+        startY: startY,
         styles: {
             fontSize: 8,
             cellPadding: 2,
@@ -75,10 +107,12 @@ export const exportToPDF = (data, columns, filename, title = 'Reporte') => {
             fillColor: [59, 130, 246],
             textColor: 255,
             fontStyle: 'bold',
+            halign: 'center',
         },
         alternateRowStyles: {
             fillColor: [249, 250, 251],
         },
+        columnStyles: cellStyles,
     });
 
     doc.save(getFileName(filename, 'pdf'));

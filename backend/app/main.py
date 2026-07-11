@@ -20,6 +20,7 @@ from app.presentation.modelo_ia_routes import router as modelo_ia_router
 from app.presentation.prediccion_routes import router as prediccion_router
 from app.presentation.historial_prediccion_routes import router as historial_router
 from app.presentation.permiso_routes import router as permiso_router
+from app.presentation.ml_metrics_routes import router as ml_metrics_router
 from app.models.usuarios import Usuario
 from app.models.roles import Rol
 from app.models.permisos import Permiso
@@ -244,6 +245,7 @@ app.include_router(modelo_ia_router)
 app.include_router(prediccion_router)
 app.include_router(historial_router)
 app.include_router(permiso_router)
+app.include_router(ml_metrics_router)
 
 
 @app.get("/")

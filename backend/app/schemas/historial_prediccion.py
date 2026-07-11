@@ -19,6 +19,8 @@ class HistorialPrediccionResponse(BaseModel):
     nombre_producto: Optional[str] = None
     codigo_producto: Optional[str] = None
     nombre_modelo: Optional[str] = None
+    nombre_subcategoria: Optional[str] = None
+    nombre_categoria: Optional[str] = None
 
     class Config:
         from_attributes = True

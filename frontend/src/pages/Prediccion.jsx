@@ -155,6 +155,16 @@ export default function Prediccion() {
             return;
         }
 
+        if (!fechaInicio || !fechaFin) {
+            setToast({ message: 'Seleccione las fechas de inicio y fin', type: 'warning' });
+            return;
+        }
+
+        if (new Date(fechaFin) <= new Date(fechaInicio)) {
+            setToast({ message: 'La fecha de fin debe ser mayor a la fecha de inicio', type: 'warning' });
+            return;
+        }
+
         if (modelosSeleccionados.length === 1 && idsProductos.length === 1) {
             await predecirProducto(idsProductos[0]);
         } else {
@@ -257,8 +267,9 @@ export default function Prediccion() {
     const coloresModelos = ['#2563eb', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
 
     const prepareChartData = () => {
-        const historialLabels = historialVentas.map(h => h.fecha);
-        const historialData = historialVentas.map(h => h.cantidad);
+        const historialLabels = historialVentas.map(h => h.fecha).sort();
+        const historialDataMap = new Map(historialVentas.map(h => [h.fecha, h.cantidad]));
+        const historialData = historialLabels.map(f => historialDataMap.get(f));
 
         // Si hay multiples modelos seleccionados, mostrar overlay
         const mostrarOverlay = modelosSeleccionados.length > 1;
@@ -313,27 +324,38 @@ export default function Prediccion() {
             : modelos.find(m => m.id_modelo === modelosSeleccionados[0]);
         const nombreModelo = modeloActivo ? `${modeloActivo.algoritmo} v${modeloActivo.version || '?'}` : 'Modelo IA';
 
-        const predLabels = prediccionesModeloActivo.map(p => p.fecha_prediccion);
-        const predData = prediccionesModeloActivo.map(p => p.demanda_estimada);
-        const predMin = prediccionesModeloActivo.map(p => p.confianza_min);
-        const predMax = prediccionesModeloActivo.map(p => p.confianza_max);
+        const prediccionesMap = new Map(prediccionesModeloActivo.map(p => [p.fecha_prediccion, p]));
+        const predLabels = [...new Set(prediccionesModeloActivo.map(p => p.fecha_prediccion))].sort();
+        const predData = predLabels.map(f => prediccionesMap.get(f)?.demanda_estimada);
+        const predMin = predLabels.map(f => prediccionesMap.get(f)?.confianza_min);
+        const predMax = predLabels.map(f => prediccionesMap.get(f)?.confianza_max);
 
-        const allLabels = [...historialLabels, ...predLabels];
+        const allLabelsUnsorted = [...historialLabels, ...predLabels];
+        const allLabels = [...allLabelsUnsorted].sort();
 
-        const historialDataset = new Array(historialLabels.length).fill(null);
-        const predDataset = new Array(historialLabels.length).fill(null);
-
-        const fullHistorial = [...historialDataset, ...historialData];
-        const fullPred = [...predDataset, ...predData];
-        const fullMin = [...new Array(historialLabels.length).fill(null), ...predMin];
-        const fullMax = [...new Array(historialLabels.length).fill(null), ...predMax];
+        const historialDataset = allLabels.map(f => {
+            const idx = historialLabels.indexOf(f);
+            return idx >= 0 ? historialData[idx] : null;
+        });
+        const predDataset = allLabels.map(f => {
+            const idx = predLabels.indexOf(f);
+            return idx >= 0 ? predData[idx] : null;
+        });
+        const fullMin = allLabels.map(f => {
+            const idx = predLabels.indexOf(f);
+            return idx >= 0 ? predMin[idx] : null;
+        });
+        const fullMax = allLabels.map(f => {
+            const idx = predLabels.indexOf(f);
+            return idx >= 0 ? predMax[idx] : null;
+        });
 
         return {
             labels: allLabels,
             datasets: [
                 {
                     label: 'Ventas Historicas',
-                    data: fullHistorial,
+                    data: historialDataset,
                     borderColor: 'rgb(100, 116, 139)',
                     backgroundColor: 'rgba(100, 116, 139, 0.1)',
                     fill: false,
@@ -354,7 +376,7 @@ export default function Prediccion() {
                 },
                 {
                     label: `${nombreModelo} - Prediccion`,
-                    data: fullPred,
+                    data: predDataset,
                     borderColor: coloresModelos[0],
                     backgroundColor: coloresModelos[0] + '20',
                     fill: false,
@@ -447,19 +469,21 @@ export default function Prediccion() {
                     {modelosSeleccionados.length > 0 && <span className="badge badge-success">Modelo Seleccionado</span>}
                 </div>
 
-                <div className="grid-3" style={{ gap: '16px' }}>
-                    <div className="form-group">
-                        <label>Categoría</label>
-                        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}>
+                <div className="grid-2" style={{ gap: '16px' }}>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Categoría</label>
+                        <select value={selectedCategory} onChange={(e) => setSelectedCategory(e.target.value)}
+                            style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--gray-300)', fontSize: '0.85rem' }}>
                             <option value="">Todas las categorías</option>
                             {categorias.map(c => (
                                 <option key={c.id_categoria} value={c.id_categoria}>{c.nombre}</option>
                             ))}
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label>Subcategoría</label>
-                        <select value={selectedSubcategory} onChange={(e) => setSelectedSubcategory(e.target.value)}>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Subcategoría</label>
+                        <select value={selectedSubcategory} onChange={(e) => setSelectedSubcategory(e.target.value)}
+                            style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--gray-300)', fontSize: '0.85rem' }}>
                             <option value="">Todas las subcategorías</option>
                             {subcategorias
                                 .filter(s => selectedCategory === '' || selectedCategory === 'all' || s.id_categoria === parseInt(selectedCategory))
@@ -468,8 +492,11 @@ export default function Prediccion() {
                             ))}
                         </select>
                     </div>
-                    <div className="form-group">
-                        <label>Productos ({productosFiltrados.length} disponibles)</label>
+                </div>
+
+                <div className="grid-2" style={{ gap: '16px' }}>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Productos ({productosFiltrados.length} disponibles)</label>
                         <MultiSelect
                             items={productosFiltrados.map(p => ({
                                 value: p.id_producto,
@@ -482,8 +509,8 @@ export default function Prediccion() {
                             showSelectAll={true}
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Modelo IA</label>
+                    <div className="form-group" style={{ marginBottom: '12px' }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Modelo IA</label>
                         <MultiSelect
                             items={modelos.filter(m => m.estado === 'ACTIVO').map(m => ({
                                 value: m.id_modelo,
@@ -498,25 +525,25 @@ export default function Prediccion() {
                     </div>
                 </div>
 
-                <div className="grid-3" style={{ gap: '16px', marginTop: '16px' }}>
-                    <div className="form-group">
-                        <label>Fecha de Inicio</label>
+                <div className="grid-3" style={{ gap: '16px', marginTop: '12px' }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Fecha de Inicio</label>
                         <input
                             type="date"
                             value={fechaInicio}
                             onChange={(e) => setFechaInicio(e.target.value)}
                             min={new Date().toISOString().split('T')[0]}
-                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--gray-300)' }}
+                            style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--gray-300)', fontSize: '0.85rem' }}
                         />
                     </div>
-                    <div className="form-group">
-                        <label>Fecha de Fin</label>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                        <label style={{ fontSize: '0.8rem', marginBottom: '4px' }}>Fecha de Fin</label>
                         <input
                             type="date"
                             value={fechaFin}
                             onChange={(e) => setFechaFin(e.target.value)}
                             min={fechaInicio || new Date().toISOString().split('T')[0]}
-                            style={{ width: '100%', padding: '8px', borderRadius: '6px', border: '1px solid var(--gray-300)' }}
+                            style={{ width: '100%', padding: '6px 10px', borderRadius: '6px', border: '1px solid var(--gray-300)', fontSize: '0.85rem' }}
                         />
                         {fechaInicio && fechaFin && (
                             <small style={{ color: 'var(--primary)', fontSize: '0.75rem', fontWeight: 'bold' }}>
@@ -524,14 +551,53 @@ export default function Prediccion() {
                             </small>
                         )}
                     </div>
-                    <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end' }}>
+                    <div className="form-group" style={{ display: 'flex', alignItems: 'flex-end', marginBottom: 0 }}>
                         <button
-                            className="btn btn-primary"
                             onClick={handleGenerar}
-                            disabled={generating || modelosSeleccionados.length === 0 || selectedProducts.length === 0 || !fechaInicio || !fechaFin}
-                            style={{ width: '100%', padding: '8px 16px', fontSize: '0.9rem' }}
+                            disabled={generating}
+                            style={{
+                                width: '100%',
+                                padding: '12px 24px',
+                                fontSize: '0.9rem',
+                                fontWeight: '600',
+                                color: '#fff',
+                                background: generating ? 'var(--gray-400)' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                                border: 'none',
+                                borderRadius: '50px',
+                                cursor: generating ? 'not-allowed' : 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                gap: '8px',
+                                boxShadow: generating ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)',
+                                transition: 'all 0.3s ease',
+                                opacity: generating ? 0.7 : 1
+                            }}
+                            onMouseEnter={(e) => {
+                                if (!generating) {
+                                    e.target.style.transform = 'translateY(-2px)';
+                                    e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.5)';
+                                }
+                            }}
+                            onMouseLeave={(e) => {
+                                e.target.style.transform = 'translateY(0)';
+                                e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
+                            }}
                         >
-                            {generating ? 'Generando...' : 'Generar Predicción'}
+                            <span>{generating ? 'Generando...' : 'Generar Predicción'}</span>
+                            <span style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                width: '28px',
+                                height: '28px',
+                                borderRadius: '50%',
+                                background: 'rgba(255,255,255,0.2)',
+                                fontSize: '1rem',
+                                flexShrink: 0
+                            }}>
+                                {generating ? '⏳' : '→'}
+                            </span>
                         </button>
                     </div>
                 </div>
@@ -705,14 +771,14 @@ export default function Prediccion() {
                             return {
                                 id_prediccion: `#${pred.id_prediccion}`,
                                 producto: prod ? `${prod.codigo} - ${prod.nombre}` : `#${pred.id_producto}`,
-                                modelo: modelosSeleccionados.length > 1 ? (modelo?.algoritmo || '-') : undefined,
+                                modelo: modelo?.algoritmo || '-',
                                 periodo: pred.periodo || '-',
                                 demanda_estimada: pred.demanda_estimada,
                                 venta_promedio_por_dia: pred.venta_promedio_por_dia?.toFixed(2) || '-',
                                 precio_venta: pred.precio_venta ? `$${pred.precio_venta.toFixed(2)}` : '-',
                                 ingreso_esperado: pred.ingreso_esperado ? `$${pred.ingreso_esperado.toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : '-',
                                 ganancia_esperada: pred.ganancia_esperada ? `$${pred.ganancia_esperada.toLocaleString('es-EC', { minimumFractionDigits: 2 })}` : '-',
-                                margen_porcentaje: pred.margen_porcentaje ? `${pred.margen_porcentaje}%` : '-',
+                                margen_porcentaje: pred.margen_porcentaje ? `${pred.margen_porcentaje.toFixed(1)}%` : '-',
                                 fecha_prediccion: pred.fecha_prediccion || '-',
                             };
                         })}
@@ -729,6 +795,13 @@ export default function Prediccion() {
                             { key: 'fecha_prediccion', label: 'Fecha' },
                         ]}
                         moduleName="prediccion"
+                        metadata={{
+                            fechaInicio: fechaInicio || (predicciones.length > 0 ? predicciones[0]?.fecha_prediccion : null),
+                            fechaFin: fechaFin || (predicciones.length > 0 ? predicciones[predicciones.length - 1]?.fecha_prediccion : null),
+                            modelo: modelosSeleccionados.length === 1
+                                ? (modelos.find(m => m.id_modelo === modelosSeleccionados[0])?.algoritmo || '-')
+                                : 'Múltiples modelos'
+                        }}
                     />
                 </div>
                 {predicciones.length === 0 ? (
@@ -739,7 +812,7 @@ export default function Prediccion() {
                     <>
                         {predicciones.length > 0 && (
                             <div style={{ display: 'flex', gap: '24px', padding: '12px 16px', background: 'var(--primary-light)', borderRadius: '8px', marginBottom: '12px', fontSize: '0.9rem', color: 'var(--gray-700)', flexWrap: 'wrap' }}>
-                                <span><strong>Rango:</strong> {predicciones[predicciones.length - 1]?.fecha_prediccion || '-'} al {predicciones[0]?.fecha_prediccion || '-'}</span>
+                                <span><strong>Rango:</strong> {predicciones[0]?.fecha_prediccion || '-'} al {predicciones[predicciones.length - 1]?.fecha_prediccion || '-'}</span>
                                 <span><strong>Productos:</strong> {new Set(predicciones.map(p => p.id_producto)).size}</span>
                                 <span><strong>Promedio ventas/dia:</strong> {(predicciones.reduce((sum, p) => sum + (p.venta_promedio_por_dia || 0), 0) / predicciones.length).toFixed(2)} uds</span>
                             </div>
@@ -791,7 +864,7 @@ export default function Prediccion() {
                                     {(modelosSeleccionados.length > 1 && modeloActivoTab
                                         ? prediccionesModeloActivo
                                         : selectedProducts.length > 0 ? prediccionesProducto : predicciones
-                                    ).slice(0, 200).map(pred => {
+                                    ).sort((a, b) => (a.fecha_prediccion || '').localeCompare(b.fecha_prediccion || '')).slice(0, 200).map(pred => {
                                         const prod = getProducto(pred.id_producto);
                                         return (
                                             <tr key={pred.id_prediccion}>

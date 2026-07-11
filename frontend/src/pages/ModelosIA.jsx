@@ -1,41 +1,55 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
+import mlMetricsService from '../services/mlService';
 import Toast from '../components/Toast';
+import MetricCard from '../components/metrics/MetricCard';
+import ModelComparisonChart from '../components/metrics/ModelComparisonChart';
+import FeatureImportanceChart from '../components/metrics/FeatureImportanceChart';
+import PredictionVsActual from '../components/metrics/PredictionVsActual';
+import ErrorDistribution from '../components/metrics/ErrorDistribution';
 import { Bar } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
     CategoryScale,
     LinearScale,
     BarElement,
+    PointElement,
+    LineElement,
     Title,
     Tooltip,
-    Legend
+    Legend,
+    Filler,
 } from 'chart.js';
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    BarElement,
-    Title,
-    Tooltip,
-    Legend
+    CategoryScale, LinearScale, BarElement, PointElement,
+    LineElement, Title, Tooltip, Legend, Filler
 );
 
 export default function ModelosIA() {
     const [modelos, setModelos] = useState([]);
     const [loading, setLoading] = useState(true);
     const [toast, setToast] = useState(null);
+    const [metrics, setMetrics] = useState(null);
+    const [features, setFeatures] = useState(null);
 
     useEffect(() => {
-        loadModelos();
+        loadData();
     }, []);
 
-    const loadModelos = async () => {
+    const loadData = async () => {
         try {
-            const response = await api.get('/modelos-ia');
-            setModelos(response.data);
-        } catch (err) {
-            setToast({ message: 'Error al cargar modelos', type: 'error' });
+            const [modelosRes, metricsRes, featuresRes] = await Promise.allSettled([
+                api.get('/modelos-ia'),
+                mlMetricsService.getAll(),
+                mlMetricsService.getFeatures(),
+            ]);
+
+            if (modelosRes.status === 'fulfilled') setModelos(modelosRes.value.data);
+            if (metricsRes.status === 'fulfilled') setMetrics(metricsRes.value.data);
+            if (featuresRes.status === 'fulfilled') setFeatures(featuresRes.value.data);
+        } catch {
+            setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {
             setLoading(false);
         }
@@ -45,8 +59,8 @@ export default function ModelosIA() {
         try {
             await api.put(`/modelos-ia/${modeloId}/activar`);
             setToast({ message: 'Modelo activado exitosamente', type: 'success' });
-            loadModelos();
-        } catch (err) {
+            loadData();
+        } catch {
             setToast({ message: 'Error al activar modelo', type: 'error' });
         }
     };
@@ -55,8 +69,8 @@ export default function ModelosIA() {
         try {
             await api.put(`/modelos-ia/${modeloId}/desactivar`);
             setToast({ message: 'Modelo desactivado exitosamente', type: 'success' });
-            loadModelos();
-        } catch (err) {
+            loadData();
+        } catch {
             setToast({ message: 'Error al desactivar modelo', type: 'error' });
         }
     };
@@ -64,94 +78,32 @@ export default function ModelosIA() {
     const prepareChartData = (metrica) => {
         return {
             labels: modelos.map(m => `${m.algoritmo} v${m.version || '1.0'}`),
-            datasets: [
-                {
-                    label: metrica.toUpperCase(),
-                    data: modelos.map(m => m[metrica] || 0),
-                    backgroundColor: modelos.map((m, i) => 
-                        m.estado === 'ACTIVO' 
-                            ? 'rgba(16, 185, 129, 0.8)' 
-                            : 'rgba(107, 114, 128, 0.5)'
-                    ),
-                    borderColor: modelos.map((m, i) => 
-                        m.estado === 'ACTIVO' 
-                            ? 'rgb(16, 185, 129)' 
-                            : 'rgb(107, 114, 128)'
-                    ),
-                    borderWidth: 2
-                }
-            ]
+            datasets: [{
+                label: metrica.toUpperCase(),
+                data: modelos.map(m => m[metrica] || 0),
+                backgroundColor: modelos.map(m =>
+                    m.estado === 'ACTIVO' ? 'rgba(16, 185, 129, 0.8)' : 'rgba(107, 114, 128, 0.5)'
+                ),
+                borderColor: modelos.map(m =>
+                    m.estado === 'ACTIVO' ? 'rgb(16, 185, 129)' : 'rgb(107, 114, 128)'
+                ),
+                borderWidth: 2,
+            }],
         };
     };
 
     const chartOptions = {
         responsive: true,
         maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                display: false
-            },
-            title: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Valor'
-                }
-            }
-        }
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, title: { display: true, text: 'Valor' } } },
     };
 
-    const prepareComparisonChart = () => {
-        return {
-            labels: ['MAE', 'RMSE', 'R²'],
-            datasets: modelos.map(modelo => ({
-                label: `${modelo.algoritmo} v${modelo.version || '1.0'}`,
-                data: [
-                    parseFloat(modelo.mae) || 0,
-                    parseFloat(modelo.rmse) || 0,
-                    parseFloat(modelo.r2) || 0
-                ],
-                backgroundColor: modelo.estado === 'ACTIVO' 
-                    ? 'rgba(16, 185, 129, 0.7)' 
-                    : 'rgba(107, 114, 128, 0.5)',
-                borderColor: modelo.estado === 'ACTIVO' 
-                    ? 'rgb(16, 185, 129)' 
-                    : 'rgb(107, 114, 128)',
-                borderWidth: 2
-            }))
-        };
-    };
-
-    const comparisonChartOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-            legend: {
-                position: 'top',
-                labels: {
-                    usePointStyle: true,
-                    padding: 15
-                }
-            },
-            title: {
-                display: false
-            }
-        },
-        scales: {
-            y: {
-                beginAtZero: true,
-                title: {
-                    display: true,
-                    text: 'Valor'
-                }
-            }
-        }
-    };
+    const ensemble = metrics?.ensemble;
+    const mae = ensemble?.mae?.toFixed(4) || 'N/A';
+    const rmse = ensemble?.rmse?.toFixed(4) || 'N/A';
+    const r2 = ensemble?.r2 != null ? (ensemble.r2 * 100).toFixed(2) : 'N/A';
+    const mape = ensemble?.mape?.toFixed(2) || 'N/A';
 
     if (loading) return <div className="content-area"><p>Cargando modelos...</p></div>;
 
@@ -159,14 +111,21 @@ export default function ModelosIA() {
         <div className="content-area">
             {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
 
+            <div className="grid-4" style={{ marginBottom: '24px' }}>
+                <MetricCard label="MAE" value={mae} color="var(--primary)" description="Error Absoluto Medio" />
+                <MetricCard label="RMSE" value={rmse} color="var(--danger)" description="Error Cuadrático Medio" />
+                <MetricCard label="R²" value={r2} suffix="%" color="var(--success)" description="Coef. Determinación" />
+                <MetricCard label="MAPE" value={mape} suffix="%" color="var(--warning)" description="Error Porcentual" />
+            </div>
+
             <div className="grid-3" style={{ gap: '16px', marginBottom: '24px' }}>
                 {modelos.map(modelo => (
-                    <div 
-                        key={modelo.id_modelo} 
+                    <div
+                        key={modelo.id_modelo}
                         className="card"
-                        style={{ 
+                        style={{
                             borderLeft: modelo.estado === 'ACTIVO' ? '4px solid var(--success)' : '4px solid var(--gray-400)',
-                            backgroundColor: modelo.estado === 'ACTIVO' ? 'var(--success-light)' : 'transparent'
+                            backgroundColor: modelo.estado === 'ACTIVO' ? 'var(--success-light)' : 'transparent',
                         }}
                     >
                         <div className="card-header">
@@ -208,19 +167,11 @@ export default function ModelosIA() {
                             </div>
                             <div style={{ display: 'flex', gap: '8px' }}>
                                 {modelo.estado === 'INACTIVO' ? (
-                                    <button 
-                                        className="btn btn-success" 
-                                        style={{ flex: 1, fontSize: '0.8rem' }}
-                                        onClick={() => handleActivar(modelo.id_modelo)}
-                                    >
+                                    <button className="btn btn-success" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => handleActivar(modelo.id_modelo)}>
                                         Activar
                                     </button>
                                 ) : (
-                                    <button 
-                                        className="btn btn-secondary" 
-                                        style={{ flex: 1, fontSize: '0.8rem' }}
-                                        onClick={() => handleDesactivar(modelo.id_modelo)}
-                                    >
+                                    <button className="btn btn-secondary" style={{ flex: 1, fontSize: '0.8rem' }} onClick={() => handleDesactivar(modelo.id_modelo)}>
                                         Desactivar
                                     </button>
                                 )}
@@ -230,19 +181,40 @@ export default function ModelosIA() {
                 ))}
             </div>
 
-            <div className="card" style={{ marginBottom: '24px' }}>
-                <div className="card-header">
-                    <h3 className="card-title">Comparativa de Métricas</h3>
+            <div className="grid-2" style={{ marginBottom: '24px' }}>
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">Comparativa de Modelos</h3>
+                    </div>
+                    <ModelComparisonChart data={metrics?.comparativa} />
                 </div>
-                <div style={{ height: '350px', padding: '16px' }}>
-                    <Bar data={prepareComparisonChart()} options={comparisonChartOptions} />
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">Importancia de Features</h3>
+                    </div>
+                    <FeatureImportanceChart data={features} />
                 </div>
             </div>
 
-            <div className="grid-3" style={{ gap: '16px' }}>
+            <div className="grid-2" style={{ marginBottom: '24px' }}>
                 <div className="card">
                     <div className="card-header">
-                        <h3 className="card-title">MAE (Error Absoluto Medio)</h3>
+                        <h3 className="card-title">Predicción vs Valor Real</h3>
+                    </div>
+                    <PredictionVsActual />
+                </div>
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">Distribución de Errores</h3>
+                    </div>
+                    <ErrorDistribution />
+                </div>
+            </div>
+
+            <div className="grid-3" style={{ gap: '16px', marginBottom: '24px' }}>
+                <div className="card">
+                    <div className="card-header">
+                        <h3 className="card-title">MAE</h3>
                     </div>
                     <div style={{ height: '200px', padding: '16px' }}>
                         <Bar data={prepareChartData('mae')} options={chartOptions} />
@@ -253,7 +225,7 @@ export default function ModelosIA() {
                 </div>
                 <div className="card">
                     <div className="card-header">
-                        <h3 className="card-title">RMSE (Error Cuadrático Medio)</h3>
+                        <h3 className="card-title">RMSE</h3>
                     </div>
                     <div style={{ height: '200px', padding: '16px' }}>
                         <Bar data={prepareChartData('rmse')} options={chartOptions} />
@@ -264,18 +236,42 @@ export default function ModelosIA() {
                 </div>
                 <div className="card">
                     <div className="card-header">
-                        <h3 className="card-title">R² (Coeficiente de Determinación)</h3>
+                        <h3 className="card-title">R²</h3>
                     </div>
                     <div style={{ height: '200px', padding: '16px' }}>
                         <Bar data={prepareChartData('r2')} options={chartOptions} />
                     </div>
                     <div style={{ padding: '8px 16px', fontSize: '0.8rem', color: 'var(--gray-500)', textAlign: 'center' }}>
-                        Mayor es mejor (máximo 1.0)
+                        Mayor es mejor (máx 1.0)
                     </div>
                 </div>
             </div>
 
-            <div className="card" style={{ marginTop: '24px' }}>
+            {ensemble?.weights && (
+                <div className="card" style={{ marginBottom: '24px' }}>
+                    <div className="card-header">
+                        <h3 className="card-title">Pesos del Ensemble</h3>
+                    </div>
+                    <div style={{ padding: '16px' }}>
+                        <div style={{ display: 'flex', gap: '24px' }}>
+                            <div style={{ flex: 1, textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>
+                                    {(ensemble.weights.xgboost * 100).toFixed(0)}%
+                                </div>
+                                <div style={{ color: 'var(--gray-500)' }}>XGBoost</div>
+                            </div>
+                            <div style={{ flex: 1, textAlign: 'center' }}>
+                                <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>
+                                    {(ensemble.weights.lightgbm * 100).toFixed(0)}%
+                                </div>
+                                <div style={{ color: 'var(--gray-500)' }}>LightGBM</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Detalle de Modelos</h3>
                 </div>
@@ -289,7 +285,7 @@ export default function ModelosIA() {
                                 <th>RMSE</th>
                                 <th>R²</th>
                                 <th>MAPE</th>
-                                <th>Fecha Entrenamiento</th>
+                                <th>Fecha</th>
                                 <th>Acciones</th>
                             </tr>
                         </thead>
@@ -309,19 +305,11 @@ export default function ModelosIA() {
                                     <td>{modelo.fecha_entrenamiento ? new Date(modelo.fecha_entrenamiento).toLocaleDateString() : 'N/A'}</td>
                                     <td>
                                         {modelo.estado === 'INACTIVO' ? (
-                                            <button 
-                                                className="btn btn-success" 
-                                                style={{ fontSize: '0.8rem' }}
-                                                onClick={() => handleActivar(modelo.id_modelo)}
-                                            >
+                                            <button className="btn btn-success" style={{ fontSize: '0.8rem' }} onClick={() => handleActivar(modelo.id_modelo)}>
                                                 Activar
                                             </button>
                                         ) : (
-                                            <button 
-                                                className="btn btn-secondary" 
-                                                style={{ fontSize: '0.8rem' }}
-                                                onClick={() => handleDesactivar(modelo.id_modelo)}
-                                            >
+                                            <button className="btn btn-secondary" style={{ fontSize: '0.8rem' }} onClick={() => handleDesactivar(modelo.id_modelo)}>
                                                 Desactivar
                                             </button>
                                         )}
