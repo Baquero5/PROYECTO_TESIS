@@ -21,7 +21,11 @@ export default function MultiSelect({
             }
         };
         document.addEventListener('mousedown', handleClickOutside);
-        return () => document.removeEventListener('mousedown', handleClickOutside);
+        document.addEventListener('touchstart', handleClickOutside);
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+            document.removeEventListener('touchstart', handleClickOutside);
+        };
     }, []);
 
     const filteredItems = items.filter(item =>
@@ -91,7 +95,7 @@ export default function MultiSelect({
             </button>
 
             {isOpen && (
-                <div style={{
+                <div className="multiselect-dropdown" style={{
                     position: 'absolute',
                     top: '100%',
                     left: 0,
@@ -101,7 +105,7 @@ export default function MultiSelect({
                     border: '1px solid var(--gray-200)',
                     borderRadius: '8px',
                     boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
-                    zIndex: 1000,
+                    zIndex: 9999,
                     maxHeight: '300px',
                     overflow: 'hidden',
                     display: 'flex',

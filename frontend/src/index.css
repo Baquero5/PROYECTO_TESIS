@@ -562,6 +562,46 @@ body {
     .content-area { padding: 16px; }
     .top-header { padding: 0 16px; }
     .page-title h1 { font-size: 1.2rem; }
+
+    /* MultiSelect dropdown - prevent clipping on mobile */
+    .multiselect-dropdown {
+        position: fixed !important;
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        max-height: 50vh !important;
+    }
+
+    /* Toast notifications - responsive on mobile */
+    .toast-container {
+        left: 16px !important;
+        right: 16px !important;
+        min-width: auto !important;
+        max-width: none !important;
+        width: auto !important;
+    }
+
+    /* Notification bell dropdown - responsive on mobile */
+    .notification-dropdown {
+        position: fixed !important;
+        left: 16px !important;
+        right: 16px !important;
+        width: auto !important;
+        max-width: none !important;
+    }
+
+    /* Tables - horizontal scroll on mobile */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    /* Grids inside cards */
+    .card .grid-2,
+    .card .grid-3,
+    .card .grid-4 {
+        grid-template-columns: 1fr;
+    }
 }
 
 input[type=number]:not(.qty-input)::-webkit-inner-spin-button,

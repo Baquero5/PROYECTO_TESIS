@@ -20,7 +20,11 @@ export default function NotificationBell() {
             }
         };
         document.addEventListener('mousedown', handleClick);
-        return () => document.removeEventListener('mousedown', handleClick);
+        document.addEventListener('touchstart', handleClick);
+        return () => {
+            document.removeEventListener('mousedown', handleClick);
+            document.removeEventListener('touchstart', handleClick);
+        };
     }, []);
 
     const loadAlerts = async () => {
@@ -102,7 +106,7 @@ export default function NotificationBell() {
             </button>
 
             {open && (
-                <div style={{
+                <div className="notification-dropdown" style={{
                     position: 'absolute',
                     top: '100%',
                     right: 0,
@@ -113,7 +117,7 @@ export default function NotificationBell() {
                     borderRadius: '12px',
                     boxShadow: 'var(--shadow-lg)',
                     border: '1px solid var(--gray-200)',
-                    zIndex: 1000,
+                    zIndex: 9999,
                     overflow: 'hidden',
                 }}>
                     <div style={{
