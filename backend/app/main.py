@@ -187,7 +187,7 @@ async def create_admin_user():
                 nombres="Administrador",
                 apellidos="del Sistema",
                 correo="admin@sistema.com",
-                password_hash=hash_password("Admin123!"),
+                password_hash=hash_password(settings.ADMIN_DEFAULT_PASSWORD),
                 estado=True,
             )
             db.add(admin)

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.repositories.inventario_repository import InventarioRepository
 from app.repositories.movimiento_inventario_repository import MovimientoInventarioRepository
@@ -67,7 +68,10 @@ async def create_inventario(
     if await repo.get_by_product(data.id_producto):
         raise HTTPException(status_code=400, detail="Ya existe inventario para este producto")
     inventario = Inventario(**data.model_dump())
-    return await repo.create(inventario)
+    try:
+        return await repo.create(inventario)
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Error de integridad al crear inventario")
 
 
 @router.put("/{inventario_id}", response_model=InventarioResponse)

@@ -61,8 +61,8 @@ export default function Layout() {
 
     const fullName = user ? `${user.nombres || ''} ${user.apellidos || ''}`.trim() : '';
     const initials = fullName
-        ? fullName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
-        : user?.correo?.substring(0, 2).toUpperCase() || 'U';
+        ? fullName.split(' ').filter(Boolean).map(n => n[0]).join('').substring(0, 2).toUpperCase()
+        : (user?.correo?.substring(0, 2) || 'U').toUpperCase();
 
     return (
         <div className="app-container">

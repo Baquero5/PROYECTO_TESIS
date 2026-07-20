@@ -41,30 +41,34 @@ export default function Dashboard() {
     }, []);
 
     const loadAll = async () => {
-        const results = await Promise.allSettled([
-            api.get('/products/stats/summary'),
-            api.get('/products?limit=2000'),
-            api.get('/categorias'),
-            api.get('/subcategorias'),
-            api.get('/inventario'),
-            api.get('/ventas'),
-            api.get('/alertas/activas'),
-            api.get('/predicciones'),
-            api.get('/modelos-ia'),
-        ]);
+        try {
+            const results = await Promise.allSettled([
+                api.get('/products/stats/summary'),
+                api.get('/products?limit=2000'),
+                api.get('/categorias'),
+                api.get('/subcategorias'),
+                api.get('/inventario'),
+                api.get('/ventas'),
+                api.get('/alertas/activas'),
+                api.get('/predicciones'),
+                api.get('/modelos-ia'),
+            ]);
 
-        const [s, p, c, sub, i, v, a, pr, m] = results;
-        if (s.status === 'fulfilled') setStats(s.value.data);
-        if (p.status === 'fulfilled') setProductos(p.value.data);
-        if (c.status === 'fulfilled') setCategorias(c.value.data);
-        if (sub.status === 'fulfilled') setSubcategorias(sub.value.data);
-        if (i.status === 'fulfilled') setInventario(i.value.data);
-        if (v.status === 'fulfilled') setVentas(v.value.data);
-        if (a.status === 'fulfilled') setAlertas(a.value.data);
-        if (pr.status === 'fulfilled') setPredicciones(pr.value.data);
-        if (m.status === 'fulfilled') setModelos(m.value.data);
-
-        setLoading(false);
+            const [s, p, c, sub, i, v, a, pr, m] = results;
+            if (s.status === 'fulfilled') setStats(s.value.data);
+            if (p.status === 'fulfilled') setProductos(p.value.data);
+            if (c.status === 'fulfilled') setCategorias(c.value.data);
+            if (sub.status === 'fulfilled') setSubcategorias(sub.value.data);
+            if (i.status === 'fulfilled') setInventario(i.value.data);
+            if (v.status === 'fulfilled') setVentas(v.value.data);
+            if (a.status === 'fulfilled') setAlertas(a.value.data);
+            if (pr.status === 'fulfilled') setPredicciones(pr.value.data);
+            if (m.status === 'fulfilled') setModelos(m.value.data);
+        } catch (err) {
+            console.error('Error loading dashboard data:', err);
+        } finally {
+            setLoading(false);
+        }
     };
 
     const getProducto = (id) => productos.find(p => p.id_producto === id);

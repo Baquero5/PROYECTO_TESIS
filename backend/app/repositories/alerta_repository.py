@@ -22,13 +22,14 @@ class AlertaRepository:
         )
         return list(result.scalars().all())
 
-    async def get_active_by_product(self, producto_id: int) -> Optional[Alerta]:
-        result = await self.db.execute(
-            select(Alerta).where(
-                Alerta.id_producto == producto_id,
-                Alerta.estado == "ACTIVA"
-            )
+    async def get_active_by_product(self, producto_id: int, tipo_alerta: str = None) -> Optional[Alerta]:
+        query = select(Alerta).where(
+            Alerta.id_producto == producto_id,
+            Alerta.estado == "ACTIVA"
         )
+        if tipo_alerta:
+            query = query.where(Alerta.tipo_alerta == tipo_alerta)
+        result = await self.db.execute(query)
         return result.scalar_one_or_none()
 
     async def get_unread(self) -> List[Alerta]:

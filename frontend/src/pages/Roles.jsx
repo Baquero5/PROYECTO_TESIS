@@ -31,12 +31,12 @@ export default function Roles() {
 
     const loadData = async () => {
         try {
-            const [rolesRes, permisosRes] = await Promise.all([
+            const [rolesRes, permisosRes] = await Promise.allSettled([
                 api.get('/roles'),
                 api.get('/permisos')
             ]);
-            setRoles(rolesRes.data);
-            setPermisos(permisosRes.data);
+            if (rolesRes.status === 'fulfilled') setRoles(rolesRes.value.data);
+            if (permisosRes.status === 'fulfilled') setPermisos(permisosRes.value.data);
         } catch (err) {
             setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {
@@ -127,8 +127,6 @@ export default function Roles() {
             setToast({ message: err.response?.data?.detail || 'Error al eliminar', type: 'error' });
         }
     };
-
-    const getPermisoId = (codigo) => permisos.find(p => p.codigo === codigo)?.id_permiso;
 
     if (loading) return <div className="content-area"><p>Cargando...</p></div>;
 

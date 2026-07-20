@@ -24,12 +24,12 @@ export default function Alertas() {
 
     const loadData = async () => {
         try {
-            const [alertasRes, prodRes] = await Promise.all([
+            const [alertasRes, prodRes] = await Promise.allSettled([
                 api.get('/alertas'),
                 api.get('/products?limit=2000')
             ]);
-            setAlertas(alertasRes.data);
-            setProductos(prodRes.data);
+            if (alertasRes.status === 'fulfilled') setAlertas(alertasRes.value.data);
+            if (prodRes.status === 'fulfilled') setProductos(prodRes.value.data);
         } catch (err) {
             setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {

@@ -16,8 +16,8 @@ export const exportToCSV = (data, columns, filename) => {
     const headers = columns.map(col => col.label);
     const rows = data.map(row => columns.map(col => {
         const value = row[col.key];
-        if (typeof value === 'string' && value.includes(',')) {
-            return `"${value}"`;
+        if (typeof value === 'string' && (value.includes(',') || value.includes('"'))) {
+            return `"${value.replace(/"/g, '""')}"`;
         }
         return value ?? '';
     }));
@@ -76,9 +76,14 @@ export const exportToPDF = (data, columns, filename, title = 'Reporte', metadata
 
     const tableColumns = columns.map(col => col.label);
     const sortedData = [...data].sort((a, b) => {
-        const idA = String(a.id_prediccion || '').replace('#', '');
-        const idB = String(b.id_prediccion || '').replace('#', '');
-        return Number(idA) - Number(idB);
+        const firstCol = columns[0]?.key;
+        if (!firstCol) return 0;
+        const valA = a[firstCol];
+        const valB = b[firstCol];
+        if (typeof valA === 'number' && typeof valB === 'number') return valA - valB;
+        const idA = String(valA || '').replace('#', '');
+        const idB = String(valB || '').replace('#', '');
+        return Number(idA) - Number(idB) || idA.localeCompare(idB);
     });
     const tableRows = sortedData.map(row => columns.map(col => String(row[col.key] ?? '')));
 

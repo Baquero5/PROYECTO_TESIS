@@ -73,40 +73,41 @@ async def create_venta(
     db: AsyncSession = Depends(get_db),
     user=Depends(require_permission("VENTAS_CREAR"))
 ):
-    venta_repo = VentaRepository(db)
-    detalle_repo = DetalleVentaRepository(db)
-    inventario_repo = InventarioRepository(db)
-    
     from app.models.ventas import Venta
     from app.models.detalle_ventas import DetalleVenta
-    
+
+    inventario_repo = InventarioRepository(db)
+
     total = sum(d.cantidad * d.precio_unitario for d in data.detalles)
-    
+
     venta = Venta(
-        id_usuario=data.id_usuario,
+        id_usuario=user.id_usuario,
         total=total
     )
-    created_venta = await venta_repo.create(venta)
-    
+    db.add(venta)
+    await db.flush()
+
     detalles = []
     for d in data.detalles:
         inventario = await inventario_repo.get_by_product(d.id_producto)
         if not inventario or inventario.stock_actual < d.cantidad:
             raise HTTPException(status_code=400, detail=f"Stock insuficiente para producto {d.id_producto}")
-        
+
         await inventario_repo.update_stock(d.id_producto, d.cantidad, "SALIDA")
-        
+
         detalle = DetalleVenta(
-            id_venta=created_venta.id_venta,
+            id_venta=venta.id_venta,
             id_producto=d.id_producto,
             cantidad=d.cantidad,
             precio_unitario=d.precio_unitario,
             subtotal=d.cantidad * d.precio_unitario
         )
+        db.add(detalle)
         detalles.append(detalle)
-    
-    await detalle_repo.create_many(detalles)
-    
-    venta_response = VentaResponse.model_validate(created_venta).model_dump()
+
+    await db.commit()
+    await db.refresh(venta)
+
+    venta_response = VentaResponse.model_validate(venta).model_dump()
     venta_response["detalles"] = [DetalleVentaResponse.model_validate(d) for d in detalles]
     return venta_response

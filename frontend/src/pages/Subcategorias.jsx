@@ -20,12 +20,12 @@ export default function Subcategorias() {
 
     const loadData = async () => {
         try {
-            const [subRes, catRes] = await Promise.all([
+            const [subRes, catRes] = await Promise.allSettled([
                 api.get('/subcategorias'),
                 api.get('/categorias')
             ]);
-            setSubcategorias(subRes.data);
-            setCategorias(catRes.data);
+            if (subRes.status === 'fulfilled') setSubcategorias(subRes.value.data);
+            if (catRes.status === 'fulfilled') setCategorias(catRes.value.data);
         } catch (err) {
             setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {

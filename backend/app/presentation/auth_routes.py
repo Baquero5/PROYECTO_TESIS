@@ -12,21 +12,15 @@ from app.services.auth_service import (
     set_token_cookie,
     clear_token_cookie,
 )
-from app.schemas.auth import UserCreate, UserLogin, UserResponse, Token
+from app.schemas.auth import UserCreate, UserLogin, UserResponse, UserUpdate, Token
 from app.models.usuarios import Usuario
-from typing import List, Optional
-from pydantic import BaseModel
+from typing import List
 
 router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
-
-class UserUpdate(BaseModel):
-    id_rol: Optional[int] = None
-    nombres: Optional[str] = None
-    apellidos: Optional[str] = None
-    correo: Optional[str] = None
-    password: Optional[str] = None
-    estado: Optional[bool] = None
+_login_attempts = {}
+_MAX_ATTEMPTS = 5
+_LOCKOUT_SECONDS = 300
 
 
 @router.post("/register", response_model=UserResponse, status_code=201)
@@ -36,8 +30,15 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
     if await repo.email_exists(data.correo):
         raise HTTPException(status_code=400, detail="El correo ya está registrado")
 
+    from sqlalchemy import select
+    from app.models.roles import Rol
+    result = await db.execute(select(Rol).where(Rol.nombre == "VENTAS"))
+    rol = result.scalar_one_or_none()
+    if not rol:
+        raise HTTPException(status_code=500, detail="Rol por defecto no encontrado")
+
     user = Usuario(
-        id_rol=data.id_rol,
+        id_rol=rol.id_rol,
         nombres=data.nombres,
         apellidos=data.apellidos,
         correo=data.correo,
@@ -49,18 +50,37 @@ async def register(data: UserCreate, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=Token)
 async def login(data: UserLogin, response: Response, db: AsyncSession = Depends(get_db)):
+    import time
+    now = time.time()
+    email = data.correo.lower().strip()
+
+    if email in _login_attempts:
+        attempts, lockout_until = _login_attempts[email]
+        if lockout_until and now < lockout_until:
+            remaining = int(lockout_until - now)
+            raise HTTPException(status_code=429, detail=f"Demasiados intentos. Intente de nuevo en {remaining} segundos")
+        if lockout_until and now >= lockout_until:
+            _login_attempts[email] = (0, None)
+
     repo = UserRepository(db)
     user = await repo.get_by_email(data.correo)
 
     if not user or not verify_password(data.password, user.password_hash):
+        attempts, _ = _login_attempts.get(email, (0, None))
+        attempts += 1
+        lockout_until = now + _LOCKOUT_SECONDS if attempts >= _MAX_ATTEMPTS else None
+        _login_attempts[email] = (attempts, lockout_until)
+        if attempts >= _MAX_ATTEMPTS:
+            raise HTTPException(status_code=429, detail="Demasiados intentos. Cuenta bloqueada temporalmente")
         raise HTTPException(status_code=401, detail="Credenciales incorrectas")
+
+    _login_attempts.pop(email, None)
 
     if not user.estado:
         raise HTTPException(status_code=403, detail="Usuario desactivado")
 
     token = create_access_token({"sub": str(user.id_usuario)})
     
-    # Establecer token en httpOnly cookie
     set_token_cookie(response, token)
     
     return Token(

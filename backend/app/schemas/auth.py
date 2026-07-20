@@ -3,7 +3,6 @@ from typing import Optional
 
 
 class UserCreate(BaseModel):
-    id_rol: int
     nombres: str = Field(..., min_length=2, max_length=100)
     apellidos: str = Field(..., min_length=2, max_length=100)
     correo: EmailStr
@@ -25,6 +24,15 @@ class UserResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+class UserUpdate(BaseModel):
+    id_rol: Optional[int] = None
+    nombres: Optional[str] = None
+    apellidos: Optional[str] = None
+    correo: Optional[str] = None
+    password: Optional[str] = None
+    estado: Optional[bool] = None
 
 
 class Token(BaseModel):

@@ -22,7 +22,6 @@ class DetalleVentaResponse(BaseModel):
 
 
 class VentaCreate(BaseModel):
-    id_usuario: int
     detalles: List[DetalleVentaCreate] = Field(..., min_length=1)
 
     @field_validator('detalles')

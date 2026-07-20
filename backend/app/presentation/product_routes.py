@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.exc import IntegrityError
 from app.core.database import get_db
 from app.repositories.product_repository import ProductRepository
 from app.schemas.product import ProductCreate, ProductUpdate, ProductResponse
@@ -27,12 +28,15 @@ async def get_stats(
     db: AsyncSession = Depends(get_db),
     user=Depends(require_permission("PRODUCTOS_LEER"))
 ):
-    repo = ProductRepository(db)
-    products = await repo.get_all()
-    
-    total = len(products)
-    total_value = sum(float(p.precio_venta) for p in products if p.precio_venta)
-    
+    from sqlalchemy import text
+    result = await db.execute(text("SELECT COUNT(*) as total FROM producto"))
+    row = result.fetchone()
+    total = row.total if row else 0
+
+    result2 = await db.execute(text("SELECT COALESCE(SUM(precio_venta), 0) as total_value FROM producto"))
+    row2 = result2.fetchone()
+    total_value = float(row2.total_value) if row2 else 0.0
+
     return {
         "total_products": total,
         "total_inventory_value": round(total_value, 2)
@@ -74,8 +78,11 @@ async def create_product(
         raise HTTPException(status_code=400, detail="El código del producto ya existe")
     
     product = Producto(**data.model_dump())
-    created = await repo.create(product)
-    return created
+    try:
+        created = await repo.create(product)
+        return created
+    except IntegrityError:
+        raise HTTPException(status_code=400, detail="Error de integridad al crear producto")
 
 
 @router.put("/{product_id}", response_model=ProductResponse)

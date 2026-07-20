@@ -1,4 +1,4 @@
-from sqlalchemy import select, desc, text
+from sqlalchemy import select, desc, text, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.models.historial_predicciones import HistorialPrediccion
 from typing import List, Optional
@@ -94,3 +94,52 @@ class HistorialPrediccionRepository:
         )
         await self.db.commit()
         return result.rowcount
+
+    async def archivar_expiradas(self) -> int:
+        """Archiva predicciones cuya fecha_prediccion + horizonte_dias ya pasó (expiradas)."""
+        from app.models.predicciones import Prediccion
+        from datetime import date
+
+        today = date.today()
+
+        result = await self.db.execute(
+            text("""
+                SELECT id_prediccion, id_producto, id_modelo, fecha_prediccion,
+                       periodo, demanda_estimada, confianza_min, confianza_max,
+                       horizonte_dias, porcentaje_confianza
+                FROM prediccion
+                WHERE DATE_ADD(fecha_prediccion, INTERVAL horizonte_dias DAY) < :today
+            """),
+            {"today": today}
+        )
+        rows = result.fetchall()
+
+        if not rows:
+            return 0
+
+        for row in rows:
+            historial = HistorialPrediccion(
+                id_producto=row.id_producto,
+                id_modelo=row.id_modelo,
+                fecha_prediccion=row.fecha_prediccion,
+                periodo=row.periodo,
+                demanda_estimada=row.demanda_estimada,
+                confianza_min=float(row.confianza_min) if row.confianza_min else None,
+                confianza_max=float(row.confianza_max) if row.confianza_max else None,
+                horizonte_dias=row.horizonte_dias,
+                porcentaje_confianza=float(row.porcentaje_confianza) if row.porcentaje_confianza else None,
+                motivo="EXPIRADA",
+            )
+            self.db.add(historial)
+
+        # Eliminar las predicciones expiradas de la tabla activa
+        pred_ids = [row.id_prediccion for row in rows]
+        placeholders = ", ".join([f":pid_{i}" for i in range(len(pred_ids))])
+        params = {f"pid_{i}": pid for i, pid in enumerate(pred_ids)}
+        await self.db.execute(
+            text(f"DELETE FROM prediccion WHERE id_prediccion IN ({placeholders})"),
+            params
+        )
+
+        await self.db.commit()
+        return len(rows)

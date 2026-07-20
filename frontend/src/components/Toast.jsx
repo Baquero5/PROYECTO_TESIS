@@ -1,12 +1,15 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 
 export default function Toast({ message, type = 'error', onClose, duration = 4000 }) {
+    const onCloseRef = useRef(onClose);
+    onCloseRef.current = onClose;
+
     useEffect(() => {
         const timer = setTimeout(() => {
-            onClose();
+            onCloseRef.current();
         }, duration);
         return () => clearTimeout(timer);
-    }, [duration, onClose]);
+    }, [duration]);
 
     const icons = {
         error: '✕',
@@ -25,7 +28,7 @@ export default function Toast({ message, type = 'error', onClose, duration = 400
     const style = colors[type];
 
     return (
-        <div style={{
+        <div className="toast-container" style={{
             position: 'fixed',
             top: '20px',
             right: '20px',

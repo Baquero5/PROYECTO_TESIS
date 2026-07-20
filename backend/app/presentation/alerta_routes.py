@@ -156,14 +156,15 @@ async def detect_alerts(
     inventarios = await inv_repo.get_all()
 
     for inv in inventarios:
-        existe_alerta = await al_repo.get_active_by_product(inv.id_producto)
-        if existe_alerta:
-            continue
+        existe_critica = await al_repo.get_active_by_product(inv.id_producto, "CRITICA")
+        existe_preventiva = await al_repo.get_active_by_product(inv.id_producto, "PREVENTIVA")
 
         producto = await prod_repo.get_by_id(inv.id_producto)
         nombre_producto = producto.nombre if producto else f"#{inv.id_producto}"
 
         if inv.stock_actual <= inv.stock_minimo and inv.stock_minimo > 0:
+            if existe_critica:
+                continue
             alerta = Alerta(
                 id_producto=inv.id_producto,
                 tipo_alerta="CRITICA",
@@ -174,6 +175,8 @@ async def detect_alerts(
             alertas_creadas.append({"producto": nombre_producto, "tipo": "CRITICA"})
 
         elif inv.stock_maximo > 0 and inv.stock_actual <= inv.stock_minimo * 1.5 and inv.stock_minimo > 0:
+            if existe_preventiva:
+                continue
             alerta = Alerta(
                 id_producto=inv.id_producto,
                 tipo_alerta="PREVENTIVA",

@@ -52,7 +52,6 @@ export default function Prediccion() {
 
     useEffect(() => {
         loadData();
-        loadKpis();
     }, []);
 
     useEffect(() => {
@@ -78,8 +77,12 @@ export default function Prediccion() {
     useEffect(() => {
         if (selectedProducts.length >= 1) {
             loadHistorial(selectedProducts[0]);
+            loadPrediccionesByProductos(selectedProducts);
+            loadKpis(selectedProducts);
         } else {
             setHistorialVentas([]);
+            setPredicciones([]);
+            setKpis(null);
         }
     }, [selectedProducts]);
 
@@ -90,16 +93,14 @@ export default function Prediccion() {
     }, [modelosSeleccionados]);
 
     const loadData = async () => {
-        const [prodRes, predRes, modelosRes, catRes, subRes] = await Promise.allSettled([
+        const [prodRes, modelosRes, catRes, subRes] = await Promise.allSettled([
             api.get('/products?limit=2000'),
-            api.get('/predicciones'),
             api.get('/modelos-ia'),
             api.get('/categorias'),
             api.get('/subcategorias')
         ]);
 
         if (prodRes.status === 'fulfilled') setProductos(prodRes.value.data);
-        if (predRes.status === 'fulfilled') setPredicciones(predRes.value.data);
         if (catRes.status === 'fulfilled') setCategorias(catRes.value.data);
         if (subRes.status === 'fulfilled') setSubcategorias(subRes.value.data);
         if (modelosRes.status === 'fulfilled') {
@@ -109,21 +110,50 @@ export default function Prediccion() {
             if (activo) setModelosSeleccionados([activo.id_modelo]);
         }
 
-        const hasError = [prodRes, predRes, modelosRes, catRes, subRes].some(r => r.status === 'rejected');
+        const hasError = [prodRes, modelosRes, catRes, subRes].some(r => r.status === 'rejected');
         if (hasError) setToast({ message: 'Algunos datos no se pudieron cargar', type: 'warning' });
+
+        // Archivar predicciones expiradas al cargar la página
+        try {
+            const archivadas = await api.post('/predicciones/archivar-expiradas');
+            if (archivadas.data.archivadas > 0) {
+                setToast({ message: `${archivadas.data.archivadas} predicciones expiradas archivadas automáticamente`, type: 'info' });
+            }
+        } catch (err) {
+            // Silencioso - no bloquea la carga
+        }
 
         setLoading(false);
     };
 
-    const loadKpis = async () => {
+    const loadKpis = async (productoIds = null) => {
         setLoadingKpis(true);
         try {
-            const response = await api.get('/predicciones/kpis');
+            let url = '/predicciones/kpis';
+            if (productoIds && productoIds.length > 0) {
+                url += `?ids_productos=${productoIds.join(',')}`;
+            }
+            const response = await api.get(url);
             setKpis(response.data);
         } catch (err) {
             console.error('Error loading KPIs:', err);
         } finally {
             setLoadingKpis(false);
+        }
+    };
+
+    const loadPrediccionesByProductos = async (productoIds) => {
+        if (!productoIds || productoIds.length === 0) {
+            setPredicciones([]);
+            return;
+        }
+        try {
+            const idsParam = productoIds.join(',');
+            const response = await api.get(`/predicciones?ids_productos=${idsParam}`);
+            setPredicciones(response.data);
+        } catch (err) {
+            console.error('Error loading predicciones:', err);
+            setPredicciones([]);
         }
     };
 
@@ -197,8 +227,8 @@ export default function Prediccion() {
             
             await api.post('/predicciones/predecir', payload);
             setToast({ message: 'Predicción generada exitosamente', type: 'success' });
-            loadData();
-            loadKpis();
+            await loadPrediccionesByProductos(selectedProducts);
+            await loadKpis(selectedProducts);
         } catch (err) {
             setToast({ message: err.response?.data?.detail || 'Error al generar predicción', type: 'error' });
         } finally {
@@ -244,8 +274,9 @@ export default function Prediccion() {
                 });
             }
 
-            loadData();
-            loadKpis();
+            await loadData();
+            await loadPrediccionesByProductos(selectedProducts);
+            await loadKpis(selectedProducts);
         } catch (err) {
             setToast({ message: err.response?.data?.detail || 'Error al generar predicciones', type: 'error' });
         } finally {
@@ -259,7 +290,9 @@ export default function Prediccion() {
         : [];
 
     const prediccionesModeloActivo = modeloActivoTab
-        ? prediccionesProducto.filter(p => p.id_modelo === modeloActivoTab)
+        ? (prediccionesProducto.filter(p => p.id_modelo === modeloActivoTab).length > 0
+            ? prediccionesProducto.filter(p => p.id_modelo === modeloActivoTab)
+            : prediccionesProducto)
         : prediccionesProducto;
 
     const getProducto = (id) => productos.find(p => p.id_producto === id);
@@ -659,7 +692,7 @@ export default function Prediccion() {
                         </div>
                     ) : (
                         <div style={{ height: '350px', padding: '16px' }}>
-                            <Line data={prepareChartData()} options={chartOptions} />
+                            <Line key={`chart-${selectedProducts.join('-')}-${modelosSeleccionados.join('-')}-${predicciones.length}`} data={prepareChartData()} options={chartOptions} redraw={true} />
                         </div>
                     )}
                 </div>
@@ -764,7 +797,7 @@ export default function Prediccion() {
                     <ExportButtons
                         data={(modelosSeleccionados.length > 1 && modeloActivoTab
                             ? prediccionesModeloActivo
-                            : selectedProducts.length > 0 ? prediccionesProducto : predicciones
+                            : prediccionesProducto
                         ).slice(0, 200).map(pred => {
                             const prod = getProducto(pred.id_producto);
                             const modelo = modelos.find(m => m.id_modelo === pred.id_modelo);
@@ -806,7 +839,7 @@ export default function Prediccion() {
                 </div>
                 {predicciones.length === 0 ? (
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '200px', color: 'var(--gray-500)' }}>
-                        <p>No hay predicciones registradas. Seleccione un producto y genere una predicción.</p>
+                        <p>No hay predicciones para los productos seleccionados. Seleccione un producto y genere una predicción.</p>
                     </div>
                 ) : (
                     <>
@@ -863,7 +896,7 @@ export default function Prediccion() {
                                 <tbody>
                                     {(modelosSeleccionados.length > 1 && modeloActivoTab
                                         ? prediccionesModeloActivo
-                                        : selectedProducts.length > 0 ? prediccionesProducto : predicciones
+                                        : prediccionesProducto
                                     ).sort((a, b) => (a.fecha_prediccion || '').localeCompare(b.fecha_prediccion || '')).slice(0, 200).map(pred => {
                                         const prod = getProducto(pred.id_producto);
                                         return (
@@ -910,11 +943,11 @@ export default function Prediccion() {
             <div className="grid-3">
                 <div className="card">
                     <div className="card-title">Total Predicciones</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{predicciones.length}</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--primary)' }}>{prediccionesProducto.length}</div>
                 </div>
                 <div className="card">
                     <div className="card-title">Productos con Predicciones</div>
-                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>{new Set(predicciones.map(p => p.id_producto)).size}</div>
+                    <div style={{ fontSize: '2rem', fontWeight: 'bold', color: 'var(--success)' }}>{new Set(prediccionesProducto.map(p => p.id_producto)).size}</div>
                 </div>
                 <div className="card">
                     <div className="card-title">Modelos Activos</div>

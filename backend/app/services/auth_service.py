@@ -46,7 +46,7 @@ def set_token_cookie(response: Response, token: str):
         key="access_token",
         value=token,
         httponly=True,
-        secure=False,  # True en producción con HTTPS
+        secure=not settings.DEBUG,
         samesite="lax",
         max_age=settings.ACCESS_TOKEN_EXPIRE_MINUTES * 60,
         path="/",
@@ -58,7 +58,7 @@ def clear_token_cookie(response: Response):
     response.delete_cookie(
         key="access_token",
         httponly=True,
-        secure=False,
+        secure=not settings.DEBUG,
         samesite="lax",
         path="/",
     )
@@ -101,16 +101,29 @@ async def get_current_user(
     return user
 
 
-async def require_admin(user: Usuario = Depends(get_current_user)) -> Usuario:
+async def require_admin(
+    request: Request,
+    user: Usuario = Depends(get_current_user),
+) -> Usuario:
     from sqlalchemy import select
     from app.models.roles import Rol
-    from app.core.database import AsyncSessionLocal
-    
-    async with AsyncSessionLocal() as db:
-        result = await db.execute(select(Rol).where(Rol.id_rol == user.id_rol))
-        rol = result.scalar_one_or_none()
-        if not rol or rol.nombre != "ADMINISTRADOR":
-            raise HTTPException(status_code=403, detail="Se requieren permisos de administrador")
+
+    token = await get_token_from_request(request)
+    payload = decode_token(token)
+    user_id = payload.get("sub")
+    if user_id is None:
+        raise HTTPException(status_code=401, detail="Token inválido")
+
+    repo = UserRepository(get_db.__wrapped__ if hasattr(get_db, '__wrapped__') else None)
+    db: AsyncSession = None
+    async for session in get_db():
+        db = session
+        break
+
+    result = await db.execute(select(Rol).where(Rol.id_rol == user.id_rol))
+    rol = result.scalar_one_or_none()
+    if not rol or rol.nombre != "ADMINISTRADOR":
+        raise HTTPException(status_code=403, detail="Se requieren permisos de administrador")
     return user
 
 

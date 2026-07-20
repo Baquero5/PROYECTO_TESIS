@@ -129,13 +129,34 @@ class MLMetricsService:
         if not features:
             return None
 
-        import random
-        random.seed(42)
-        importance_data = [
-            {"feature": f, "importance": round(random.uniform(0.02, 0.12), 4)}
-            for f in features
-        ]
-        importance_data.sort(key=lambda x: x["importance"], reverse=True)
+        importance_data = []
+
+        try:
+            import joblib
+            from pathlib import Path
+
+            backend_dir = Path(__file__).resolve().parent.parent.parent
+            models_path = backend_dir / "ml_models"
+
+            for model_file in ["xgboost_model.pkl", "lightgbm_model.pkl"]:
+                model_path = models_path / model_file
+                if model_path.exists():
+                    model = joblib.load(model_path)
+                    if hasattr(model, 'feature_importances_') and len(model.feature_importances_) == len(features):
+                        importance_data = [
+                            {"feature": f, "importance": round(float(imp), 4)}
+                            for f, imp in zip(features, model.feature_importances_)
+                        ]
+                        importance_data.sort(key=lambda x: x["importance"], reverse=True)
+                        break
+        except Exception:
+            importance_data = []
+
+        if not importance_data:
+            importance_data = [
+                {"feature": f, "importance": 0.0}
+                for f in features
+            ]
 
         return {
             "features": importance_data[:10],

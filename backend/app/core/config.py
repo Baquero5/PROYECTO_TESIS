@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from functools import lru_cache
+import secrets
 
 
 class Settings(BaseSettings):
@@ -8,9 +9,11 @@ class Settings(BaseSettings):
     DEBUG: bool = False
 
     DATABASE_URL: str = "mysql+aiomysql://root:123456@localhost:3307/TESIS"
-    SECRET_KEY: str = "smartinventory-tesis-2026-secret-key-fijo"
+    SECRET_KEY: str = secrets.token_urlsafe(64)
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 60
+
+    ADMIN_DEFAULT_PASSWORD: str = "Admin123!"
 
     CORS_ORIGINS: list = ["http://localhost:5173", "http://localhost:3000"]
     CORS_ALLOW_CREDENTIALS: bool = True
@@ -20,7 +23,9 @@ class Settings(BaseSettings):
 
     class Config:
         env_file = ".env"
+        env_file_encoding = "utf-8"
         case_sensitive = True
+        extra = "ignore"
 
 
 @lru_cache()

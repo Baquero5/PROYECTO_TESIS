@@ -23,16 +23,17 @@ export default function ErrorDistribution({ errors = [] }) {
     const bins = 15;
     const min = Math.min(...errors);
     const max = Math.max(...errors);
-    const binWidth = (max - min) / bins;
+    const range = max - min;
+    const binWidth = range === 0 ? 1 : range / bins;
 
-    const histogram = Array(bins).fill(0);
+    const histogram = Array(range === 0 ? 1 : bins).fill(0);
     errors.forEach(err => {
-        const idx = Math.min(Math.floor((err - min) / binWidth), bins - 1);
+        const idx = range === 0 ? 0 : Math.min(Math.floor((err - min) / binWidth), bins - 1);
         histogram[idx]++;
     });
 
     const labels = histogram.map((_, i) => {
-        const start = min + i * binWidth;
+        const start = range === 0 ? min : min + i * binWidth;
         return `${start.toFixed(1)}`;
     });
 

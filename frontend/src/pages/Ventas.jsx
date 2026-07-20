@@ -1,9 +1,11 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
 
 export default function Ventas() {
+    const { user } = useAuth();
     const [ventas, setVentas] = useState([]);
     const [productos, setProductos] = useState([]);
     const [inventario, setInventario] = useState([]);
@@ -42,16 +44,19 @@ export default function Ventas() {
     };
 
     const addDetalle = () => {
-        setDetalles([...detalles, { id_producto: '', cantidad: 1, precio_unitario: 0 }]);
+        setDetalles([...detalles, { _key: Date.now(), id_producto: '', cantidad: 1, precio_unitario: 0 }]);
     };
 
     const updateDetalle = (index, field, value) => {
-        const newDetalles = [...detalles];
-        newDetalles[index][field] = value;
-        if (field === 'id_producto') {
-            const prod = productos.find(p => p.id_producto === parseInt(value));
-            if (prod) newDetalles[index].precio_unitario = prod.precio_venta;
-        }
+        const newDetalles = detalles.map((det, i) => {
+            if (i !== index) return det;
+            const updated = { ...det, [field]: value };
+            if (field === 'id_producto') {
+                const prod = productos.find(p => p.id_producto === parseInt(value));
+                if (prod) updated.precio_unitario = prod.precio_venta;
+            }
+            return updated;
+        });
         setDetalles(newDetalles);
         setErrors({ ...errors, detalles: '' });
     };
@@ -99,9 +104,8 @@ export default function Ventas() {
             return;
         }
         try {
-            const user = JSON.parse(localStorage.getItem('user'));
             await api.post('/ventas', {
-                id_usuario: user.id_usuario,
+                id_usuario: user?.id_usuario,
                 detalles: detalles.map(d => ({
                     id_producto: parseInt(d.id_producto),
                     cantidad: parseInt(d.cantidad),
@@ -285,7 +289,7 @@ export default function Ventas() {
                                         {detalles.map((det, idx) => {
                                             const stock = getStock(parseInt(det.id_producto));
                                             return (
-                                                <tr key={idx}>
+                                                <tr key={det._key || idx}>
                                                     <td>
                                                         <select value={det.id_producto}
                                                             onChange={(e) => updateDetalle(idx, 'id_producto', e.target.value)}

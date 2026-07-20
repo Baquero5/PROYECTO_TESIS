@@ -9,7 +9,7 @@ from app.schemas.prediccion import PrediccionCreate, PrediccionResponse, Predicc
 from app.services.ml_service import ml_service
 from app.services.auth_service import require_permission
 from app.models.predicciones import Prediccion
-from typing import List
+from typing import List, Dict
 import pandas as pd
 import asyncio
 from concurrent.futures import ThreadPoolExecutor
@@ -19,8 +19,9 @@ from functools import partial
 # Thread pool para predicciones ML (no bloquea event loop)
 _ml_executor = ThreadPoolExecutor(max_workers=4)
 
-# Lock por producto para evitar race conditions
-_product_locks = {}
+# Lock por producto para evitar race conditions (thread-safe con defaultdict)
+_product_locks: Dict[int, asyncio.Lock] = {}
+_product_locks_init = asyncio.Lock()
 
 router = APIRouter(prefix="/api/predicciones", tags=["Predicciones"])
 
@@ -28,6 +29,7 @@ router = APIRouter(prefix="/api/predicciones", tags=["Predicciones"])
 @router.get("", response_model=List[PrediccionResponse])
 async def get_predicciones(
     id_modelo: int = None,
+    ids_productos: str = None,
     db: AsyncSession = Depends(get_db),
     user=Depends(require_permission("PREDICCION_IA_LEER"))
 ):
@@ -50,9 +52,18 @@ async def get_predicciones(
         INNER JOIN producto p ON pr.id_producto = p.id_producto
     """
     params = {}
+    conditions = []
     if id_modelo:
-        query += " WHERE pr.id_modelo = :id_modelo"
+        conditions.append("pr.id_modelo = :id_modelo")
         params["id_modelo"] = id_modelo
+    if ids_productos:
+        ids_list = [int(x) for x in ids_productos.split(",") if x.strip()]
+        placeholders = ", ".join([f":id_prod_{i}" for i in range(len(ids_list))])
+        conditions.append(f"pr.id_producto IN ({placeholders})")
+        for i, pid in enumerate(ids_list):
+            params[f"id_prod_{i}"] = pid
+    if conditions:
+        query += " WHERE " + " AND ".join(conditions)
     query += " ORDER BY pr.fecha_prediccion DESC"
     result = await db.execute(text(query), params)
     rows = result.fetchall()
@@ -83,33 +94,39 @@ async def get_predicciones(
 
 @router.get("/kpis", response_model=KPIsResponse)
 async def get_kpis_prediccion(
+    ids_productos: str = None,
     db: AsyncSession = Depends(get_db),
     user=Depends(require_permission("PREDICCION_IA_LEER"))
 ):
     """
     Calcula KPIs de rentabilidad basados en las predicciones existentes.
     Retorna: ingreso esperado, ganancia esperada, productos más rentables.
+    Si se proporciona ids_productos, filtra solo esos productos.
     """
-    result = await db.execute(
-        text("""
-            SELECT 
-                p.id_producto,
-                p.codigo,
-                p.nombre,
-                p.precio_venta,
-                p.precio_compra,
-                COALESCE(SUM(pred.demanda_estimada), 0) as demanda_total,
-                COALESCE(SUM(pred.confianza_min), 0) as demanda_minima,
-                COALESCE(SUM(pred.confianza_max), 0) as demanda_maxima
-            FROM producto p
-            INNER JOIN prediccion pred ON p.id_producto = pred.id_producto
-            INNER JOIN modelo_ia m ON pred.id_modelo = m.id_modelo
-            WHERE p.estado = 1 AND m.estado = 'ACTIVO'
-            GROUP BY p.id_producto, p.codigo, p.nombre, p.precio_venta, p.precio_compra
-            HAVING demanda_total > 0
-            ORDER BY demanda_total DESC
-        """)
-    )
+    query = """
+        SELECT 
+            p.id_producto,
+            p.codigo,
+            p.nombre,
+            p.precio_venta,
+            p.precio_compra,
+            COALESCE(SUM(pred.demanda_estimada), 0) as demanda_total,
+            COALESCE(SUM(pred.confianza_min), 0) as demanda_minima,
+            COALESCE(SUM(pred.confianza_max), 0) as demanda_maxima
+        FROM producto p
+        INNER JOIN prediccion pred ON p.id_producto = pred.id_producto
+        INNER JOIN modelo_ia m ON pred.id_modelo = m.id_modelo
+        WHERE p.estado = 1 AND m.estado = 'ACTIVO'
+    """
+    params = {}
+    if ids_productos:
+        ids_list = [int(x) for x in ids_productos.split(",") if x.strip()]
+        placeholders = ", ".join([f":id_prod_{i}" for i in range(len(ids_list))])
+        query += f" AND p.id_producto IN ({placeholders})"
+        for i, pid in enumerate(ids_list):
+            params[f"id_prod_{i}"] = pid
+    query += " GROUP BY p.id_producto, p.codigo, p.nombre, p.precio_venta, p.precio_compra HAVING demanda_total > 0 ORDER BY demanda_total DESC"
+    result = await db.execute(text(query), params)
     rows = result.fetchall()
     
     productos_kpi = []
@@ -215,6 +232,17 @@ async def create_prediccion(
     return await repo.create(prediccion)
 
 
+@router.post("/archivar-expiradas")
+async def archivar_predicciones_expiradas(
+    db: AsyncSession = Depends(get_db),
+    user=Depends(require_permission("PREDICCION_IA_LEER"))
+):
+    """Archiva predicciones que ya pasaron su fecha fin (fecha_prediccion + horizonte_dias)."""
+    hist_repo = HistorialPrediccionRepository(db)
+    archivadas = await hist_repo.archivar_expiradas()
+    return {"archivadas": archivadas, "mensaje": f"{archivadas} predicciones expiradas archivadas"}
+
+
 @router.post("/predecir", response_model=List[PrediccionResponse], status_code=201)
 async def predecir_demanda(
     data: PrediccionRequest,
@@ -285,8 +313,10 @@ async def predecir_demanda(
             detail=f"Se necesitan al menos 30 días de historial. Hay {len(features_df)} días disponibles."
         )
 
-    predicciones_raw = ml_service.predict_demand(
-        model, features_df, data.horizonte_dias, use_ensemble=use_ensemble
+    loop = asyncio.get_event_loop()
+    predicciones_raw = await loop.run_in_executor(
+        _ml_executor,
+        partial(ml_service.predict_demand, model, features_df, data.horizonte_dias, use_ensemble=use_ensemble)
     )
 
     repo = PrediccionRepository(db)
@@ -364,9 +394,9 @@ async def predecir_lote(
 
     async def predecir_producto_modelo(producto_id: int, modelo_id: int):
         """Predice un producto con un modelo especifico. Thread-safe con lock por producto."""
-        # Lock por producto para evitar race conditions
-        if producto_id not in _product_locks:
-            _product_locks[producto_id] = asyncio.Lock()
+        async with _product_locks_init:
+            if producto_id not in _product_locks:
+                _product_locks[producto_id] = asyncio.Lock()
 
         async with _product_locks[producto_id]:
             modelo_info = modelos_cargados[modelo_id]

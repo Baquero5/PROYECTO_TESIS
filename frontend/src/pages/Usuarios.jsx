@@ -19,12 +19,12 @@ export default function Usuarios() {
 
     const loadData = async () => {
         try {
-            const [usrRes, rolRes] = await Promise.all([
+            const [usrRes, rolRes] = await Promise.allSettled([
                 api.get('/auth/users'),
                 api.get('/roles')
             ]);
-            setUsuarios(usrRes.data);
-            setRoles(rolRes.data);
+            if (usrRes.status === 'fulfilled') setUsuarios(usrRes.value.data);
+            if (rolRes.status === 'fulfilled') setRoles(rolRes.value.data);
         } catch (err) {
             setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {

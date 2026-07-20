@@ -30,12 +30,12 @@ export default function Inventario() {
 
     const loadData = async () => {
         try {
-            const [invRes, prodRes] = await Promise.all([
+            const [invRes, prodRes] = await Promise.allSettled([
                 api.get('/inventario'),
                 api.get('/products?limit=2000')
             ]);
-            setInventario(invRes.data);
-            setProductos(prodRes.data);
+            if (invRes.status === 'fulfilled') setInventario(invRes.value.data);
+            if (prodRes.status === 'fulfilled') setProductos(prodRes.value.data);
         } catch (err) {
             setToast({ message: 'Error al cargar datos', type: 'error' });
         } finally {
@@ -181,7 +181,7 @@ export default function Inventario() {
 
     const getStockStatus = (inv) => {
         if (inv.stock_actual <= inv.stock_minimo) return { class: 'badge-danger', text: 'Bajo' };
-        if (inv.stock_actual >= inv.stock_maximo * 0.8) return { class: 'badge-warning', text: 'Alto' };
+        if (inv.stock_maximo > 0 && inv.stock_actual >= inv.stock_maximo * 0.8) return { class: 'badge-warning', text: 'Alto' };
         return { class: 'badge-success', text: 'Normal' };
     };
 
