@@ -46,12 +46,12 @@ function AppRoutes() {
                 <Route path="/inventario" element={<Inventario />} />
                 <Route path="/ventas" element={<Ventas />} />
                 <Route path="/alertas" element={
-                    <RoleRoute allowedRoles={[1, 2]}>
+                    <RoleRoute allowedRoles={[1, 2, 3]}>
                         <Alertas />
                     </RoleRoute>
                 } />
                 <Route path="/prediccion" element={
-                    <RoleRoute allowedRoles={[1, 2]}>
+                    <RoleRoute allowedRoles={[1]}>
                         <Prediccion />
                     </RoleRoute>
                 } />
@@ -66,17 +66,17 @@ function AppRoutes() {
                     </RoleRoute>
                 } />
                 <Route path="/usuarios" element={
-                    <RoleRoute allowedRoles={[1, 2]}>
+                    <RoleRoute allowedRoles={[1]}>
                         <Usuarios />
                     </RoleRoute>
                 } />
                 <Route path="/roles" element={
-                    <RoleRoute allowedRoles={[1, 2]}>
+                    <RoleRoute allowedRoles={[1]}>
                         <Roles />
                     </RoleRoute>
                 } />
                 <Route path="/reportes" element={
-                    <RoleRoute allowedRoles={[1, 2]}>
+                    <RoleRoute allowedRoles={[1, 2, 3]}>
                         <Reportes />
                     </RoleRoute>
                 } />

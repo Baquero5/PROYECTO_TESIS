@@ -2,8 +2,10 @@ import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
+import { useAuth } from '../context/AuthContext';
 
 export default function Alertas() {
+    const { user } = useAuth();
     const [alertas, setAlertas] = useState([]);
     const [productos, setProductos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -310,8 +312,12 @@ export default function Alertas() {
                                             <td><span className={`badge ${a.estado === 'ACTIVA' ? 'badge-warning' : 'badge-success'}`}>{a.estado}</span></td>
                                             <td>{a.fecha_alerta ? new Date(a.fecha_alerta).toLocaleDateString() : '-'}</td>
                                             <td>
-                                                <button className="btn btn-outline" style={{ marginRight: '4px' }} onClick={() => handleEdit(a)}>Editar</button>
-                                                <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(a.id_alerta)}>Eliminar</button>
+                                                {user?.id_rol !== 3 && (
+                                                    <>
+                                                        <button className="btn btn-outline" style={{ marginRight: '4px' }} onClick={() => handleEdit(a)}>Editar</button>
+                                                        <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(a.id_alerta)}>Eliminar</button>
+                                                    </>
+                                                )}
                                             </td>
                                         </tr>
                                     );

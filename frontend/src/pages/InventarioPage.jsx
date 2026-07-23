@@ -2,8 +2,10 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
 import ExportButtons from '../components/ExportButtons';
+import { useAuth } from '../context/AuthContext';
 
 export default function Inventario() {
+    const { user } = useAuth();
     const [inventario, setInventario] = useState([]);
     const [productos, setProductos] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -222,9 +224,11 @@ export default function Inventario() {
                             columns={exportColumns}
                             moduleName="inventario"
                         />
-                        <button className="btn btn-primary" onClick={() => setShowModal(true)}>
-                            + Nuevo Registro
-                        </button>
+                        {user?.id_rol !== 3 && (
+                            <button className="btn btn-primary" onClick={() => setShowModal(true)}>
+                                + Nuevo Registro
+                            </button>
+                        )}
                     </div>
                 </div>
 
@@ -257,7 +261,7 @@ export default function Inventario() {
                                 <th style={{ background: 'var(--gray-200)' }}>Stock Mínimo</th>
                                 <th style={{ background: 'var(--gray-200)' }}>Stock Máximo</th>
                                 <th style={{ background: 'var(--gray-200)' }}>Estado</th>
-                                <th style={{ background: 'var(--gray-200)' }}>Acciones</th>
+                                {user?.id_rol !== 3 && <th style={{ background: 'var(--gray-200)' }}>Acciones</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -274,10 +278,12 @@ export default function Inventario() {
                                         <td>{inv.stock_minimo}</td>
                                         <td>{inv.stock_maximo}</td>
                                         <td><span className={`badge ${status.class}`}>{status.text}</span></td>
-                                        <td>
-                                            <button className="btn" style={{ background: 'var(--success)', color: 'white', marginRight: '4px' }} onClick={() => openMovimiento(inv, 'ENTRADA')}>+ Entrada</button>
-                                            <button className="btn" style={{ background: 'var(--warning)', color: 'white' }} onClick={() => openMovimiento(inv, 'SALIDA')}>- Salida</button>
-                                        </td>
+                                            {user?.id_rol !== 3 && (
+                                                <td>
+                                                    <button className="btn" style={{ background: 'var(--success)', color: 'white', marginRight: '4px' }} onClick={() => openMovimiento(inv, 'ENTRADA')}>+ Entrada</button>
+                                                    <button className="btn" style={{ background: 'var(--warning)', color: 'white' }} onClick={() => openMovimiento(inv, 'SALIDA')}>- Salida</button>
+                                                </td>
+                                            )}
                                     </tr>
                                 );
                             })}

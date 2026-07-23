@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Productos() {
+    const { user } = useAuth();
     const [productos, setProductos] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [subcategorias, setSubcategorias] = useState([]);
@@ -245,9 +247,11 @@ export default function Productos() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Gestión de Productos</h3>
-                    <button className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                        + Nuevo Producto
-                    </button>
+                    {user?.id_rol !== 3 && (
+                        <button className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                            + Nuevo Producto
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ marginBottom: '16px', display: 'flex', gap: '12px', flexWrap: 'wrap', alignItems: 'center' }}>
@@ -332,7 +336,7 @@ export default function Productos() {
                                 <th onClick={() => handleSort('estado')} style={{ cursor: 'pointer', userSelect: 'none', background: 'var(--gray-200)' }}>
                                     Estado {getSortIcon('estado')}
                                 </th>
-                                <th style={{ background: 'var(--gray-200)' }}>Acciones</th>
+                                {user?.id_rol !== 3 && <th style={{ background: 'var(--gray-200)' }}>Acciones</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -353,10 +357,12 @@ export default function Productos() {
                                             {prod.estado ? 'Activo' : 'Inactivo'}
                                         </span>
                                     </td>
-                                    <td>
-                                        <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(prod)}>Editar</button>
-                                        <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(prod.id_producto)}>Eliminar</button>
-                                    </td>
+                                    {user?.id_rol !== 3 && (
+                                        <td>
+                                            <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(prod)}>Editar</button>
+                                            <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(prod.id_producto)}>Eliminar</button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                             {loadingMore && (

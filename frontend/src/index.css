@@ -55,6 +55,8 @@
     --dark: #f8fafc;
 }
 
+html { overflow-x: hidden; }
+
 * {
     margin: 0;
     padding: 0;
@@ -67,6 +69,7 @@ body {
     color: var(--gray-800);
     line-height: 1.5;
     transition: var(--transition);
+    overflow-x: hidden;
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -75,7 +78,7 @@ body {
 ::-webkit-scrollbar-thumb:hover { background: var(--gray-500); }
 
 /* ========== LAYOUT ========== */
-.app-container { display: flex; min-height: 100vh; }
+.app-container { display: flex; min-height: 100vh; overflow-x: hidden; }
 
 /* ========== SIDEBAR ========== */
 .sidebar {
@@ -221,6 +224,8 @@ body {
     margin-left: var(--sidebar-width);
     min-height: 100vh;
     transition: var(--transition);
+    overflow-x: hidden;
+    min-width: 0;
 }
 
 .sidebar.collapsed ~ .main-content {
@@ -240,12 +245,24 @@ body {
     position: sticky;
     top: 0;
     z-index: 99;
+    overflow: hidden;
+    gap: 12px;
 }
 
-.page-title h1 { font-size: 1.5rem; font-weight: 600; color: var(--gray-800); }
-.page-title p { font-size: 0.8rem; color: var(--gray-500); margin-top: 2px; }
+.top-header > div:first-child {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+    flex: 1;
+    overflow: hidden;
+}
 
-.header-actions { display: flex; align-items: center; gap: 20px; }
+.page-title { min-width: 0; flex: 1; overflow: hidden; }
+.page-title h1 { font-size: 1.5rem; font-weight: 600; color: var(--gray-800); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.page-title p { font-size: 0.8rem; color: var(--gray-500); margin-top: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.header-actions { display: flex; align-items: center; gap: 20px; flex-shrink: 0; }
 
 .theme-toggle {
     background: var(--gray-200);
@@ -286,7 +303,7 @@ body {
 .user-name { font-weight: 500; font-size: 0.85rem; }
 
 /* ========== CONTENT AREA ========== */
-.content-area { padding: 32px; }
+.content-area { padding: 32px; overflow-x: hidden; }
 
 /* ========== CARDS ========== */
 .card {
@@ -317,6 +334,8 @@ body {
 .grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
 .grid-4 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 20px; }
 
+.grid-2 > *, .grid-3 > *, .grid-4 > * { min-width: 0; }
+
 /* ========== KPI CARDS ========== */
 .kpi-card {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
@@ -344,15 +363,21 @@ body {
     letter-spacing: 1px;
     opacity: 0.8;
     margin-bottom: 8px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
-.kpi-value { font-size: 2rem; font-weight: 700; margin-bottom: 4px; }
+.kpi-value { font-size: 2rem; font-weight: 700; margin-bottom: 4px; overflow: hidden; text-overflow: ellipsis; }
 
 .kpi-change {
     font-size: 0.7rem;
     display: flex;
     align-items: center;
     gap: 4px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
 }
 
 .kpi-change.positive { color: #a7f3d0; }
@@ -541,11 +566,12 @@ body {
     display: none;
     background: none;
     border: none;
-    font-size: 1.8rem;
+    font-size: 1.5rem;
     cursor: pointer;
-    padding: 0;
-    margin-right: 15px;
+    padding: 4px;
+    margin-right: 8px;
     color: var(--gray-800);
+    flex-shrink: 0;
 }
 
 @media (max-width: 1024px) {
@@ -556,12 +582,20 @@ body {
 @media (max-width: 768px) {
     .sidebar { transform: translateX(-100%); position: fixed; z-index: 1000; }
     .sidebar.open { transform: translateX(0); }
-    .main-content { margin-left: 0; }
-    .mobile-toggle { display: block; }
+    .main-content { margin-left: 0 !important; width: 100% !important; box-sizing: border-box; }
+    .mobile-toggle { display: block; flex-shrink: 0; }
     .grid-2, .grid-3, .grid-4 { grid-template-columns: 1fr; }
-    .content-area { padding: 16px; }
-    .top-header { padding: 0 16px; }
-    .page-title h1 { font-size: 1.2rem; }
+    .content-area { padding: 12px; }
+    .grid-4 { gap: 10px; }
+    .top-header { padding: 0 12px; height: auto; min-height: 56px; flex-wrap: nowrap; }
+    .page-title h1 { font-size: 0.85rem; }
+    .page-title p { font-size: 0.65rem; }
+    .header-actions { gap: 8px; }
+    .header-actions .theme-toggle { padding: 6px; }
+    .user-info { display: none; }
+    .card { margin-bottom: 12px; padding: 14px; }
+    .kpi-card { padding: 14px; }
+    .kpi-value { font-size: 1.5rem; }
 
     /* MultiSelect dropdown - prevent clipping on mobile */
     .multiselect-dropdown {

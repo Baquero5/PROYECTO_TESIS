@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Categorias() {
+    const { user } = useAuth();
     const [categorias, setCategorias] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -105,9 +107,11 @@ export default function Categorias() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Gestión de Categorías</h3>
-                    <button className="btn btn-primary" onClick={openModal}>
-                        + Nueva Categoría
-                    </button>
+                    {user?.id_rol !== 3 && (
+                        <button className="btn btn-primary" onClick={openModal}>
+                            + Nueva Categoría
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>
@@ -127,7 +131,7 @@ export default function Categorias() {
                                 <th>ID</th>
                                 <th>Nombre</th>
                                 <th>Descripción</th>
-                                <th>Acciones</th>
+                                {user?.id_rol !== 3 && <th>Acciones</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -138,10 +142,12 @@ export default function Categorias() {
                                     <td>{cat.id_categoria}</td>
                                     <td><strong>{cat.nombre}</strong></td>
                                     <td>{cat.descripcion || '-'}</td>
-                                    <td>
-                                        <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(cat)}>Editar</button>
-                                        <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(cat.id_categoria)}>Eliminar</button>
-                                    </td>
+                                    {user?.id_rol !== 3 && (
+                                        <td>
+                                            <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(cat)}>Editar</button>
+                                            <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(cat.id_categoria)}>Eliminar</button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

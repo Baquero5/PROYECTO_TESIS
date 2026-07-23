@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Subcategorias() {
+    const { user } = useAuth();
     const [subcategorias, setSubcategorias] = useState([]);
     const [categorias, setCategorias] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -130,9 +132,11 @@ export default function Subcategorias() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Gestión de Subcategorías</h3>
-                    <button className="btn btn-primary" onClick={openModal}>
-                        + Nueva Subcategoría
-                    </button>
+                    {user?.id_rol !== 3 && (
+                        <button className="btn btn-primary" onClick={openModal}>
+                            + Nueva Subcategoría
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
@@ -163,7 +167,7 @@ export default function Subcategorias() {
                                 <th>Nombre</th>
                                 <th>Categoría</th>
                                 <th>Descripción</th>
-                                <th>Acciones</th>
+                                {user?.id_rol !== 3 && <th>Acciones</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -175,10 +179,12 @@ export default function Subcategorias() {
                                     <td><strong>{sub.nombre}</strong></td>
                                     <td>{getNombreCategoria(sub.id_categoria)}</td>
                                     <td>{sub.descripcion || '-'}</td>
-                                    <td>
-                                        <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(sub)}>Editar</button>
-                                        <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(sub.id_subcategoria)}>Eliminar</button>
-                                    </td>
+                                    {user?.id_rol !== 3 && (
+                                        <td>
+                                            <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(sub)}>Editar</button>
+                                            <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(sub.id_subcategoria)}>Eliminar</button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>

@@ -1,8 +1,10 @@
 import { useState, useEffect } from 'react';
 import api from '../services/api';
 import Toast from '../components/Toast';
+import { useAuth } from '../context/AuthContext';
 
 export default function Proveedores() {
+    const { user } = useAuth();
     const [proveedores, setProveedores] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -122,9 +124,11 @@ export default function Proveedores() {
             <div className="card">
                 <div className="card-header">
                     <h3 className="card-title">Gestión de Proveedores</h3>
-                    <button className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
-                        + Nuevo Proveedor
-                    </button>
+                    {user?.id_rol !== 3 && (
+                        <button className="btn btn-primary" onClick={() => { resetForm(); setShowModal(true); }}>
+                            + Nuevo Proveedor
+                        </button>
+                    )}
                 </div>
 
                 <div style={{ marginBottom: '16px' }}>
@@ -146,7 +150,7 @@ export default function Proveedores() {
                                 <th>RUC</th>
                                 <th>Teléfono</th>
                                 <th>Correo</th>
-                                <th>Acciones</th>
+                                {user?.id_rol !== 3 && <th>Acciones</th>}
                             </tr>
                         </thead>
                         <tbody>
@@ -159,10 +163,12 @@ export default function Proveedores() {
                                     <td>{prov.ruc}</td>
                                     <td>{prov.telefono || '-'}</td>
                                     <td>{prov.correo || '-'}</td>
-                                    <td>
-                                        <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(prov)}>Editar</button>
-                                        <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(prov.id_proveedor)}>Eliminar</button>
-                                    </td>
+                                    {user?.id_rol !== 3 && (
+                                        <td>
+                                            <button className="btn btn-outline" style={{ marginRight: '8px' }} onClick={() => handleEdit(prov)}>Editar</button>
+                                            <button className="btn" style={{ background: 'var(--danger)', color: 'white' }} onClick={() => handleDelete(prov.id_proveedor)}>Eliminar</button>
+                                        </td>
+                                    )}
                                 </tr>
                             ))}
                         </tbody>
